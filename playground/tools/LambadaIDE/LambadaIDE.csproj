@@ -1,0 +1,166 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{20B74952-F5AF-4826-A638-7738E946EBE0}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LambadaIDE</RootNamespace>
+    <AssemblyName>LambadaIDE</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Basic\Application.cs" />
+    <Compile Include="Basic\BuiltInExpression.cs" />
+    <Compile Include="Basic\CombinatorEnvironment.cs" />
+    <Compile Include="Basic\Expression.cs" />
+    <Compile Include="Basic\Hook.cs" />
+    <Compile Include="Basic\Node.cs" />
+    <Compile Include="Basic\Runtime.cs" />
+    <Compile Include="BuiltIn\B.cs" />
+    <Compile Include="BuiltIn\Bool\And.cs" />
+    <Compile Include="BuiltIn\Bool\Bool.cs" />
+    <Compile Include="BuiltIn\Bool\Not.cs" />
+    <Compile Include="BuiltIn\Bool\Or.cs" />
+    <Compile Include="BuiltIn\C.cs" />
+    <Compile Include="BuiltIn\I.cs" />
+    <Compile Include="BuiltIn\IO\IOReturn.cs" />
+    <Compile Include="BuiltIn\IO\IOBind.cs" />
+    <Compile Include="BuiltIn\IO\ReadLine.cs" />
+    <Compile Include="BuiltIn\IO\WriteLine.cs" />
+    <Compile Include="BuiltIn\K.cs" />
+    <Compile Include="BuiltIn\Bean\Bean.cs" />
+    <Compile Include="BuiltIn\IO\Write.cs" />
+    <Compile Include="BuiltIn\String\StringWhere.cs" />
+    <Compile Include="BuiltIn\String\StrToN.cs" />
+    <Compile Include="BuiltIn\String\StrFromN.cs" />
+    <Compile Include="BuiltIn\String\StringEquals.cs" />
+    <Compile Include="BuiltIn\String\StringCutAt.cs" />
+    <Compile Include="BuiltIn\String\StringTake.cs" />
+    <Compile Include="BuiltIn\String\StringIsEmpty.cs" />
+    <Compile Include="BuiltIn\String\StringAddFront.cs" />
+    <Compile Include="BuiltIn\String\StringCons.cs" />
+    <Compile Include="BuiltIn\String\StringAddBack.cs" />
+    <Compile Include="BuiltIn\Y.cs" />
+    <Compile Include="BuiltIn\String\String.cs" />
+    <Compile Include="BuiltIn\String\StringHead.cs" />
+    <Compile Include="BuiltIn\String\StringSkip.cs" />
+    <Compile Include="BuiltIn\String\StringTail.cs" />
+    <Compile Include="BuiltIn\Marsh.cs" />
+    <Compile Include="BuiltIn\NatNumber\Add.cs" />
+    <Compile Include="BuiltIn\NatNumber\Div.cs" />
+    <Compile Include="BuiltIn\NatNumber\IsZero.cs" />
+    <Compile Include="BuiltIn\NatNumber\Mod.cs" />
+    <Compile Include="BuiltIn\NatNumber\Mul.cs" />
+    <Compile Include="BuiltIn\NatNumber\NatNumber.cs" />
+    <Compile Include="BuiltIn\NatNumber\Pow.cs" />
+    <Compile Include="BuiltIn\NatNumber\Pred.cs" />
+    <Compile Include="BuiltIn\NatNumber\Sub.cs" />
+    <Compile Include="BuiltIn\NatNumber\Succ.cs" />
+    <Compile Include="BuiltIn\NatNumber\Xor.cs" />
+    <Compile Include="BuiltIn\Pair\Fst.cs" />
+    <Compile Include="BuiltIn\Pair\MakePair.cs" />
+    <Compile Include="BuiltIn\Pair\Pair.cs" />
+    <Compile Include="BuiltIn\Pair\RealPair.cs" />
+    <Compile Include="BuiltIn\Pair\Snd.cs" />
+    <Compile Include="BuiltIn\S.cs" />
+    <Compile Include="BuiltIn\U.cs" />
+    <Compile Include="CodeEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CodeEditor.Designer.cs">
+      <DependentUpon>CodeEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI.Designer.cs">
+      <DependentUpon>GUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Lazy.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="CodeEditor.resx">
+      <DependentUpon>CodeEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI.resx">
+      <DependentUpon>GUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="prelude.native.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="prelude.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
