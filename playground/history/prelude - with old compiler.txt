@@ -1,0 +1,1009 @@
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' lambAda stage1 (the extra "A" is for extra awesomeness) '
+'                                                         '
+' Last changed: 03.09.2013         Author: Johannes Bader '
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+' define SKI in terms of U to enable abstraction killing 
+' for systems implementing ONLY U (how romantic!)
+I = U U
+K = U (U I)     ' <- where U and I first met
+S = U K
+
+B = S (K S) K
+C = S (S (K S) (S (K K) S)) (K K)
+
+' SKI combinatours redefined via abstractions
+I = \x x
+K = \a \b a
+S = \a \b \c a c (b c)
+
+' few more combinators
+B = \a \b \c a (b c)
+C = \a \b \c a c b
+M = \x x x
+
+' fixed point
+Y = \f M (\x f (x x))
+
+
+' bool
+TRUE = K
+FALSE = K I
+IF = I
+NOT = \b b FALSE TRUE
+
+AND = \a \b a b FALSE
+OR = \a \b a TRUE b
+IMPLIES = \a \b a b TRUE
+
+XOR = \a \b IF a (NOT b) b
+EQ = \a \b NOT (XOR a b)
+
+
+' numbers (N_0)
+Succ = S B
+zero = K I
+one = Succ zero
+
+
+Apply = I       ' apply (2) (1) times to (3)
+
+Add = S I (K (S B))
+Mul = B
+Pow = S (K(S(S(S K)))) K
+
+isZero = \n n (K FALSE) TRUE
+
+
+
+''' higher order types
+
+' pair
+makePair = \a \b \f f a b
+fst = \pair pair (\a \b a)
+snd = \pair pair (\a \b b)
+changeFst = \pair \f makePair 
+                        (f (fst pair)) 
+                        (snd pair)
+changeSnd = \pair \f makePair 
+                        (fst pair) 
+                        (f (snd pair))
+
+' NUMBERS PART 2
+Pred = \n \f \x snd(n((\pair makePair(FALSE)(IF(fst(pair))(I)(f)(snd(pair)))))(makePair(TRUE)(x)))
+Sub = Y(\sub \a \b IF(isZero b)
+                    a
+                    (sub (Pred a) (Pred b))
+       )
+
+isEQ = \a \b AND (isZero (Sub a b)) (isZero (Sub b a))
+isLTE = \a \b isZero (Sub a b)
+isGTE = \a \b isLTE b a
+isLT = \a \b NOT (isGTE a b)
+isGT = \a \b NOT (isLTE a b)
+
+Min = \a \b IF(isLT a b) a b
+Max = \a \b IF(isGT a b) a b
+
+Mod = Y(\mod \a \b IF(isLT a b) a (mod (Sub a b) b))
+Div = Y(\div \a \b IF(isLT a b) zero (Succ (div (Sub a b) b)))
+
+' Z
+ZfromN = \n makePair FALSE n
+Zzero = ZfromN zero
+ZisZero = \z isZero (snd z)
+ZisNeg = fst
+ZabsN = snd
+Znorm = \z IF(ZisZero z) Zzero z
+ZNegate = \z Znorm (makePair (NOT (ZisNeg z)) (snd z))
+ZSucc = \z Znorm (makePair (ZisNeg z) (IF(ZisNeg z) (Pred (snd z)) (Succ (snd z))))
+ZPred = \z ZNegate (ZSucc (ZNegate z))
+
+ZMul = \z1 \z2 Znorm (makePair (XOR (ZisNeg z1) (ZisNeg z2)) (Mul (ZabsN z1) (ZabsN z2)))
+ZDiv = \z1 \z2 Znorm (makePair (XOR (ZisNeg z1) (ZisNeg z2)) (Div (ZabsN z1) (ZabsN z2)))
+xzadd = \z1 \z2 IF (NOT (ZisNeg z2)) (ZfromN (Add (ZabsN z1) (ZabsN z2))) (IF (isLT (ZabsN z1) (ZabsN z2)) (makePair TRUE (Sub (ZabsN z2) (ZabsN z1))) (makePair FALSE (Sub (ZabsN z1) (ZabsN z2))))
+ZAdd = \z1 \z2 Znorm (IF (ZisNeg z1) (ZNegate (xzadd (ZNegate z1) (ZNegate z2))) (xzadd z1 z2))
+ZSub = \z1 \z2 ZAdd z1 (ZNegate z2)
+ZMod = \z \m Znorm (changeSnd z (\b Mod b (ZabsN m)))
+ZModX = \z \m Znorm (changeSnd (ZAdd (changeSnd z (\b Mod b (ZabsN m))) m) (\a Mod a (ZabsN m)))
+
+'' list
+' begin{structurally critical}
+listIsNotEmpty = fst
+listIsEmpty = B NOT listIsNotEmpty
+listHead = B fst snd
+listTail = B snd snd
+listEmpty = makePair FALSE I
+listAddFront = \l \x makePair TRUE (makePair x l)
+' end{structurally critical}
+
+foldl = Y(\fold \l \x \f IF(listIsNotEmpty l) (fold (listTail l) (f x (listHead l)) f) x)
+foldr = Y(\fold \l \x \f IF(listIsNotEmpty l) (f (fold (listTail l) x f) (listHead l)) x)
+
+' begin{structurally conv}
+'ptox = \str Y(\fold \l \x \f IF(listIsNotEmpty l) (f (fold (listTail l) x f) (listHead l)) x) str xlistEmpty xlistAddFront
+'xtop = \str Y(\fold \l \x \f IF(xlistIsNotEmpty l) (f (fold (xlistTail l) x f) (xlistHead l)) x) str listEmpty listAddFront
+' end{structurally conv}
+
+reverseBag = Y(\reverseBag \a \b IF(listIsNotEmpty a) (reverseBag (listTail a) (listAddFront b (listHead a))) b)
+reverse = \l reverseBag l listEmpty
+unfold = Y(\unfold \x \f listAddFront (unfold (f x) f) x)
+repeat = \elem unfold elem I
+
+listCons = \l \k foldr l k listAddFront
+    
+listReturn = listAddFront listEmpty
+listAddBack = \l \x listCons l (listReturn x)
+
+cfold = Y(\fold \l \x \f listAddFront (IF(listIsEmpty l) listEmpty (fold (listTail l) (f x (listHead l)) f)) x)
+
+listTake = Y(\take \l \n IF(OR (isZero n) (listIsEmpty l)) listEmpty (listAddFront (take (listTail l) (Pred n)) (listHead l)))
+listTakeWhile = Y(\take \l \p IF(OR (listIsEmpty l) (NOT (p (listHead l))))(listEmpty)(listAddFront(take (listTail(l)) p)(listHead(l))))
+
+listBind = \l \f foldl l listEmpty (\a \b listCons a (f b))
+listMap = \l \f listBind l (B listReturn f)
+listWhere = \l \f foldr l listEmpty (\a \b IF(f b) (listAddFront a b) a)
+listSkip = Y(\skip \l \n IF(OR (isZero n) (listIsEmpty l)) l (skip (listTail l) (Pred n)))
+listSkipWhile = Y(\skip \l \p IF(AND (p (listHead l)) (NOT (listIsEmpty l))) (skip (listTail l) p) l)
+
+listAny = \l \f NOT (listIsEmpty (listWhere l f))
+listAll = \l \f NOT (listAny l (B NOT f))
+
+listCount = \l foldl l zero (B K Succ)
+
+listZip = Y(\lz \l1 \l2 \op IF (OR (listIsEmpty l1) (listIsEmpty l2)) listEmpty (listAddFront (lz (listTail l1) (listTail l2) op) (op (listHead l1) (listHead l2))))
+listZipLonger = Y(\lz \l1 \l2 \pad \op IF (OR (listIsEmpty l1) (listIsEmpty l2)) (IF (listIsEmpty l1) (listZip (repeat pad) l2 op) (listZip l1 (repeat pad) op)) (listAddFront (lz (listTail l1) (listTail l2) pad op) (op (listHead l1) (listHead l2))))
+listEquals = \eq \l1 \l2 AND (isEQ (listCount l1) (listCount l2)) (listAll (listZip l1 l2 eq) I)
+strEquals = listEquals isEQ
+
+listMerge = \lt Y(\merge \l1 \l2 IF(listIsEmpty l1) l2 (IF(listIsEmpty l2) l1 (IF(lt (listHead l1) (listHead l2)) (listAddFront (merge (listTail l1) l2) (listHead l1)) (listAddFront (merge l1 (listTail l2)) (listHead l2)))))
+listSort = \lt Y(\sort \l IF(isGT (listCount l) 1) ((\mid listMerge lt (sort (listTake l mid))  (sort (listSkip l mid))) (Div (listCount l) 2)) l)
+
+intSort = listSort isLT
+
+listElementAt = \l \n listHead (listSkip l n)
+
+strIsEmpty = listIsEmpty
+strIsNotEmpty = B NOT strIsEmpty
+strHead = listHead
+strTail = listTail
+strEmpty = listEmpty
+strAddFront = listAddFront
+strAddBack = listAddBack
+strCons = listCons
+strSkip = listSkip
+strTake = listTake
+strReturn = listReturn
+strWhere = listWhere
+
+' recursive functions
+Nats0 = unfold zero Succ
+Nats = unfold one Succ
+zeroes = repeat 0
+ByteVals = listTake Nats0 256
+
+toBinSeq = \n listMap (listTakeWhile (unfold n (C Div 2)) (B NOT isZero)) (C Mod 2)
+fromBinSeq = \l foldl (listZip l Nats0 (\a \b Mul a (Pow 2 b))) 0 Add
+Xor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y Mod (Add x y) 2))
+
+isAlpha = \c OR 
+                (OR 
+                    (AND (isGT c 64) (isLT c 91)) 
+                    (AND (isGT c 96) (isLT c 123))) 
+                (isEQ c 95)
+Alpha = strWhere ByteVals isAlpha
+isNum = \c AND (isGT c 47) (isLT c 58)
+Num = strWhere ByteVals isNum
+isAlphaNum = \c OR (isAlpha c) (isNum c)
+AlphaNum = strCons Alpha Num
+isWhiteSpace = \c isLT c 34
+WhiteSpace = strWhere ByteVals isWhiteSpace
+NewLine = strAddFront (strReturn 10) 13
+
+halt = Y(\halt \x (IF x halt I) x)
+fak = \n foldl (listTake Nats n) one Mul
+
+' awesome sequences...
+'_nextCandids = \prime \candids (listWhere candids (\n (NOT (isZero (Mod n prime)))))
+'_primes = Y(\temp \candids (newPrime \listAddFront (temp (_nextCandids newPrime candids)) newPrime)(listHead candids))
+'primes = _primes (listSkip Nats one)
+'fibs = Y(\fi listAddFront (listAddFront (listZip fi (listTail fi) Add) 1) 1)
+
+'_modUint = \x Mod x (Pow 2 32)
+'_quadEx = \quad \f f (fst (fst quad)) (snd (fst quad)) (fst (snd quad)) (snd (snd quad))
+'_getT = \x Xor x (_modUint (Mul x (Pow 2 11)))
+'_randomPermut = \quad _quadEx quad (\x \y \z \w makePair (makePair y z) (makePair w ((\t Xor (Xor w (Div w (Pow 2 19))) (Xor t (Div t 256))) (_getT x))))
+'_randomGet = \quad _quadEx quad (\x \y \z \w Mod w (Pow 2 31))
+'randoms = \seed listTail (listMap (unfold (makePair (makePair seed 842502087) (makePair 3579807591 273326509)) _randomPermut) _randomGet)
+'randomsBound = \seed \min \max listMap (randoms seed) (\x Add min (Mod x (Sub max min)))
+
+
+
+' formatters
+xstrFromNat = Y(\temp \acc \n IF(isZero n) acc (temp (strAddFront acc (Add 48 (Mod n 10))) (Div n 10)))
+strFromN = \n IF(isZero n) (strReturn 48) (xstrFromNat strEmpty n)
+strFromNs = \ns listBind ns (\n strAddBack (strFromN n) 32)
+strFromZ = \z IF(ZisNeg z) (strAddFront (strFromN (ZabsN z)) 45) (strFromN (ZabsN z))
+strToN = \str foldl str 0 (\i \c Add (Mul i 10) (Sub c 48))
+strFromB = \b IF(b) "TRUE" "FALSE"
+strFromS = \s strCons (strReturn 96) (strCons s (strReturn 96))
+
+strFromPair = \fa \fb \p strCons (strCons (strCons (strCons "(" (fa (fst p))) " ; ") (fb (snd p))) ")"
+
+
+listCutAt = Y(\self \l \f IF(OR (listIsEmpty l) (f (listHead l))) (makePair listEmpty l) (changeFst (self (listTail l) f) (\x listAddFront x (listHead l))))
+
+strFromSS = \ss foldl ss strEmpty (\s \x strCons s (strAddBack x 10))
+xlistSplitAt = \l \f unfold (listCutAt l (K TRUE)) (\p changeSnd (listCutAt (snd p) f) (\li listSkip li one))
+listSplitAt = \l \f listBind (listCutAt (listSkip (xlistSplitAt l f) one) (\x listIsEmpty (snd x))) (\x listReturn (snd x))
+ 
+listContains = \list \elem \eq listAny list (\x eq elem x)
+strContains = \list \elem listContains list elem isEQ
+
+listRepeat = \n \list listBind (listTake (repeat list) n) I
+
+strBurst = \str listMap str (\c listReturn c)
+strTrim = \str reverse (listSkipWhile (reverse (listSkipWhile str isWhiteSpace)) isWhiteSpace)
+
+listJoin = \lists \sepa IF(listIsEmpty lists) listEmpty (foldl (listTail lists) (listHead lists) (\cur \new listCons (listCons cur sepa) new))
+strJoin = \strs \sepa IF(strIsEmpty strs) strEmpty (foldl (listTail strs) (listHead strs) (\cur \new strCons (strCons cur sepa) new))
+
+strCutAt = listCutAt
+
+
+' maybe
+maybeReturn = makePair TRUE
+maybeNothing = makePair FALSE I
+maybeHasValue = fst
+maybeGetValue = snd
+maybeBind = \m \f IF (maybeHasValue m) (f (maybeGetValue m)) maybeNothing
+maybeMap = \m \f maybeBind m (B maybeReturn f)
+maybeAlternative = \m \a IF (maybeHasValue m) m a
+maybeTryGetValue = \m \a maybeGetValue (maybeAlternative m (maybeReturn a))
+
+strFromMaybe = \formatter \m IF(maybeHasValue m) (strCons "Just " (formatter (maybeGetValue m))) "Nothing"
+
+
+' parser stuff: P t = (S => M (S, t))
+parseReturn = \x \string maybeReturn (makePair string x)
+parseFail = \string maybeNothing
+parseOperation = \conv \res maybeMap res (\u changeSnd u conv)
+parseBindOperation = \p \conv (\string parseOperation conv (p string))
+parsePipe = \p1 \cp2 \string maybeBind (p1 string) (\e cp2 (snd e) (fst e))
+parseBind = \compose \p1 \p2 \string maybeBind (p1 string) (\e parseOperation (compose (snd e)) (p2 (fst e)) )
+parseBindDiscard = parseBind K
+parseBindOverride = parseBind (K I)
+parseBindPair = parseBind makePair
+
+parseCharIf = \cond \string IF (AND (NOT (listIsEmpty string)) (cond (listHead string))) (parseReturn (listHead string) (listTail string)) (parseFail string)
+parseCharX = \set parseCharIf (\c listContains set c isEQ)
+parseChar = \c parseCharIf (isEQ c)
+parseString = \str foldl (listMap str parseChar) (parseReturn strEmpty) (parseBind strAddBack)
+parseUntil = \cond \str (\p parseReturn (fst p) (snd p)) (strCutAt str cond)
+parseWhile = \cond parseUntil (B NOT cond)
+parseWhileMinOne = \cond \str (\res IF(strIsEmpty (snd (maybeGetValue res))) (parseFail str) res) (parseWhile cond str)
+
+parseOption = \p1 \p2 \string maybeAlternative (p1 string) (p2 string)
+
+parseWhitespace = parseWhile isWhiteSpace
+parseWithWhitespace = \p parseBindDiscard (parseBindOverride parseWhitespace p) parseWhitespace
+parseToken = parseBind (\c \s strAddFront s c) (parseCharIf isAlpha) (parseWhile isAlphaNum) 
+parseNumber = parseBindOperation (parseWhileMinOne isNum) strToN
+
+parseDump = \formatter strFromMaybe (strFromPair strFromS formatter)
+
+parseAccept = \restFilter \res maybeBind res (\p IF(restFilter (fst p)) (maybeReturn (snd p)) maybeNothing)
+parseAcceptAll = parseAccept (K TRUE)
+parseAcceptFullyConsumed = parseAccept listIsEmpty
+
+parseWhileSuccessfulInternal = Y
+    (\self \parser \s 
+        (\res 
+            (IF(maybeHasValue res) 
+                (
+                    (\result changeSnd result (\tail listAddFront tail (snd (maybeGetValue res)))) 
+                    (self parser (fst (maybeGetValue res)))
+                ) 
+                (makePair s listEmpty)
+            )
+        ) 
+        (parser s)
+    )
+parseWhileSuccessful = \parser \s maybeReturn (parseWhileSuccessfulInternal parser s)
+
+' : (strFromMaybe (I) (parseAcceptFullyConsumed (parseWhileSuccessful (parseChar _eCharBrOpen) "(( ")))
+
+' map
+mapCreate = \eq makePair eq listEmpty
+mapGetAll = \map \key listWhere (snd map) (\x fst map key (fst x))
+mapHasKey = \map \key listAny (mapGetAll map key) (K TRUE)
+mapCount = B listCount snd
+mapAdd = \map \key \value changeSnd map (\list listAddFront list (makePair key value))
+mapRemove = \map \key changeSnd map (\list listWhere list (\elem NOT (fst map key (fst elem))))
+mapSet = \map \key \value mapAdd (mapRemove map key) key value
+mapGet = \map \key snd (listHead (mapGetAll map key))
+
+' ID-fier
+idfCreate = mapCreate
+idfHandle = \idf \x IF(mapHasKey idf x) (makePair idf (mapGet idf x)) ((\id makePair (mapAdd idf x id) id) (mapCount idf))
+idfHandleX = \idf \xs foldl xs (makePair idf listEmpty) (\pair \x (\res makePair (fst res) (listAddBack (snd pair) (snd res))) (idfHandle (fst pair) x))
+idfCount = mapCount
+
+' list ex
+listDistinct = \l \eq snd (foldl l (makePair (idfCreate eq) listEmpty) (\pair \x (\res makePair (fst res) (IF(isEQ (snd res) (idfCount (fst pair))) (listAddBack (snd pair) x) (snd pair))) (idfHandle (fst pair) x)))
+
+' temp art addin
+newLine = strReturn 10
+
+empty = strReturn 32
+
+diff = \a \b IF (isLT a b) (Sub b a) (Sub a b)
+
+gDrawL = \w \y \f listBind (listTake Nats0 w) (\x (f x y))
+gDraw = \w \h \f listBind (listTake Nats0 h) (\y listCons (gDrawL w y f) newLine)
+
+gCanvas = K (K empty)
+gOverlay = \sel \col \canvas \x \y IF (sel x y) (listReturn col) (canvas x y)
+gPixel = \x \y \col gOverlay (\xx \yy AND (isEQ xx x) (isEQ yy y)) col
+gCircle = \x \y \s \col gOverlay (\xx \yy isGT (Pow s 2) (Add (Pow (diff xx x) 2) (Pow (diff yy y) 2))) col    
+
+
+' triple
+makeTriple = \a \b \c \f f a b c
+tfst = \tri tri (\a \b \c a)
+tsnd = \tri tri (\a \b \c b)
+ttrd = \tri tri (\a \b \c c)
+tchangeFst = \tri \f makeTriple (f (tfst tri)) (tsnd tri) (ttrd tri)
+tchangeSnd = \tri \f makeTriple (tfst tri) (f (tsnd tri)) (ttrd tri)
+tchangeTrd = \tri \f makeTriple (tfst tri) (tsnd tri) (f (ttrd tri))
+
+' bean (S => M ?)
+'bean
+beanEmpty = K maybeNothing
+'bean => S => ? => bean
+beanSet = \mapping \s \x (\query IF(strEquals s query) (maybeReturn x) (mapping query))
+'bean => S => M ?
+beanTryGet = \mapping \query mapping query
+'bean => S => ?
+beanGet = \mapping \query maybeGetValue (mapping query)
+'bean => S => bool
+beanHas = \mapping \query maybeHasValue (mapping query)
+
+
+' seq
+seqEmpty = makePair 0 I
+seqLength = fst
+seqGet = snd
+seqSet = \seq \i \x changeSnd seq (\f \ii IF(isEQ i ii) x (f ii))
+seqAddFront = \seq \x makePair (Succ (seqLength seq)) (\i IF(isZero i) x (seqGet seq (Pred i)))
+seqAddBack =  \seq \x makePair (Succ (seqLength seq)) (\i IF(isEQ i (seqLength seq)) x (seqGet seq i))
+seqConcat = \s1 \s2 makePair (Add (seqLength s1) (seqLength s2)) (\i IF(isLT i (seqLength s1)) (seqGet s1 i) (seqGet s2 (Sub i (seqLength s1))))
+seqRangeUnsafe = \seq \offset \count makePair count (\i seqGet seq (Sub i offset))
+seqRange = \seq \offset \count seqRangeUnsafe seq offset (Min count (Sub (seqLength seq) offset))
+
+seqToList = \seq listMap (listTake Nats0 (seqLength seq)) (\i seqGet seq i)
+listToSeq = \list foldr list seqEmpty (\seq \x seqAddFront seq x)
+
+'------------------'
+' COMPILER SECTION '
+'------------------'
+
+'' vararg consumer
+getFirstConsumeMoreDeferred = \mf \v v 
+                 (\a 
+                    Y(\self \n IF(isZero n) a (K (self (Pred n)))) (mf a)
+                 )
+getFirstConsumeMore = \m getFirstConsumeMoreDeferred (K m)
+
+'' CONSTANTS
+_eCharBrClose = strHead ")"
+_eCharBrOpen = strHead "("
+_eCharAbstr = strHead "\"
+_eCharAssign = 61
+_eCharComment = 39
+_eStrColon = strReturn 58
+_eIsQuot = \x OR (isEQ x 34) (isEQ x 96)
+_eIsNewLine = \x OR (isEQ x 10) (isEQ x 13)
+
+
+'' TOKENIZER
+' tokens
+tokenParenOpen = \f f 0
+tokenParenClose = \f f 1
+tokenAbstraction = \f f 2
+tokenAssign = \f f 3
+tokenLiteral = \literal \f f 10 literal ' S
+tokenConstS = \value \f f 11 value      ' S
+tokenConstN = \value \f f 12 value      ' N
+tokenComment = \text \f f 13 text       ' S
+token_VarCount = \type IF(isLT type 10) 0 1
+token_Type = getFirstConsumeMoreDeferred token_VarCount
+
+token_String = \x
+    (\istype
+        IF(istype 0) "<PAR_OPEN>" (
+        IF(istype 1) "<PAR_CLOSE>" (
+        IF(istype 2) "<ABSTRACT>" (
+        IF(istype 3) "<ASSIGN>" (
+        IF(istype 10) (strCons (strCons "<LITERAL(" (x (\t \x x))) ")>") (
+        IF(istype 11) (strCons (strCons "<CONSTS(" (x (\t \x x))) ")>") (
+        IF(istype 12) (strCons (strCons "<CONSTN(" (strFromN (x (\t \x x)))) ")>") (
+        IF(istype 13) "<COMMENT>" (
+        "<!!!UNKNOWN!!!>"
+        ))))))))
+    ) (isEQ (token_Type x))
+token_String_list = \xs strJoin (listMap xs token_String) " "
+
+' :: Parser Token
+eatParenOpen = parseBindOperation (parseChar _eCharBrOpen) (K tokenParenOpen)
+eatParenClose = parseBindOperation (parseChar _eCharBrClose) (K tokenParenClose)
+eatAbstraction = parseBindOperation (parseChar _eCharAbstr) (K tokenAbstraction)
+eatAssign = parseBindOperation (parseChar _eCharAssign) (K tokenAssign)
+eatLiteral = parseBindOperation parseToken (\x tokenLiteral x)
+eatConstS = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\x tokenConstS x)
+eatConstN = parseBindOperation parseNumber (\x tokenConstN x)
+eatComment = parseBindOperation (parseBindOverride (parseChar _eCharComment) (parseUntil _eIsNewLine)) (\x tokenComment x)
+
+eatSomething = parseWithWhitespace
+        (parseOption 
+        (parseOption
+        (parseOption
+        (parseOption
+        (parseOption
+        (parseOption
+        (parseOption
+            eatParenOpen
+            eatParenClose
+        )   eatAbstraction
+        )   eatAssign
+        )   eatLiteral
+        )   eatConstS
+        )   eatConstN
+        )   eatComment)
+
+' Parser [Token]
+eatAllToken = parseWhileSuccessful eatSomething
+
+' S => M [Token]
+tokenize = B parseAcceptFullyConsumed eatAllToken
+
+' S => S
+token_Run = \s (strFromMaybe I (maybeMap (tokenize s) token_String_list))
+
+' SAMPLE USAGE
+' : (strFromMaybe (\f strJoin (listMap f (B strFromN token_Type)) ", ") (parseAcceptFullyConsumed (eatAllToken "=")))
+' : (strFromMaybe (\f (B strFromN token_Type) f) (parseAcceptFullyConsumed (eatSomething "=")))
+' : (token_Run "asd")
+
+
+'' SYNTAXER
+' syntax elems
+syntaxLiteral = \literal \f f 0 literal                     ' S
+syntaxConstN = \value \f f 1 value                          ' N
+syntaxConstS = \value \f f 2 value                          ' S
+syntaxAbstraction = \literal \body \f f 10 literal body     ' S SYNTAX
+syntaxApplication = \o1 \o2 \f f 11 o1 o2                   ' SYNTAX SYNTAX
+syntaxAssignment = \literal \o \f f 12 literal o            ' S SYNTAX
+syntax_VarCount = \type IF(isLT type 10) 1 2               
+syntax_Type = getFirstConsumeMoreDeferred syntax_VarCount
+
+syntax_String = Y(\this \x
+    (\istype
+        IF(istype 0) (strCons (strCons "literal(" (x (\t \x x))) ")") (
+        IF(istype 1) (strCons (strCons "constn(" (strFromN (x (\t \x x)))) ")") (
+        IF(istype 2) (strCons (strCons "consts(" (x (\t \x x))) ")") (
+        IF(istype 10) (strCons (strCons "abstract(" (strCons (x (\t \x \_ x)) (strCons ", " (this (x (\t \_ \x x)))))   ) ")") (
+        IF(istype 11) (strCons (strCons "apply(" (strCons (this (x (\t \x \_ x))) (strCons ", " (this (x (\t \_ \x x)))))   ) ")") (
+        IF(istype 12) (strCons (strCons "assign(" (strCons (x (\t \x \_ x)) (strCons ", " (this (x (\t \_ \x x)))))   ) ")") (
+        "!!!unknown!!!"
+        ))))))
+    ) (isEQ (syntax_Type x)))
+syntax_String_list = \xs strJoin (listMap xs syntax_String) "; "
+
+token_Parse = \id (parseCharIf (\token isEQ (token_Type token) id))
+' B :=  lit=E | \lit E | lit | constS | constN | (E) | comment    'return [Syntax]
+' E :=  app  :=  B*                                               'return Syntax
+
+' Parser [Syntax]
+cstrSyntaxLiteral = parseBindOperation
+                      (token_Parse 10)
+                      (\res listReturn (syntaxLiteral (res (\t \v v))))
+cstrSyntaxConst = parseOption
+                    (parseBindOperation
+                      (token_Parse 11)
+                      (\res listReturn (syntaxConstS (res (\t \v v)))))
+                    (parseBindOperation
+                      (token_Parse 12)
+                      (\res listReturn (syntaxConstN (res (\t \v v)))))
+cstrSyntaxComment = parseBindOperation
+                      (token_Parse 13)
+                      (\res listEmpty)
+cstrSyntaxAbstract = \e parseBindOverride
+                      (token_Parse 2)
+                      (parseBind
+                        (\a \b listReturn (syntaxAbstraction (a (\t \v v)) b))
+                        (token_Parse 10)
+                        e
+                      )
+cstrSyntaxAssignment = \e 
+                      (parseBind
+                        (\a \b listReturn (syntaxAssignment (a (\t \v v)) b))
+                        (
+                            parseBindDiscard
+                            (token_Parse 10)
+                            (token_Parse 3)
+                        )
+                        e
+                      )
+
+cstrSyntaxNested = \e parseBindOverride 
+                        (token_Parse 0)
+                        (
+                            parseBindDiscard 
+                                (parseBindOperation e listReturn)
+                                (token_Parse 1)
+                        )
+' B:
+cstrSyntaxSingle = \e (parseOption
+                      (parseOption 
+                      (parseOption 
+                      (parseOption 
+                      (parseOption 
+                        (cstrSyntaxAssignment e)
+                        (cstrSyntaxAbstract e))
+                        cstrSyntaxLiteral)
+                        cstrSyntaxConst)
+                        cstrSyntaxComment)
+                        (cstrSyntaxNested e))
+
+' E:
+cstrSyntaxApplication = \e 
+                        parsePipe
+                            (parseWhileSuccessful (cstrSyntaxSingle e))
+                            (\list 
+                                (\ops 
+                                    IF(listIsEmpty ops) 
+                                    parseFail
+                                    (parseReturn
+                                        (foldl 
+                                            (listTail ops) 
+                                            (listHead ops) 
+                                            (\x \y syntaxApplication x y)))
+                                ) (listBind list I)
+                            )
+
+cstrSyntaxEverything = parseWhileSuccessful (Y cstrSyntaxApplication)
+
+' [TOKEN] => M [SYNTAX]
+cstrSyntax = B parseAcceptFullyConsumed cstrSyntaxEverything
+
+
+syntaxResultsToString = strFromMaybe (\f strJoin (listMap f (B strFromN syntax_Type)) ", ")
+syntaxResultToString = strFromMaybe (\f (B strFromN syntax_Type) f)
+
+' S => S
+syntax_Run = \s (strFromMaybe I (maybeMap (maybeBind (tokenize s) cstrSyntax) syntax_String_list))
+
+' : (syntaxResultsToString (parseAcceptFullyConsumed (cstrSyntaxComment (listReturn (tokenComment "asd")))))
+' : (syntaxResultsToString (parseAcceptFullyConsumed (cstrSyntaxConst (listReturn (tokenConstS "asd")))))
+' : (syntaxResultsToString (parseAcceptFullyConsumed (cstrSyntaxLiteral (listReturn (tokenConstS "asd")))))
+' : (syntaxResultsToString (parseAcceptFullyConsumed (cstrSyntaxSingle cstrSyntaxComment (listReturn (tokenLiteral "asd")))))
+' : (syntaxResultsToString (maybeBind (tokenize "\asd 4") (\x parseAcceptFullyConsumed (cstrSyntaxAbstract cstrSyntaxConst x))))
+' : (syntaxResultsToString (maybeBind (tokenize "\asd 4") (\x parseAcceptFullyConsumed (cstrSyntaxEverything x))))
+' : (syntaxResultToString (maybeBind (tokenize "\asd 4") (\x parseAcceptFullyConsumed (cstrSyntaxApplication cstrSyntaxConst x))))
+' : (syntaxResultToString (maybeBind (tokenize "\asd 4") (\x parseAcceptFullyConsumed ((Y cstrSyntaxApplication) x))))
+' : (syntaxResultsToString (maybeBind (tokenize "4 'asd") cstrSyntax))
+' : (??? (eatAllSyntax "4 'asd"))
+
+nativeLiteral = \literal \f f 0 literal
+nativeConstN = \value \f f 1 value
+nativeConstS = \value \f f 2 value
+nativeApplication = \o1 \o2 \f f 10 o1 o2
+nativeAssignment = \literal \o \f f 11 literal o
+native_VarCount = \type IF(isLT type 10) 1 2
+native_Type = getFirstConsumeMoreDeferred native_VarCount
+
+native_String = Y(\this \x
+    (\istype
+        IF(istype 0) (strCons (strCons "literal(" (x (\t \x x))) ")") (
+        IF(istype 1) (strCons (strCons "constn(" (strFromN (x (\t \x x)))) ")") (
+        IF(istype 2) (strCons (strCons "consts(" (x (\t \x x))) ")") (
+        IF(istype 10) (strCons (strCons "apply(" (strCons (this (x (\t \x \_ x))) (strCons ", " (this (x (\t \_ \x x)))))   ) ")") (
+        IF(istype 11) (strCons (strCons "assign(" (strCons (x (\t \x \_ x)) (strCons ", " (this (x (\t \_ \x x)))))   ) ")") (
+        "!!!unknown!!!"
+        )))))
+    ) (isEQ (native_Type x)))
+native_String_list = \xs strJoin (listMap xs native_String) "; "
+
+nativeI = nativeLiteral "I"
+nativeK = nativeLiteral "K"
+nativeB = nativeLiteral "B"
+nativeC = nativeLiteral "C"
+nativeS = nativeLiteral "S"
+
+' NATIVE => S => B
+nativeContainsLit = Y(\this \n \lit
+        (\istype
+            IF(istype 0) (strEquals lit (n (\t \x x)))
+            (
+            IF(istype 10)
+            (
+                OR (this (n (\t \x \_ x)) lit) (this (n (\t \_ \x x)) lit)
+            )
+            FALSE
+            )               
+        ) (isEQ (native_Type n))
+    )
+' SYNTAX => NATIVE
+syntaxToNative = Y(\this \syntax
+        (\istype
+            IF(istype 0) (nativeLiteral (syntax (\t \x x)))
+            (
+            IF(istype 1) (nativeConstN (syntax (\t \x x)))
+            (
+            IF(istype 2) (nativeConstS (syntax (\t \x x)))
+            (
+            IF(istype 11) (nativeApplication (this (syntax (\t \x \_ x))) (this (syntax (\t \_ \x x))))
+            (
+            IF(istype 12) (nativeAssignment (syntax (\t \x \_ x)) (this (syntax (\t \_ \x x))))
+            (
+            IF(istype 10)
+            (
+                (Y(\strip \lit \nbody
+                    IF (isEQ (native_Type nbody) 10)
+                    (
+                      (\a \b
+                        IF (nativeContainsLit a lit)
+                        (
+                            IF (nativeContainsLit b lit)
+                            (nativeApplication (nativeApplication nativeS (strip lit a)) (strip lit b))
+                            (nativeApplication (nativeApplication nativeC (strip lit a)) b)
+                        )
+                        (
+                            IF (nativeContainsLit b lit)
+                            (nativeApplication (nativeApplication nativeB a) (strip lit b))
+                            (nativeApplication nativeK nbody)
+                        )
+                      ) (nbody (\t \x \_ x)) (nbody (\t \_ \x x))
+                    )
+                    (
+                        IF (nativeContainsLit nbody lit)
+                        nativeI
+                        (nativeApplication nativeK nbody)
+                    )
+                )) (syntax (\t \x \_ x)) (this (syntax (\t \_ \x x)))
+            )
+            (
+                I 'unknown syntax
+            ) 
+            ) 
+            ) 
+            ) 
+            ) 
+            )               
+        ) (isEQ (syntax_Type syntax))
+    )
+
+
+' NATIVE => S
+nativeToExe = Y(\this \n
+        (\istype
+            IF(istype 0) (n (\t \x x))
+            (
+            IF(istype 1) (strFromN (n (\t \x x)))
+            (
+            IF(istype 2) (strAddBack (strAddFront (n (\t \x x)) 34) 34)
+            (
+            IF(istype 10) (strCons (strCons (strCons (this (n (\t \x \_ x))) " ") (this (n (\t \_ \x x)))) ".")
+            (
+            IF(istype 11) (strCons (strCons (n (\t \x \_ x)) (strCons (strAddBack " " _eCharAssign) " ")) (this (n (\t \_ \x x))))
+            (
+            "<UNKNOWN_NATIVE>"
+            ) 
+            ) 
+            ) 
+            ) 
+            )               
+        ) (isEQ (native_Type n))
+    )
+
+' TODO: implement implicit recursion by using Y-combi on self-enving
+' (NATIVE, ENV) => (???, ENV)
+nativeToObj = Y(\this \env \n
+        (\istype
+            IF(istype 0) (makePair (env (n (\t \x x))) env)
+            (
+            IF(istype 1) (makePair (n (\t \x x)) env)
+            (
+            IF(istype 2) (makePair (n (\t \x x)) env)
+            (
+            IF(istype 10) (makePair ((this env (n (\t \x \_ x)))  (this env (n (\t \_ \x x)))) env)
+            (
+            IF(istype 11) ((\key \value makePair value (\req IF(strEquals key req) value (env req))) (n (\t \x \_ x)) (this env (n (\t \_ \x x))))
+            (
+            makePair I env ' fail
+            ) 
+            ) 
+            ) 
+            ) 
+            )               
+        ) (isEQ (native_Type n))
+    )
+
+
+' S => S
+native_Run = \s (strFromMaybe I (maybeMap 
+                                    (maybeMap (maybeBind (tokenize s) cstrSyntax) (\l listMap l syntaxToNative))
+                                    native_String_list
+                ))
+
+' S => M S (TEMP, use great pipe function in the end to combine stages!!!)
+eatAll = \s maybeMap (maybeBind (tokenize s) cstrSyntax) (\synt strJoin (listMap synt (\sy nativeToExe (syntaxToNative sy))) "; ")
+' : (strFromMaybe I (eatAll "="))
+
+' bootstrap
+makeDeferred = makePair 0 
+makePrimitive = makePair 1 
+makeApplication = \a \b makePair 2 (makePair a b)
+redBindInit = K maybeNothing
+reduce = \mapping Y(\red \p IF (isEQ (fst p) 0) (mapping (snd p)) (IF(isEQ (fst p) 1) (maybeReturn (snd p)) (maybeBind (red (fst (snd p))) (\op maybeMap (red (snd (snd p))) (\arg op arg)))))
+strFromExpr = Y(\str \e IF(isEQ (fst e) 0) (strFromS (snd e)) (IF(isEQ (fst e) 1) "<internal>" (strFromPair str str (snd e))))
+containsDeferred = \s Y(\cd \e IF(isEQ (fst e) 0) (strEquals s (snd e)) (IF(isEQ (fst e) 2) (OR (cd (fst (snd e))) (cd (snd (snd e)))) FALSE))
+
+
+
+' N => S => M (P S N)
+execReadChar = B parseWithWhitespace parseChar
+' x => N => S => M (P S x)
+execChar = \result \char parseBindOverride (execReadChar char) (parseReturn result)
+
+' lit. tokens:
+' S => M (P S EXPR)
+execToken = parseWithWhitespace (parseBindOperation (parseOption parseToken (parseString _eStrColon)) makeDeferred)
+' S => M (P S EXPR)
+execNum = parseWithWhitespace (parseBindOperation parseNumber makePrimitive)
+' S => M (P S EXPR)
+execString = parseWithWhitespace (parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseWhile (B NOT _eIsQuot)) (parseCharIf _eIsQuot))) makePrimitive)
+
+' S => M (P S EXPR)
+execLit = parseOption (parseOption execToken execNum) execString
+
+
+iiiS = makeApplication (makePrimitive S)
+iiiK = makeApplication (makePrimitive K)
+iiiI = makePrimitive I
+iiiB = makeApplication (makePrimitive B)
+iiiC = makeApplication (makePrimitive C)
+
+' S => EXPR => EXPR
+execTransform = \var Y(\trans \expr 
+                        IF(isEQ (fst expr) 1) 
+                            (iiiK expr) 
+                            (IF(isEQ (fst expr) 2) 
+                                (makeApplication (iiiS (trans (fst (snd expr)))) (trans (snd (snd expr)))) 
+                                (IF(strEquals var (snd expr)) 
+                                    iiiI 
+                                    (iiiK expr))))
+
+' EXPR => S => M (P S EXPR)
+execExpression = Y(\ee \expr 
+                        parseOption 
+                            (parseOption 
+                                (execChar expr _eCharBrClose) 
+                                (parsePipe 
+                                    (parseOption 
+                                        execLit 
+                                        (parseBindOverride (execReadChar _eCharBrOpen) (ee iiiI))) 
+                                    (\arg ee (makeApplication expr arg))))    
+                            (parseBindOverride 
+                                (execReadChar _eCharAbstr) 
+                                (parsePipe 
+                                    execToken 
+                                    (Y(\ea \var parseBindOperation (ee iiiI) (execTransform (snd var)))))))
+' S => M (P S EXPR)
+execOpenExpression = execExpression iiiI
+' S => M EXPR
+exec = \str parseAcceptFullyConsumed (execOpenExpression (strCons str ")"))
+' S => M X
+execReduce = \str maybeBind (exec str) (reduce redBindInit)
+' M MAPPING => S => M X
+run = \map \str maybeBind map (\mapping maybeBind (exec str) (reduce mapping))
+' MAPPING => S => EXPR => MAPPING
+addExprInternal = \map \s \e (\q IF(strEquals s q) e (map q))
+' M MAPPING => S => EXPR => M MAPPING
+addExpr = \map \s \e maybeMap map (\m addExprInternal m s e)
+' M MAPPING => S => M MAPPING
+execStatementInternal = \map \str 
+                            maybeBind map 
+                                (\mapping (\pair 
+                                    IF(maybeHasValue pair) 
+                                        (maybeReturn (\query 
+                                            IF(strEquals query (fst (maybeGetValue pair))) 
+                                                (snd (maybeGetValue pair)) 
+                                                (mapping query))) 
+                                        maybeNothing) (maybeMap (parseBindDiscard execToken (execReadChar _eCharAssign) str) (\p makePair (snd (snd p)) (maybeBind (exec (fst p)) (reduce mapping)))))
+' M MAPPING => S => M MAPPING
+execStatement = \map \str (\s IF(strIsEmpty s) map (execStatementInternal map str))(strTrim (listTakeWhile str (\c NOT (isEQ _eCharComment c))))
+
+execDump = \str strFromMaybe strFromExpr (exec str)
+execRDump = \str \formatter maybeTryGetValue (maybeMap (execReduce str) formatter) "<fail>"
+
+
+' conv to stage0
+cOptExpr = Y(\str \e IF(isEQ (fst e) 2) ((\op IF(AND (isEQ (fst op) 0) (strEquals (snd op) "I")) (snd (snd e)) (makeApplication (str (fst (snd e))) (str (snd (snd e))))) (fst (snd e))) e)
+
+' lit. tokens:
+' S => M (P S EXPR)
+cexecToken = parseBindOperation (parseWithWhitespace parseToken) makeDeferred
+' S => M (P S EXPR)
+cexecNum = parseBindOperation (parseWithWhitespace parseNumber) (\n makeDeferred (strFromN n))
+' S => M (P S EXPR)
+cexecString = parseBindOperation (parseWithWhitespace (parseBindDiscard (parseBindOverride (parseCharIf _eIsQuot) (parseWhile (B NOT _eIsQuot))) (parseCharIf _eIsQuot))) (\s makeDeferred (strAddFront (strAddBack s 34) 34))
+
+' S => M (P S EXPR)
+cexecLit = parseOption (parseOption cexecToken cexecNum) cexecString
+
+cccS = makeApplication (makeDeferred "S")
+cccK = makeApplication (makeDeferred "K")
+cccI = makeDeferred "I"
+cccB = makeApplication (makeDeferred "B")
+cccC = makeApplication (makeDeferred "C")
+
+' S => EXPR => EXPR
+cexecTransform = \var (\contains Y(
+                    \trans \expr IF(contains expr) 
+                                    (IF(isEQ (fst expr) 2) 
+                                        ((\p (\pf \ps IF(contains pf) 
+                                                        (IF(contains ps) 
+                                                            (makeApplication (cccS (trans pf)) (trans ps)) 
+                                                            (makeApplication (cccC (trans pf)) ps)) 
+                                                        (IF(contains ps) 
+                                                            (makeApplication (cccB pf) (trans ps)) 
+                                                            (cccK p))) 
+                                            (fst p) (snd p)) (snd expr)) 
+                                         cccI) 
+                                    (cccK expr))) 
+                      (containsDeferred var)
+' EXPR => S => M (P S EXPR)
+cexecExpression = Y(\ee \expr parseBindOperation (parseOption (parseOption (execChar expr _eCharBrClose) (parsePipe (parseOption cexecLit (parseBindOverride (execReadChar _eCharBrOpen) (ee cccI))) (\arg ee (makeApplication expr arg))))    (parseBindOverride (execReadChar _eCharAbstr) (parsePipe cexecToken (Y(\ea \var parseBindOperation (ee cccI) (cexecTransform (snd var))))))) cOptExpr)
+' S => M (P S EXPR)
+cexecOpenExpression = cexecExpression cccI
+' S => M EXPR
+cexec = \str parseAcceptFullyConsumed (cexecOpenExpression (strCons str ")"))
+
+cstrFromPair = \fa \fb \p strCons (strCons (fa (fst p)) " ") (fb (snd p))
+cstrFromExpr = Y(\str \e IF(isEQ (fst e) 0) (snd e) (IF(isEQ (fst e) 1) "<internal>" (strCons (cstrFromPair str str (snd e)) ".")))
+cexecDump = \str strFromMaybe cstrFromExpr (cexec str)
+compile = \str maybeMap (cexec str) cstrFromExpr
+
+' basic evaluator
+evalNumber = parseWithWhitespace parseNumber
+evalProduct = Y(\evalProduct parseOption (parseBind Mul evalNumber (parseBindOverride (parseChar (strHead "*")) evalProduct)) evalNumber)
+evalSum = Y(\evalSum parseOption (parseBind Add evalProduct (parseBindOverride (parseChar (strHead "+")) evalSum)) evalProduct)
+eval = \s (strFromN (maybeTryGetValue (parseAcceptFullyConsumed (evalSum s)) 1337))    
+
+
+
+'million = (\s (maybeTryGetValue (parseAcceptFullyConsumed (evalSum s)) 1337)) "100 * 1000 + 20000 * 45"
+million = Mul 1000 1000
+millionS = (strFromN million)
+
+' tests
+testCount = 83
+
+' bool and basic combis
+test0 = TRUE
+test1 = I TRUE
+test2 = K TRUE FALSE
+test3 = S (K I) I TRUE
+
+test4 = NOT FALSE
+test5 = B NOT NOT TRUE
+test6 = OR TRUE FALSE
+test7 = NOT (OR FALSE FALSE)
+test8 = AND TRUE TRUE
+test9 = NOT (AND TRUE FALSE)
+test10 = IMPLIES FALSE FALSE
+test11 = IMPLIES FALSE TRUE
+test12 = IMPLIES TRUE TRUE
+test13 = NOT (IMPLIES TRUE FALSE)
+test14 = EQ FALSE FALSE
+test15 = EQ TRUE TRUE
+
+' N
+test16 = isZero 0
+test17 = NOT (isZero 1)
+test18 = isEQ 42 42
+test19 = NOT (isEQ 42 43)
+test20 = isEQ 1 (Succ 0)
+test21 = isEQ 43 (Add 23 20)
+test22 = isEQ 69 (Mul 3 23)
+test23 = isEQ 32 (Pow 2 5)
+test24 = isEQ 31 (Pred 32)
+test25 = isEQ 65 (Sub 101 36)
+test26 = isEQ 3 (Div 63 16)
+test27 = isEQ 3 (Mod 91 4)
+test28 = isLTE 3 3
+test29 = isLTE 3 4
+test30 = NOT (isLTE 3 2)
+test31 = isGTE 4 3
+test32 = isLT 3 4
+test33 = NOT (isLT 3 3)
+test34 = isGT 4 3
+
+' pair
+_test35f = makePair 45 23
+test35 = isEQ 45 (fst _test35f)
+test36 = isEQ 23 (snd _test35f)
+
+' list
+_test37f = "Aa"
+test37 = listIsNotEmpty _test37f
+test38 = NOT (listIsEmpty _test37f)
+test39 = isEQ 65 (listHead _test37f)
+test40 = isEQ 97 (B listHead listTail _test37f)
+_test41f = listAddFront listEmpty 66
+test41 = isEQ 66 (listHead _test41f)
+test42 = isEQ 2 (listCount _test37f)
+test43 = isEQ 97 (B listHead reverse _test37f)
+test44 = isEQ 3 (listCount (listCons _test37f _test41f))
+test45 = isEQ 1 (listCount (listReturn 32))
+test46 = isEQ 3 (listCount (listAddBack _test37f 49))
+test47 = strEquals _test37f "Aa"
+test48 = NOT (strEquals _test37f "AA")
+test49 = strEquals "asd" (listTake "asdqwe" 3)
+test50 = strEquals "asd" (listTakeWhile "asdqwe" (\p NOT (isEQ p (listHead "q"))))
+test51 = strEquals "bte" (listMap "asd" Succ)
+test52 = strEquals "ade" (listWhere "asdqwe" (\p isLTE p (listHead "e")))
+test53 = strEquals "qwe" (listSkip "asdqwe" 3)
+test54 = strEquals "qwe" (listSkipWhile "asdqwe" (\p NOT (isEQ p (listHead "q"))))
+test55 = listAny "qwe" (\c isEQ c (listHead "w"))
+test56 = NOT (listAny "asd" (\c isEQ c (listHead "w")))
+test57 = listAll "qwe" (\c isGT c 65)
+test58 = NOT (listAll "qwe" (\c isGT c 110))
+test59 = strEquals "bte" (listZip "asd" (repeat 1) Add)
+test60 = isEQ 65 (listElementAt "asdAqwe" 3)
+test61 = isEQ 1 (listHead Nats)
+test62 = isEQ 0 (listHead Nats0)
+test63 = isEQ 0 (listHead ByteVals)
+test64 = isEQ 256 (listCount ByteVals)
+test65 = isEQ 435 (Xor 123 456)
+test66 = isAlpha 65
+test67 = NOT (isAlpha 64)
+test68 = isNum (listHead "0")
+test69 = NOT (isNum (listHead "a"))
+test70 = isAlphaNum (listHead "a")
+test71 = isAlphaNum (listHead "0")
+test72 = NOT (isAlphaNum (listHead "!"))
+test73 = isWhiteSpace (listHead " ")
+test74 = NOT (isWhiteSpace (listHead "a"))
+test75 = isEQ 720 (fak 6)
+test76 = strEquals "23" (strFromN 23)
+test77 = strEquals "(12 ; 13)" (strFromPair strFromN strFromN (makePair 12 13))
+test78 = strEquals "(asd ; qwe)" (strFromPair I I (listCutAt "asdqwe" (\c isEQ c (listHead "q"))))
+test79 = strContains "asd" (listHead "s")
+test80 = NOT (strContains "asd" (listHead "w"))
+test81 = strEquals "asd" (strTrim "   asd   ")
+
+' maybe
+test82 = TRUE
+
+
+
+
+' testx
+tfac1 = \a snd (makePair a 1)
+tfac2 = K 1
+tval1 = tfac1 I
+tval2 = tfac2 I
+
+
+
+
+' : (token_Run "asd = 5 (\asd qwe asd) p")
+' : (syntax_Run "asd = 5 (\asd qwe asd) p")
+' : (native_Run "asd = 5 (\asd qwe asd) p")
+
+
+
