@@ -112,7 +112,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.richTextBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(25)))), ((int)(((byte)(25)))));
-            this.richTextBox2.Location = new System.Drawing.Point(12, 12);
+            this.richTextBox2.Location = new System.Drawing.Point(9, 12);
             this.richTextBox2.Name = "richTextBox2";
             this.richTextBox2.Size = new System.Drawing.Size(902, 541);
             this.richTextBox2.TabIndex = 10;

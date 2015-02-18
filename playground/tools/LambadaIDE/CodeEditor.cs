@@ -17,6 +17,7 @@ namespace LambadaIDE
             InitializeComponent();
         }
 
+        [Browsable(true)]
         public override string Text
         {
             get
@@ -53,6 +54,15 @@ namespace LambadaIDE
             //labelLineNumbers.Location = new Point(0, d);
 
             updateNumberLabel();
+        }
+
+        private void textBoxText_TextChanged(object sender, EventArgs e)
+        {
+            updateNumberLabel();
+        }
+
+        private void textBoxText_KeyPress(object sender, KeyPressEventArgs e)
+        {
         }
     }
 

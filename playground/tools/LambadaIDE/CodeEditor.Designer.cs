@@ -63,20 +63,23 @@
             this.textBoxText.Font = new System.Drawing.Font("Consolas", 12F);
             this.textBoxText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.textBoxText.Location = new System.Drawing.Point(52, 0);
+            this.textBoxText.MaxLength = 2147483647;
             this.textBoxText.Multiline = true;
             this.textBoxText.Name = "textBoxText";
             this.textBoxText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBoxText.Size = new System.Drawing.Size(524, 510);
             this.textBoxText.TabIndex = 3;
-            this.textBoxText.Text = "Hello World\r\nWhere is the pie?\r\nHello World\r\nWhere is the pie?\r\n";
+            this.textBoxText.Text = "\r\n";
             this.textBoxText.WordWrap = false;
             this.textBoxText.Scroll += new System.Action(this.textBoxText_Scroll);
+            this.textBoxText.TextChanged += new System.EventHandler(this.textBoxText_TextChanged);
+            this.textBoxText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxText_KeyPress);
             // 
             // CodeEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(25)))), ((int)(((byte)(25)))));
+            this.BackColor = System.Drawing.Color.Black;
             this.Controls.Add(this.textBoxText);
             this.Controls.Add(this.splitter);
             this.Controls.Add(this.labelLineNumbers);
