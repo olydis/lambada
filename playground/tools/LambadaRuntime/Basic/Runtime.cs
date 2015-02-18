@@ -25,6 +25,7 @@ namespace LambadaRuntime.Basic
         void envOverride()
         {
             Boost("_builtin_", new Abstraction("_builtin_", x => { Debug.WriteLine("RAN _builtin_!!!"); return x; }).AsNode());
+            Boost("_builtin__Type", new Abstraction("_builtin__Type", x => { Debug.WriteLine("RAN _builtin__Type!!!"); return x; }).AsNode());
 
             // EXTERN
             Boost(U.Instance);

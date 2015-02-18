@@ -1,18 +1,16 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' lambAda stage1 (the extra "A" is for extra awesomeness) '
 '                                                         '
-' Last changed: 15.04.2014         Author: Johannes Bader '
+' Last changed: 18.02.2015         Author: Johannes Bader '
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 ' EXTERN
-_builtin_ = _builtin_
-u = _builtin_
-write = _builtin_        ' S => IO ()
-writeLine = _builtin_    ' S => IO ()
-readLine = _builtin_     ' IO S
-ioBind = _builtin_       ' IO a => (a => IO b) => IO b
-ioReturn = _builtin_     ' x => IO x
-msgBox = _builtin_       ' x => x
+write = _builtin_     ' S => IO ()
+writeLine = _builtin_ ' S => IO ()
+readLine = _builtin_  ' IO S
+ioBind = _builtin_    ' IO a => (a => IO b) => IO b
+ioReturn = _builtin_  ' x => IO x
+msgBox = _builtin_    ' x => x
 
 ''' basic runtime
 ' define SKI in terms of U to enable abstraction killing 
@@ -1170,7 +1168,7 @@ _nlMB = NativeLiteral "maybeBind"
 _nlTA = NativeLiteral "typeApply"
 nativeToTypeNative = \native native
             (\literal NativeLiteral (strCons literal "_Type"))
-            (\value NativeLiteral "Zero_Type")
+            (\value NativeLiteral "k_Type")
             (\value NativeLiteral "ListEmpty_Type")
             (\o1 \o2 
                 NativeApplication

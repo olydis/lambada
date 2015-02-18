@@ -99,7 +99,7 @@ namespace LambadaIDE
                 Console.WriteLine(line);
                 System.Windows.Forms.Application.DoEvents();
                 result.Append(rt.CompileDown(line));
-                //resultType.Append(rt.CompileDownType(line));
+                resultType.Append(rt.CompileDownType(line));
             }
 
 
