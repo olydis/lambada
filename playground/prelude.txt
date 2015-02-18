@@ -1,17 +1,18 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' lambAda stage1 (the extra "A" is for extra awesomeness) '
 '                                                         '
-' Last changed: 24.11.2013         Author: Johannes Bader '
+' Last changed: 15.04.2014         Author: Johannes Bader '
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 ' EXTERN
-'u = u
-'write = write           ' S => IO ()
-'writeLine = writeLine   ' S => IO ()
-'readLine = readLine     ' IO S
-'ioBind = ioBind         ' IO a => (a => IO b) => IO b
-'ioReturn = ioReturn     ' x => IO x
-'msgBox = msgBox         ' x => x
+_builtin_ = _builtin_
+u = _builtin_
+write = _builtin_        ' S => IO ()
+writeLine = _builtin_    ' S => IO ()
+readLine = _builtin_     ' IO S
+ioBind = _builtin_       ' IO a => (a => IO b) => IO b
+ioReturn = _builtin_     ' x => IO x
+msgBox = _builtin_       ' x => x
 
 ''' basic runtime
 ' define SKI in terms of U to enable abstraction killing 
@@ -99,15 +100,15 @@ listHead = \list list i (\head \tail head)
 listTail = \list list i (\head \tail tail)
 
 foldl = \l \x \f l
-			x
-			(\head \tail foldl tail (f x head) f)
+            x
+            (\head \tail foldl tail (f x head) f)
 foldr = \l \x \f l
-			x
-			(\head \tail f (foldr tail x f) head)
+            x
+            (\head \tail f (foldr tail x f) head)
 
 reverseBag = \a \b a
-			b
-			(\head \tail reverseBag tail (ListCons head b))
+            b
+            (\head \tail reverseBag tail (ListCons head b))
 reverse = \l reverseBag l ListEmpty
 unfold = \x \f ListCons x (unfold (f x) f)
 repeat = \elem unfold elem i
@@ -120,41 +121,41 @@ listAddBack = \l \x listConcat l (listReturn x)
 cfold = \l \x \f ListCons x (l ListEmpty (\head \tail cfold tail (f x head) f))
 
 listTake = \l \n 
-	l
-		ListEmpty
-		(\head \tail n 
-			ListEmpty
-			(\dn ListCons head (listTake tail dn))
-		)
+    l
+        ListEmpty
+        (\head \tail n 
+            ListEmpty
+            (\dn ListCons head (listTake tail dn))
+        )
 
 listTakeWhile = \l \p 
-	l
-		ListEmpty
-		(\head \tail
-			if(not (p head))
-				ListEmpty
-				(ListCons head (listTakeWhile tail p))
-		)
+    l
+        ListEmpty
+        (\head \tail
+            if(not (p head))
+                ListEmpty
+                (ListCons head (listTakeWhile tail p))
+        )
 
 
 listBind = \l \f foldl l ListEmpty (\a \b listConcat a (f b))
 listMap = \l \f listBind l (b listReturn f)
 listWhere = \l \f foldr l ListEmpty (\a \b if(f b) (ListCons b a) a)
 listSkip = \l \n 
-	l
-		ListEmpty
-		(\head \tail n 
-			l
-			(\dn listSkip tail dn)
-		)
+    l
+        ListEmpty
+        (\head \tail n 
+            l
+            (\dn listSkip tail dn)
+        )
 listSkipWhile = \l \p
-	l
-		ListEmpty
-		(\head \tail 
-			if(not (p head))
-				l
-				(listSkipWhile tail p)
-		)
+    l
+        ListEmpty
+        (\head \tail 
+            if(not (p head))
+                l
+                (listSkipWhile tail p)
+        )
 listAny = \l \f not (listIsEmpty (listWhere l f))
 listAll = \l \f not (listAny l (b not f))
 ors = \conds listAny conds i
@@ -163,43 +164,43 @@ ands = \conds listAll conds i
 listCount = \l foldl l Zero (b k Succ)
 
 listZip = \l1 \l2 \op 
-	l1
-		ListEmpty
-		(\h1 \t1
-			l2
-				ListEmpty
-				(\h2 \t2
-					ListCons 
-						(op h1 h2)
-						(listZip t1 t2 op) 
-				)
-		)
+    l1
+        ListEmpty
+        (\h1 \t1
+            l2
+                ListEmpty
+                (\h2 \t2
+                    ListCons 
+                        (op h1 h2)
+                        (listZip t1 t2 op) 
+                )
+        )
 listZipLonger = \l1 \l2 \pad \op 
-	l1
-		(listMap l2 (\item2 op pad item2))
-		(\h1 \t1
-			l2
-				(listMap l1 (\item1 op item1 pad))
-				(\h2 \t2
-					ListCons 
-						(op h1 h2)
-						(listZipLonger t1 t2 pad op) 
-				)
-		)
+    l1
+        (listMap l2 (\item2 op pad item2))
+        (\h1 \t1
+            l2
+                (listMap l1 (\item1 op item1 pad))
+                (\h2 \t2
+                    ListCons 
+                        (op h1 h2)
+                        (listZipLonger t1 t2 pad op) 
+                )
+        )
 listEquals = \eq \l1 \l2 and (isEQ (listCount l1) (listCount l2)) (listAll (listZip l1 l2 eq) i)
 strEquals = listEquals isEQ
 listMerge = \lt \l1 \l2
-	l1
-		l2
-		(\h1 \t1
-			l2
-				l1
-				(\h2 \t2
-					if (l1 h1 h2)
-						(ListCons h1 (listMerge lt t1 l2))
-						(ListCons h2 (listMerge lt l1 h2))
-				)
-		)
+    l1
+        l2
+        (\h1 \t1
+            l2
+                l1
+                (\h2 \t2
+                    if (l1 h1 h2)
+                        (ListCons h1 (listMerge lt t1 l2))
+                        (ListCons h2 (listMerge lt l1 h2))
+                )
+        )
 
 listSort = y(\sort \lt \l if(isGT (listCount l) 1) ((\mid listMerge lt (sort lt (listTake l mid))  (sort lt (listSkip l mid))) (div (listCount l) 2)) l)
 
@@ -209,25 +210,25 @@ listElementAt = \l \n listHead (listSkip l n)
 
 listStartsWith = \eq \l1 \l2 listEquals eq (listTake l1 (listCount l2)) l2
 
-strIsEmpty = listIsEmpty
-strIsNotEmpty = b not strIsEmpty
-strHead = listHead
-strTail = listTail
-strEmpty = ListEmpty
-straddFront = listAddFront
-straddBack = listAddBack
-strCons = listConcat
-strSkip = listSkip
-strTake = listTake
-strReturn = listReturn
-strWhere = listWhere
-strLength = listCount
-strStartsWith = listStartsWith isEQ
+strIsEmpty = i listIsEmpty
+strIsNotEmpty = i b not strIsEmpty
+strHead = i listHead
+strTail = i listTail
+strEmpty = i ListEmpty
+straddFront = i listAddFront
+straddBack = i listAddBack
+strCons = i listConcat
+strSkip = i listSkip
+strTake = i listTake
+strReturn = i listReturn
+strWhere = i listWhere
+strLength = i listCount
+strStartsWith = i listStartsWith isEQ
 
 listJoin = \lists \sepa lists
-	ListEmpty 
-	(\head \tail foldl tail head (\cur \new listConcat (listConcat cur sepa) new))
-strJoin = \strs \sepa if(strIsEmpty strs) strEmpty (foldl (listTail strs) (listHead strs) (\cur \new strCons (strCons cur sepa) new))
+    ListEmpty 
+    (\head \tail foldl tail head (\cur \new listConcat (listConcat cur sepa) new))
+strJoin = \strs \sepa if(listIsEmpty strs) strEmpty (foldl (listTail strs) (listHead strs) (\cur \new strCons (strCons cur sepa) new))
 strConss = \strs strJoin strs "" 
 
 
@@ -378,12 +379,12 @@ parseAcceptFullyConsumed = parseAccept listIsEmpty
 parseWhilesuccessful = 
     \parser \s 
         (parser s)
-			(ParseResult s ListEmpty)
-			(\remaining \item 
-				(parseWhilesuccessful parser remaining)
-				ParseResultFail ' unreachable :)
-				(\rremaining \ritems ParseResult rremaining (ListCons item ritems))
-			) 
+            (ParseResult s ListEmpty)
+            (\remaining \item 
+                (parseWhilesuccessful parser remaining)
+                ParseResultFail ' unreachable :)
+                (\rremaining \ritems ParseResult rremaining (ListCons item ritems))
+            ) 
 
 ' map
 mapCreate = \eq Pair eq ListEmpty
@@ -454,16 +455,248 @@ switchCond = \cond \listpairxres \alt _switchCond listpairxres alt cond
 switch = \obj \listpairxres \cond \alt switchCond (cond obj) listpairxres alt
 switchN = \obj \listpairnumres \alt switch obj listpairnumres isEQ alt
 
-'------------------'
-' COMPILER SECTION '
-'------------------'
-
 '' vararg consumer
 getFirstConsumeMoreDeferred = \mf \v v 
                  (\a 
                     y(\self \n if(isZero n) a (k (self (pred n)))) (mf a)
                  )
 getFirstConsumeMore = \m getFirstConsumeMoreDeferred (k m)
+
+
+
+'------------------'
+' COMPILER SECTION '
+'------------------'
+
+
+
+_listIndexOfPred = \l \f \offset l Nothing (\head \tail if(f head) (Just offset) (_listIndexOfPred tail f (Succ offset)))
+listIndexOfPred = \l \f _listIndexOfPred l f 0
+listIndexOf = \l \eq \x listIndexOfPred l (eq x)
+
+
+'''''' TYPING
+
+' TYPES
+Type = TypeVariable uid     ' N
+     | TypeAbstraction a b  ' Type Type
+     | TypeIntersection a b ' Type Type
+
+'(((d -> (c -> b)) -> ((g -> c) -> (d^g -> b))) -> ((e -> (f -> e)) -> a)) -> a
+typeUa = TypeVariable 0
+typeUb = TypeVariable 1
+typeUc = TypeVariable 2
+typeUd = TypeVariable 3
+typeUe = TypeVariable 4
+typeUf = TypeVariable 5
+typeUg = TypeVariable 6
+typeU = TypeAbstraction 
+            (TypeAbstraction
+                (TypeAbstraction
+                    (TypeAbstraction typeUd (TypeAbstraction typeUc typeUb))
+                    (TypeAbstraction (TypeAbstraction typeUg typeUc) (TypeAbstraction (TypeIntersection typeUd typeUg) typeUb))
+                )
+                (TypeAbstraction
+                    (TypeAbstraction typeUe (TypeAbstraction typeUf typeUe))
+                    typeUa
+                )
+            )
+            typeUa
+
+u_Type = Just typeU
+
+typeKx = TypeAbstraction typeUe (TypeAbstraction typeUf typeUe)
+typeIx = TypeAbstraction typeUe typeUe
+typeSx = (TypeAbstraction
+            (TypeAbstraction typeUd (TypeAbstraction typeUc typeUb))
+            (TypeAbstraction (TypeAbstraction typeUg typeUc) (TypeAbstraction (TypeIntersection typeUd typeUg) typeUb))
+        )
+
+printType = \type type
+                (\uid strFromN uid)
+                (\a \b strConss ["(", printType a, " -> ", printType b, ")"])
+                (\a \b strConss ["(", printType a, " ^ ", printType b, ")"])
+printRestrictionList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [printType a, " = ", printType b]))) ", "
+printUnificationList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [strFromN a, " => ", printType b]))) ", "
+printUnificationResult = \mtypePairList strFromMaybe printUnificationList mtypePairList
+
+_typeEnumVariables = \type type
+                        (\uid listReturn uid)
+                        (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
+                        (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
+typeEnumVariables = \type listDistinct (_typeEnumVariables type) isEQ
+
+typeCountUsage = \type \uid type
+                        (\uidx if(isEQ uid uidx) 1 0)
+                        (\a \b add (typeCountUsage a uid) (typeCountUsage b uid))
+                        (\a \b add (typeCountUsage a uid) (typeCountUsage b uid))
+
+' strips singletons
+_removeSingletons = \type \removeUidPred type
+                        (\uid type)
+                        (\a \b TypeAbstraction (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
+                        (\a \b if (listAll (typeEnumVariables a) removeUidPred) b
+                              (if (listAll (typeEnumVariables b) removeUidPred) a 
+                              (TypeIntersection (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
+                              )
+                        )
+' renumbers vars
+_typeNormalize = \type \vars type
+                        (\uid TypeVariable (maybeTryGetValue (listIndexOf vars isEQ uid) 1337))
+                        (\a \b TypeAbstraction (_typeNormalize a vars) (_typeNormalize b vars))
+                        (\a \b TypeIntersection (_typeNormalize a vars) (_typeNormalize b vars))
+typeNormalize = \type (\type _typeNormalize type (typeEnumVariables type))
+                      (
+                        (\singletons _removeSingletons 
+                            type 
+                            (\uidx listAny 
+                                singletons
+                                (isEQ uidx)
+                            )
+                        ) (listWhere (typeEnumVariables type) (\uid isEQ 1 (typeCountUsage type uid)))
+                      )
+
+
+
+' offsets all variable uids by a constant (e.g. to prevent collisions) 
+_typeShift = \type \offset type
+                        (\uid TypeVariable (add offset uid))
+                        (\a \b TypeAbstraction (_typeShift a offset) (_typeShift b offset))
+                        (\a \b TypeIntersection (_typeShift a offset) (_typeShift b offset))
+
+typeNextSafeVariable = \type foldl (typeEnumVariables (_typeShift type 1)) 0 max
+typeContainsVariableUid = \uid \type listAny (typeEnumVariables type) (isEQ uid)
+
+typeReplaceUidWithType = \uid \type \containerType containerType
+                        (\uidx if(isEQ uid uidx) type containerType)
+                        (\a \b TypeAbstraction (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
+                        (\a \b TypeIntersection (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
+
+typeListReplaceUidWithType = \uid \type \tlist listMap tlist (\pair pair (\a \b Pair (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b)))
+
+
+
+_getSelfAppCenterHelper = \var \abs 
+        TypeVariable_Dispatch
+            (\uid TypeAbstraction_Dispatch
+                (\a \b TypeVariable_Dispatch (\uidx if (isEQ uid uidx) (Just b) Nothing) Nothing a)
+                Nothing
+                abs
+            )
+            Nothing
+            var
+
+' Type -> Maybe Type
+' (t -> <center>) ^ t
+_getSelfAppCenter = \t 
+        TypeIntersection_Dispatch
+            (\ax \bx TypeVariable_Dispatch (k (_getSelfAppCenterHelper ax bx)) (_getSelfAppCenterHelper bx ax) ax)
+            Nothing
+            t
+
+' Type -> Type -> Maybe [Pair Type Type]
+' (t -> a) ^ t = (u -> b) ^ u -> c
+_isFixPointComboHelper = \t1 \t2
+        TypeAbstraction_Dispatch
+            (\a \b
+                (\m1 \m2 \a3
+                    maybeBind m1
+                    (\a1 
+                        maybeMap m2
+                        (\a2 [Pair a1 a2, Pair a1 a3])
+                    )
+                )
+                (_getSelfAppCenter t1)
+                (_getSelfAppCenter a)
+                b
+            )
+            Nothing
+            t2
+
+fpTest1 = TypeIntersection (TypeVariable 0) (TypeAbstraction (TypeVariable 0) (TypeVariable 1))
+fpTest2 = TypeAbstraction (_typeShift fpTest1 2) (TypeVariable 4)
+fpTest3 = [Pair fpTest1 fpTest2]
+
+' unify -> N -> iaType -> ibType -> otherType -> [Pair Type Type] -> Maybe Type
+_intersectionSplit = \unify \nextSafeUid \ia \ib \other \c2
+    maybeTryGetValue
+    ( ' fix point       
+        maybeMap
+            (_isFixPointComboHelper (TypeIntersection ia ib) other)
+            (\list unify nextSafeUid (listConcat c2 list))
+    )
+    ( ' el classico
+        (\otherA \otherB
+            maybeMap 
+                (unify (mul 3 nextSafeUid) (listConcat c2 [Pair ia otherA, Pair ib otherB])) 
+                i'(listConcat (listMap (typeEnumVariables other) (\uid Pair uid (TypeIntersection (TypeVariable (add uid nextSafeUid)) (TypeVariable (add uid (mul 2 nextSafeUid)))))))
+        ) (_typeShift other nextSafeUid) (_typeShift other (mul 2 nextSafeUid))
+    )
+
+' N -> Type -> N -> [Pair Type Type] -> Maybe Type
+_typeUnify = \breakN \interesting \nextSafeUid \c breakN 
+            Nothing
+            (\pred c
+                (Just interesting)
+                (\head \c2 head
+                    (\l \r l
+                        (\uid 
+                            (\rContainsL \innerResult 
+                                if(rContainsL) 
+                                (TypeVariable_Dispatch (\uidx _typeUnify pred interesting nextSafeUid c2) Nothing r)
+                                innerResult
+                            ) (typeContainsVariableUid uid r) (_typeUnify pred (typeReplaceUidWithType uid r interesting) nextSafeUid (typeListReplaceUidWithType uid r c2))
+                        )
+                        (\a \b r
+                            (\uidx if(typeContainsVariableUid uidx l) Nothing (_typeUnify pred (typeReplaceUidWithType uidx l interesting) nextSafeUid (typeListReplaceUidWithType uidx l c2)))
+                            (\ax \bx _typeUnify pred interesting nextSafeUid (listConcat c2 [Pair a ax, Pair b bx]))
+                            (\ax \bx _intersectionSplit (_typeUnify pred interesting) nextSafeUid ax bx l c2)
+                        )
+                        (\a \b r
+                            (\uidx if(typeContainsVariableUid uidx l) Nothing (_typeUnify pred (typeReplaceUidWithType uidx l interesting) nextSafeUid (typeListReplaceUidWithType uidx l c2)))
+                            (\ax \bx _intersectionSplit (_typeUnify pred interesting) nextSafeUid a b r c2)
+                            (\ax \bx _typeUnify pred interesting nextSafeUid (listConcat c2 [Pair a ax, Pair b bx]))
+                        )
+                    )
+                )
+            )
+
+' Type -> [Pair Type Type] -> Maybe Type
+typeUnify = \interesting \c _typeUnify 40 interesting (foldl (listMap c (\pair pair (\a \b max (typeNextSafeVariable a) (typeNextSafeVariable b)))) 0 max) c
+
+' Type -> Type -> Maybe Type
+typeApply = \a \b maybeMap ((\oa \ob typeUnify (TypeVariable (add oa ob)) [Pair a (TypeAbstraction (_typeShift b oa) (TypeVariable (add oa ob)))]) (typeNextSafeVariable a) (typeNextSafeVariable b)) typeNormalize
+
+
+typeErr = TypeVariable 42
+typeI = maybeTryGetValue (typeApply typeU typeU) typeErr 
+typeUI = maybeTryGetValue (typeApply typeU typeI) typeErr 
+typeK = maybeTryGetValue (typeApply typeU typeUI) typeErr 
+typeKI = maybeTryGetValue (typeApply typeK typeI) typeErr 
+typeS = maybeTryGetValue (typeApply typeU typeK) typeErr 
+typeSI = maybeTryGetValue (typeApply typeS typeI) typeErr 
+typeM = maybeTryGetValue (typeApply typeSI typeI) typeErr
+typeKS = maybeTryGetValue (typeApply typeK typeS) typeErr
+typeSKS = maybeTryGetValue (typeApply typeS typeKS) typeErr
+typeB = maybeTryGetValue (typeApply typeSKS typeK) typeErr
+typeSB = maybeTryGetValue (typeApply typeS typeB) typeErr
+typeT = maybeTryGetValue (typeApply typeSB typeI) typeErr
+typeTM = maybeTryGetValue (typeApply typeT typeM) typeErr
+
+typeI1 = maybeTryGetValue (typeApply typeM typeI) typeErr
+typeI2 = maybeTryGetValue (typeApply typeTM typeI) typeErr
+typeI3 = maybeTryGetValue (typeApply typeB typeI) typeErr
+typeI4 = maybeTryGetValue (typeApply typeM typeU) typeErr
+typeI5 = maybeTryGetValue (typeApply typeM typeKI) typeErr
+
+typeCB = TypeAbstraction (TypeAbstraction typeUa typeUb)
+                         (TypeAbstraction (TypeAbstraction typeUb typeUc) (TypeAbstraction typeUa typeUc))
+typeCBM = maybeTryGetValue (typeApply typeCB typeM) typeErr
+typeBM = maybeTryGetValue (typeApply typeB typeM) typeErr
+typeY = maybeTryGetValue (typeApply typeBM typeCBM) typeErr
+
+typeMM = maybeTryGetValue (typeApply typeM typeM) typeErr
+
 
 '' CONSTANTS
 _eCharBrOpen = strHead "("
@@ -485,13 +718,13 @@ _eIsNewLine = \x or (isEQ x 10) (isEQ x 13)
 ' special chars
 
 Schar = ScharParenOpen
-	  | ScharParenClose
-	  | ScharAbstraction
-	  | ScharAssign
-	  | ScharSqBracketOpen
-	  | ScharSqBracketClose
-	  | ScharComma
-	  | ScharSingleOr
+      | ScharParenClose
+      | ScharAbstraction
+      | ScharAssign
+      | ScharSqBracketOpen
+      | ScharSqBracketClose
+      | ScharComma
+      | ScharSingleOr
 
 scharEQ = \a \b isEQ (Schar_ID a) (Schar_ID b)
 
@@ -506,12 +739,12 @@ schar_String = \x x
         "<SINGLE_OR>"
 
 ' tokens
-Token = TokenSpecialChar schar		' schar
-	  | TokenLiteralLower literal	' S
-	  | TokenLiteralUpper literal	' S
-	  | TokenConstS value			' S
-	  | TokenConstN value			' N
-	  | TokenComment value			' S
+Token = TokenSpecialChar schar      ' schar
+      | TokenLiteralLower literal   ' S
+      | TokenLiteralUpper literal   ' S
+      | TokenConstS value           ' S
+      | TokenConstN value           ' N
+      | TokenComment value          ' S
 
 tokenLiteral = \literal if(isLowerCaseLetter (strHead literal)) (TokenLiteralLower literal) (TokenLiteralUpper literal) 
 
@@ -525,18 +758,18 @@ token_String = \x x
 token_String_list = \xs strJoin (listMap xs token_String) " "
 
 ' :: Parser Token
-eatParenOpen = parseBindOperation (parseChar _eCharBrOpen) (k (TokenSpecialChar ScharParenOpen))
-eatParenClose = parseBindOperation (parseChar _eCharBrClose) (k (TokenSpecialChar ScharParenClose))
-eatSqBracketOpen = parseBindOperation (parseChar _eCharSqBrOpen) (k (TokenSpecialChar ScharSqBracketOpen))
-eatSqBracketClose = parseBindOperation (parseChar _eCharSqBrClose) (k (TokenSpecialChar ScharSqBracketClose))
-eatComma = parseBindOperation (parseChar _eCharComma) (k (TokenSpecialChar ScharComma))
-eatAbstraction = parseBindOperation (parseChar _eCharAbstr) (k (TokenSpecialChar ScharAbstraction))
-eatAssign = parseBindOperation (parseChar _eCharAssign) (k (TokenSpecialChar ScharAssign))
-eatSingleOr = parseBindOperation (parseChar _eCharOr) (k (TokenSpecialChar ScharSingleOr))
+eatParenOpen        = parseBindOperation (parseChar _eCharBrOpen)    (k (TokenSpecialChar ScharParenOpen))
+eatParenClose       = parseBindOperation (parseChar _eCharBrClose)   (k (TokenSpecialChar ScharParenClose))
+eatSqBracketOpen    = parseBindOperation (parseChar _eCharSqBrOpen)  (k (TokenSpecialChar ScharSqBracketOpen))
+eatSqBracketClose   = parseBindOperation (parseChar _eCharSqBrClose) (k (TokenSpecialChar ScharSqBracketClose))
+eatComma            = parseBindOperation (parseChar _eCharComma)     (k (TokenSpecialChar ScharComma))
+eatAbstraction      = parseBindOperation (parseChar _eCharAbstr)     (k (TokenSpecialChar ScharAbstraction))
+eatAssign           = parseBindOperation (parseChar _eCharAssign)    (k (TokenSpecialChar ScharAssign))
+eatSingleOr         = parseBindOperation (parseChar _eCharOr)        (k (TokenSpecialChar ScharSingleOr))
 
 eatLiteral = parseBindOperation parseToken (\x tokenLiteral x)
-eatConstS = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\x TokenConstS x)
-eatConstN = parseBindOperation parsenumber (\x TokenConstN x)
+eatConstS  = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\x TokenConstS x)
+eatConstN  = parseBindOperation parsenumber (\x TokenConstN x)
 eatComment = parseBindOperation (parseBindOverride (parseChar _eCharComment) (parseUntil _eIsNewLine)) (\x TokenComment x)
 
 eatSpecialChar = parseOptions
@@ -575,13 +808,13 @@ token_Run = \s (strFromMaybe i (maybeMap (token_Process s) token_String_list))
 '' SYNTAXER
 
 SyntaxExpression = SyntaxName literal                             ' S
-				 | SyntaxConstN value                             ' N
-				 | SyntaxConstS value                             ' S
-				 | SyntaxList list                                ' [SYNTAX]
-				 | SyntaxAbstraction literal body                 ' S SYNTAX
-				 | SyntaxApplication o1 o2                        ' SYNTAX SYNTAX
-				 | SyntaxAssignment literal o                     ' S SYNTAX
-				 | SyntaxType literalType listPairInstanceArgs    ' S [(S, [S])]
+                 | SyntaxConstN value                             ' N
+                 | SyntaxConstS value                             ' S
+                 | SyntaxList list                                ' [SYNTAX]
+                 | SyntaxAbstraction literal body                 ' S SYNTAX
+                 | SyntaxApplication o1 o2                        ' SYNTAX SYNTAX
+                 | SyntaxAssignment literal o                     ' S SYNTAX
+                 | SyntaxType literalType listPairInstanceArgs    ' S [(S, [S])]
 
 syntaxCreateApplication = \syntaxes foldl (listTail syntaxes) (listHead syntaxes) SyntaxApplication
 syntaxCreateAbstraction = \literals \body foldr literals body (\x \lit SyntaxAbstraction lit x)
@@ -607,21 +840,21 @@ cstrParseAbstractionTail = \e
     parsePipe
         parseSingle
         (TokenLiteralLower_Dispatch 
-			(\literal parseBindOperation 
+            (\literal parseBindOperation 
                 e
                 (\rese listReturn (SyntaxAbstraction literal rese))
             ) 
-			parseFail)
+            parseFail)
 
 cstrParseSChar = \specialChar 
     parsePipe
         parseSingle
-		(TokenSpecialChar_Dispatch  
+        (TokenSpecialChar_Dispatch  
             (\schar if(scharEQ specialChar schar)
                 (parseReturn i)
                 parseFail
             )
-			parseFail)
+            parseFail)
 
 cstrParseLiteralL = parsePipe
         parseSingle
@@ -640,10 +873,14 @@ cstrParseSingleOr = cstrParseSChar ScharSingleOr
 cstrParseListTail = \e parseBindDiscard 
                     (parseBindOperation 
                         (
-                            parseBind
-                                ListCons
-                                e
-                                (parseWhilesuccessful (parseBindOverride cstrParseComma e))
+                            parseOption
+                            (
+                                parseBind
+                                    ListCons
+                                    e
+                                    (parseWhilesuccessful (parseBindOverride cstrParseComma e))
+                            )
+                            (parseReturn ListEmpty)
                         )
                         (\list listReturn (SyntaxList list))
                     )
@@ -721,11 +958,11 @@ syntax_Process = b parseAcceptFullyConsumed cstrSyntaxEverything
 syntax_Run = \s (strFromMaybe i (maybeMap (maybeBind (token_Process s) syntax_Process) syntax_String_list))
 
 
-NativeDefinition = NativeAssignment literal o	' S Native
-NativeExpression = NativeLiteral literal		' S
-				 | NativeConstN value			' N
-				 | NativeConstS value			' S
-				 | NativeApplication o1 o2		' Native Native
+NativeDefinition = NativeAssignment literal o   ' S Native
+NativeExpression = NativeLiteral literal        ' S
+                 | NativeConstN value           ' N
+                 | NativeConstS value           ' S
+                 | NativeApplication o1 o2      ' Native Native
         
 getCollisionFreeLiteral = \literal strCons ":arg:" literal
 
@@ -756,7 +993,7 @@ nativeListCons = NativeLiteral "ListCons"
 isNativeLiteral = \lit \nat NativeLiteral_Dispatch 
         (\literal strEquals lit literal)
         False
-		nat
+        nat
 
 ' NativeExpression => S => B
 nativeContainsLit = y(\this \n \lit
@@ -781,18 +1018,18 @@ finalizeNativeExpr =
             (\value n)
             (\value n)
             (\o1 \o2 (\a1 \a2
-				(\defres 
-					if(isNativeLiteral "y" a1)
-					(
-						NativeApplication_Dispatch
-						(\i1 \i2 if(isNativeLiteral "k" i1) i2 defres)
-						defres
-						a2
-					)
-					defres
-				)
-				(NativeApplication a1 a2)
-			) (this o1) (this o2))
+                (\defres 
+                    if(isNativeLiteral "y" a1)
+                    (
+                        NativeApplication_Dispatch
+                        (\i1 \i2 if(isNativeLiteral "k" i1) i2 defres)
+                        defres
+                        a2
+                    )
+                    defres
+                )
+                (NativeApplication a1 a2)
+            ) (this o1) (this o2))
     )
 finalizeNativeDefs = \n n (\literal \o NativeAssignment literal (finalizeNativeExpr o))
 
@@ -828,7 +1065,7 @@ _syntaxToNative = y(\this \syntax
                     nativeI
                     (NativeApplication nativeK nbody)
                 )
-				nbody
+                nbody
             )) 
             literal 
             (this body)
@@ -837,71 +1074,71 @@ _syntaxToNative = y(\this \syntax
         (\literal \o NativeAssignment "fail" (NativeConstS "fail"))
         (\typeLiteral NativeAssignment "fail" (NativeConstS "fail"))  
     )
-	
+    
 _createUniqueNameFromN = \n strCons ":bound:" (strFromN n)
 _createUniqueNameFromS = \s strCons ":bound:" s
 
 _syntaxEmitTypeInstance = \items \ctrArgList \index \args \name
-	[
-		NativeAssignment 
-			name
-			(
-				_syntaxToNative
-				(syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (listMap (listAddFront args (_createUniqueNameFromN index)) SyntaxName)))
-			),
-		NativeAssignment
-			(strCons name "_Dispatch")
-			(
-				_syntaxToNative
-				(
-					(\argDisp \argAlt \argItem syntaxCreateAbstraction [argDisp, argAlt, argItem] 
-						(syntaxCreateApplication 
-							(ListCons 
-								(SyntaxName argItem)
-								(listMap items (\item 
-									if(isEQ index (snd item)) 
-										(SyntaxName argDisp)
-										(syntaxCreateAbstraction (snd (fst item)) (SyntaxName argAlt))
-								))
-							)
-						)
-					)
-					(_createUniqueNameFromS "disp")
-					(_createUniqueNameFromS "alt")
-					(_createUniqueNameFromS "item")
-				)
-			)
-	]
+    [
+        NativeAssignment 
+            name
+            (
+                _syntaxToNative
+                (syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (listMap (listAddFront args (_createUniqueNameFromN index)) SyntaxName)))
+            ),
+        NativeAssignment
+            (strCons name "_Dispatch")
+            (
+                _syntaxToNative
+                (
+                    (\argDisp \argAlt \argItem syntaxCreateAbstraction [argDisp, argAlt, argItem] 
+                        (syntaxCreateApplication 
+                            (ListCons 
+                                (SyntaxName argItem)
+                                (listMap items (\item 
+                                    if(isEQ index (snd item)) 
+                                        (SyntaxName argDisp)
+                                        (syntaxCreateAbstraction (snd (fst item)) (SyntaxName argAlt))
+                                ))
+                            )
+                        )
+                    )
+                    (_createUniqueNameFromS "disp")
+                    (_createUniqueNameFromS "alt")
+                    (_createUniqueNameFromS "item")
+                )
+            )
+    ]
 _syntaxEmitTypeStuff = \typeName \items \ctrArgList
-	listConcat
-	(
-		listBind items
+    listConcat
+    (
+        listBind items
         (\item 
             (\pair \index _syntaxEmitTypeInstance items ctrArgList index (snd pair) (fst pair))
             (fst item)
             (snd item)
         )
-	)
-	[
-		NativeAssignment
-			(strCons typeName "_ID")
-			(
-				_syntaxToNative
-				(
-					(\argItem SyntaxAbstraction argItem
-						(syntaxCreateApplication 
-							(ListCons 
-								(SyntaxName argItem)
-								(listMap items (\item 
-									syntaxCreateAbstraction (snd (fst item)) (SyntaxConstN (snd item))
-								))
-							)
-						)
-					)
-					(_createUniqueNameFromS "item")
-				)
-			)
-	]
+    )
+    [
+        NativeAssignment
+            (strCons typeName "_ID")
+            (
+                _syntaxToNative
+                (
+                    (\argItem SyntaxAbstraction argItem
+                        (syntaxCreateApplication 
+                            (ListCons 
+                                (SyntaxName argItem)
+                                (listMap items (\item 
+                                    syntaxCreateAbstraction (snd (fst item)) (SyntaxConstN (snd item))
+                                ))
+                            )
+                        )
+                    )
+                    (_createUniqueNameFromS "item")
+                )
+            )
+    ]
 
 ' SYNTAX => [NATIVE defs]
 _syntaxToNativeDefs = \syntax
@@ -914,18 +1151,47 @@ _syntaxToNativeDefs = \syntax
         (\o1 \o2 ListEmpty)
         '(\literal \o listReturn (NativeAssignment literal (_syntaxToNative o)))   
         (\literal \o listReturn (NativeAssignment literal 
-			(NativeApplication nativeY 
-				(_syntaxToNative (SyntaxAbstraction literal o))
-			)))   
+            (NativeApplication nativeY 
+                (_syntaxToNative (SyntaxAbstraction literal o))
+            )))   
         (\typeLiteral \pairs 
             (\optionCount \items
                 (\ctrArgList _syntaxEmitTypeStuff typeLiteral items ctrArgList)
                 (listMap (listTake nats0 optionCount) _createUniqueNameFromN)
             )
             (listCount pairs)
-			(listZip pairs nats0 Pair)
+            (listZip pairs nats0 Pair)
         )
 syntaxToNative = \s listMap (_syntaxToNativeDefs s) finalizeNativeDefs
+
+' NATIVE => NATIVE
+_nlB = NativeLiteral "b"
+_nlMB = NativeLiteral "maybeBind"
+_nlTA = NativeLiteral "typeApply"
+nativeToTypeNative = \native native
+            (\literal NativeLiteral (strCons literal "_Type"))
+            (\value NativeLiteral "Zero_Type")
+            (\value NativeLiteral "ListEmpty_Type")
+            (\o1 \o2 
+                NativeApplication
+                    (NativeApplication _nlMB (nativeToTypeNative o1))
+                    (NativeApplication 
+                        (NativeApplication 
+                            _nlB
+                            (NativeApplication _nlMB (nativeToTypeNative o2))) 
+                        _nlTA)
+            )
+nativeDefToTypeNative = \native native
+            (\literal \o NativeAssignment
+                (strCons literal "_Type")
+                (nativeToTypeNative o)
+            )
+
+NativeDefinition = NativeAssignment literal o   ' S Native
+NativeExpression = NativeLiteral literal        ' S
+                 | NativeConstN value           ' N
+                 | NativeConstS value           ' S
+                 | NativeApplication o1 o2      ' Native Native            
 
 ' NATIVE => S
 nativeExprToExe = \n n
@@ -962,6 +1228,21 @@ native_Process = \synts maybeReturn (listBind synts syntaxToNative)
 
 ' [NATIVE] => S
 output_Process = \natives strConss (listMap natives nativeDefToExe)
+
+' [NATIVE] => S
+output_ProcessType = \natives strConss (listMap natives (b nativeDefToExe nativeDefToTypeNative))
+' S => S
+pipeType = \s
+    maybeTryGetValue (
+    maybeMap (
+    maybeBind (
+    maybeBind 
+        (token_Process s)
+        syntax_Process)
+        native_Process)
+        output_ProcessType)
+    ""
+
 
 ' S => S
 pipe = \s
@@ -1010,7 +1291,7 @@ million = mul 1000 1000
 millionS = (strFromN million)
 
 ' tests
-testCount = 83
+testCount = 100
 
 ' bool and basic combis
 test0 = True
@@ -1106,10 +1387,28 @@ test79 = strContains "asd" (listHead "s")
 test80 = not (strContains "asd" (listHead "w"))
 test81 = strEquals "asd" (strTrim "   asd   ")
 
-' maybe
-test82 = True
+' types
+test82 = strEquals "(0 -> 0)" (printType typeI)
+test83 = strEquals "(0 -> (1 -> 0))" (printType typeK)
+test84 = strEquals "((0 -> (1 -> 2)) -> ((3 -> 1) -> ((0 ^ 3) -> 2)))" (printType typeS)
+test85 = strEquals "(((0 -> 1) ^ 0) -> 1)" (printType typeM)
+test86 = strEquals "((0 -> 1) -> ((2 -> 0) -> (2 -> 1)))" (printType typeB)
+test87 = strEquals "(((0 -> 1) ^ (2 -> 0)) -> (2 -> 1))" (printType typeT)
 
+test88 = strEquals "(0 -> 0)" (printType typeI1)
+test89 = strEquals "(0 -> 0)" (printType typeI2)
+test90 = strEquals "((0 -> 1) -> (0 -> 1))" (printType typeI3)
+test91 = strEquals "(0 -> 0)" (printType typeI4)
+test92 = strEquals "(0 -> 0)" (printType typeI5)
 
+test93 = strEquals "((0 -> 0) -> 0)" (printType typeY)
+
+test94 = True
+test95 = True
+test96 = True
+test97 = True
+test98 = True
+test99 = True
 
 
 ' testx
@@ -1142,3 +1441,17 @@ scenario2 = \a foldl (listTake nats 5) "0" (\b \_ calledOften2 "42" (strCons a b
 ' IO
 ioRun = \io snd (io 0)
 ' : ((ioRun (ioBind readLine writeLine)) "asd")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
