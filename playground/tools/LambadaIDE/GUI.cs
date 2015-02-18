@@ -60,8 +60,8 @@ namespace LambadaIDE
             try
             {
                 var state = rt.Eval(richTextBox1.Text).MachineState;
-                if (state.Length > 500)
-                    state = state.Substring(0, 500) + "  ---  TOTAL LENGTH: " + state.Length;
+                if (state.Length > 2000)
+                    state = state.Substring(0, 2000) + "  ---  TOTAL LENGTH: " + state.Length;
                 MessageBox.Show("RESULT = " + state);
             }
             catch

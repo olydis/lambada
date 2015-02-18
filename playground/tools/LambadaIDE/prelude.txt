@@ -52,6 +52,8 @@ eq = \a \b not (xor a b)
 ''' Type: Nat
 Nat = Zero | Succ n
 one = Succ Zero
+two = Succ one
+three = Succ two
 
 
 add = \n \m m n (\dm add (Succ n) dm)
@@ -65,6 +67,12 @@ sub = \a \b if(isZero b)
         a
         (sub (pred a) (pred b))
 
+sub1 = \s \a \b if(isZero b)
+        a
+        (s (pred a) (pred b))
+sub2 = \s \a \b b
+        a
+        (\i a Zero (\j s j i))
 
 ''' Type: Pair
 Pair = Pair a b
@@ -665,6 +673,22 @@ typeUnify = \interesting \c _typeUnify 40 interesting (foldl (listMap c (\pair p
 ' Type -> Type -> Maybe Type
 typeApply = \a \b maybeMap ((\oa \ob typeUnify (TypeVariable (add oa ob)) [Pair a (TypeAbstraction (_typeShift b oa) (TypeVariable (add oa ob)))]) (typeNextSafeVariable a) (typeNextSafeVariable b)) typeNormalize
 
+' [Pair (Maybe Type) (Maybe Type)] -> Maybe [Pair Type Type]
+_unMaybe = \c c (Just []) (\h \t maybeBind (_unMaybe t) (\pt h (\ma \mb maybeBind ma (\a maybeBind mb (\b Just (ListCons (Pair a b) pt))))))
+' Maybe Type -> [Pair (Maybe Type) (Maybe Type)] -> Maybe Type
+typeUnifyM = \minteresting \mc maybeBind minteresting (\interesting maybeBind (_unMaybe mc) (\c typeUnify interesting c))
+
+' Maybe Type -> Maybe Type -> Maybe Type
+typeEquateM = \ma \mb maybeMap (typeUnifyM ma [Pair ma (maybeBind ma (\a maybeBind mb (\b Just (_typeShift b (typeNextSafeVariable a)))))]) typeNormalize
+
+' [Maybe Type] -> Maybe Type
+typeEquateMs = \ms foldl ms (TypeVariable 0) typeEquateM
+
+' Maybe Type -> Maybe Type -> Maybe Type
+typeApplyM = \ma \mb maybeBind ma (\a maybeBind mb (\b typeApply a b))
+
+' Maybe (TypeAbstraction a b) -> Maybe b
+typeTargetM = \t maybeBind t (TypeAbstraction_Dispatch (k Just) Nothing)
 
 typeErr = TypeVariable 42
 typeI = maybeTryGetValue (typeApply typeU typeU) typeErr 
@@ -1165,20 +1189,12 @@ syntaxToNative = \s listMap (_syntaxToNativeDefs s) finalizeNativeDefs
 ' NATIVE => NATIVE
 _nlB = NativeLiteral "b"
 _nlMB = NativeLiteral "maybeBind"
-_nlTA = NativeLiteral "typeApply"
+_nlTA = NativeLiteral "typeApplyM"
 nativeToTypeNative = \native native
             (\literal NativeLiteral (strCons literal "_Type"))
             (\value NativeLiteral "k_Type")
             (\value NativeLiteral "ListEmpty_Type")
-            (\o1 \o2 
-                NativeApplication
-                    (NativeApplication _nlMB (nativeToTypeNative o1))
-                    (NativeApplication 
-                        (NativeApplication 
-                            _nlB
-                            (NativeApplication _nlMB (nativeToTypeNative o2))) 
-                        _nlTA)
-            )
+            (\o1 \o2 NativeApplication (NativeApplication _nlTA (nativeToTypeNative o1)) (nativeToTypeNative o2))
 nativeDefToTypeNative = \native native
             (\literal \o NativeAssignment
                 (strCons literal "_Type")
