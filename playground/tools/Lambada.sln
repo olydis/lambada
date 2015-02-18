@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LambadaIDE", "LambadaIDE\LambadaIDE.csproj", "{20B74952-F5AF-4826-A638-7738E946EBE0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LambadaRuntime", "LambadaRuntime\LambadaRuntime.csproj", "{1796C771-FCE4-4B11-8988-1148DD834F68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{20B74952-F5AF-4826-A638-7738E946EBE0}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{20B74952-F5AF-4826-A638-7738E946EBE0}.Release|x86.ActiveCfg = Release|Any CPU
 		{20B74952-F5AF-4826-A638-7738E946EBE0}.Release|x86.Build.0 = Release|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Debug|x86.Build.0 = Debug|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Release|x86.ActiveCfg = Release|Any CPU
+		{1796C771-FCE4-4B11-8988-1148DD834F68}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

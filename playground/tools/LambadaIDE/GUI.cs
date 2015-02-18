@@ -1,5 +1,5 @@
-﻿using LambadaIDE.Basic;
-using LightModel;
+﻿using LambadaRuntime.Basic;
+using LambadaRuntime.BuiltIn;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,15 +23,34 @@ namespace LambadaIDE
         {
             InitializeComponent();
 
-            nativePrelude = File.ReadAllText("prelude.native.txt");
-            richTextBox2.Text = File.ReadAllText("prelude.txt");
+            try
+            {
+                nativePrelude = File.ReadAllText("prelude.new.native.txt");
+                richTextBox2.Text = File.ReadAllText("prelude.new.txt");
+            }
+            catch
+            {
+                MessageBox.Show("FALLBACK");
+                nativePrelude = File.ReadAllText("prelude.native.txt");
+                richTextBox2.Text = File.ReadAllText("prelude.txt");
+            }
 
             Init();
         }
 
         private void Init()
         {
-            rt = new Runtime(nativePrelude);
+            rt = Runtime.Create(nativePrelude);
+            rt.Boost("write", Write.Instance);
+            rt.Boost("writeLine", WriteLine.Instance);
+            rt.Boost("readLine", ReadLine.Instance);
+            rt.Boost("ioBind", IOBind.Instance);
+            rt.Boost("ioReturn", IOReturn.Instance);
+            rt.Boost("msgBox", new Abstraction("msgBox", delegate(Node n)
+            {
+                MessageBox.Show(StringX.ValueOfNode(n)); return n;
+            }).AsNode());
+            rt.Boost("mat", new Abstraction("mat", n => StringX.FromString(n.MachineState)).AsNode());
         }
 
         Runtime rt;
@@ -40,7 +59,10 @@ namespace LambadaIDE
         {
             try
             {
-                MessageBox.Show("RESULT = " + rt.Eval(richTextBox1.Text).Expression);
+                var state = rt.Eval(richTextBox1.Text).MachineState;
+                if (state.Length > 500)
+                    state = state.Substring(0, 500) + "  ---  TOTAL LENGTH: " + state.Length;
+                MessageBox.Show("RESULT = " + state);
             }
             catch
             {
@@ -52,7 +74,6 @@ namespace LambadaIDE
         {
             File.WriteAllText("prelude.new.txt", richTextBox2.Text);
 
-            StringBuilder result = new StringBuilder();
             Stopwatch sw = Stopwatch.StartNew();
 
             List<string> logicalLines = new List<string>();
@@ -69,6 +90,8 @@ namespace LambadaIDE
             progressBar1.Value = 0;
             progressBar1.Maximum = logicalLines.Count;
 
+            StringBuilder result = new StringBuilder();
+            StringBuilder resultType = new StringBuilder();
             foreach(var line in logicalLines)
             {
                 progressBar1.Value++;
@@ -76,12 +99,13 @@ namespace LambadaIDE
                 Console.WriteLine(line);
                 System.Windows.Forms.Application.DoEvents();
                 result.Append(rt.CompileDown(line));
+                //resultType.Append(rt.CompileDownType(line));
             }
 
 
             progressBar1.Value = 0;
             sw.Stop();
-            nativePrelude = result.ToString();
+            nativePrelude = result.ToString() + resultType.ToString();
             File.WriteAllText("prelude.new.native.txt", nativePrelude);
 
             Init();
