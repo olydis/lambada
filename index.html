@@ -2,7 +2,7 @@
   <head>
     <meta charset="UTF-8">
     <title>Lambada, powered by TypeScipt</title>
-    <style type="text/csse">
+    <style type="text/css">
 span, input, body, textarea, a
 {
     margin: 0px;
@@ -70,7 +70,7 @@ a.sel
 
     </style>
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
-    <script src="runtime.js"></script>
+    <script src="runtime/typescript/runtime.js"></script>
     <script>
         $(function() 
         {
@@ -79,8 +79,7 @@ a.sel
         
         function main(binary) 
         {
-            alert(binary);
-            Runtime.main(binary);
+            var rt = Runtime.create(binary);
         }
     </script>
   </head>
