@@ -1,11 +1,3 @@
-_builtin_ y i..
-u _builtin_.
-write _builtin_.
-writeLine _builtin_.
-readLine _builtin_.
-ioBind _builtin_.
-ioReturn _builtin_.
-msgBox _builtin_.
 i u u..
 k u u i...
 s u k..

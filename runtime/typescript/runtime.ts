@@ -19,12 +19,34 @@ class StringReader
     
     public readWhitespace(): string
     {
-        return readWhile(ch => /^\s$/.test(ch));
+        return this.readWhile(ch => /^\s$/.test(ch));
     }
-    
+
+    public readNaturalNumber(): number
+    {
+        var num = this.readWhile(ch => /^[0-9]$/.test(ch));
+        return num == "" ? null : parseInt(num);
+    }
+
     public readToken(): string
     {
-        return readWhile(ch => /^[a-zA-Z0-9]$/.test(ch));
+        return this.readWhile(ch => /^[a-zA-Z0-9_]$/.test(ch));
+    }
+
+    public readChar(expected: string): boolean
+    {
+        var b = true;
+        return this.readWhile(ch =>
+        {
+            if (!b) return false;
+            b = false;
+            return ch == expected;
+        }).length == 1;
+    }
+
+    public get charsLeft(): number
+    {
+        return this.len - this.index;
     }
 }
 
@@ -33,29 +55,234 @@ class Runtime
     public static create(binary: string): Runtime
     {
         var rt = new Runtime();
-        binary
-            .split("\n")
-            .forEach(s => rt.define(s));
+        rt.define(binary);
         return rt;
     }
     
-    private defs: { [name: string]: Expression };
+    private defs: { [name: string]: ExpressionBase };
     
     public constructor()
     {
-        
+        this.defs = { };
+        this.defs["i"] = new BuiltinExpression("i", stack => stack.length >= 1);
+        this.defs["k"] = new BuiltinExpression("k", stack => stack.length >= 2, stack =>
+        {
+            var x = stack.pop();
+            stack.pop();
+            stack.push(x);
+        });
+        this.defs["s"] = new BuiltinExpression("s", stack => stack.length >= 3, stack =>
+        {
+            var a = stack.pop();
+            var b = stack.pop();
+            var c = stack.pop();
+            stack.push(Expression.createApplication(a, c, Expression.createApplication(b, c)));
+        });
+        this.defs["b"] = new BuiltinExpression("b", stack => stack.length >= 3, stack =>
+        {
+            var a = stack.pop();
+            var b = stack.pop();
+            var c = stack.pop();
+            stack.push(Expression.createApplication(a, Expression.createApplication(b, c)));
+        });
+        this.defs["c"] = new BuiltinExpression("c", stack => stack.length >= 3, stack =>
+        {
+            var a = stack.pop();
+            var b = stack.pop();
+            var c = stack.pop();
+            stack.push(Expression.createApplication(a, c, b));
+        });
+        this.defs["u"] = new BuiltinExpression("u", stack => stack.length >= 1, stack =>
+        {
+            var x = stack.pop();
+            stack.push(this.defs["k"]);
+            stack.push(this.defs["s"]);
+            stack.push(x);
+        });
+
+
+        this.defs["msgBox"] = new BuiltinExpression("msgBox", stack => stack.length >= 1, stack => window.alert(stack[stack.length - 1].toString()));
     }
     
     public define(binaryDefinition: string): void
     {
-        window.alert(binaryDefinition);
+        var reader = new StringReader(binaryDefinition);
+
+        reader.readWhitespace();
+        while (reader.charsLeft > 0)
+        {
+            // begin parse definition
+            var name = reader.readToken();
+
+            var expressionStack: ExpressionBase[] = [];
+
+            while (true)
+            {
+                reader.readWhitespace();
+
+                // apply
+                if (reader.readChar("."))
+                {
+                    if (expressionStack.length < 2)
+                        break;
+                    var b = expressionStack.pop();
+                    var a = expressionStack.pop();
+                    if (a instanceof Expression)
+                    {
+                        (<Expression>a).stack.unshift(b);
+                        expressionStack.push(a);
+                    }
+                    else
+                    {
+                        expressionStack.push(Expression.createApplication(a, b));
+                    }
+                    continue;
+                }
+
+                // num
+                var num = reader.readNaturalNumber();
+                if (num != null)
+                {
+                    expressionStack.push(Expression.createNumber(num));
+                    continue;
+                }
+
+                // string
+                if (reader.readChar("\""))
+                {
+                    var s = reader.readWhile(ch => ch != "\"");
+                    reader.readChar("\"");
+                    expressionStack.push(Expression.createString(s));
+                    continue;
+                }
+
+                // defref
+                var defRef = reader.readToken();
+                var def = this.defs[defRef];
+                if (def == undefined)
+                    throw "undefined reference: " + defRef;
+                expressionStack.push(def);
+            }
+
+            console.log(name);
+            if (this.defs[name] == undefined)
+            {
+                var content = expressionStack.pop();
+                this.defs[name] = new BuiltinExpression(name, stack => true, stack => stack.push(content));
+                document.writeln(name + " = " + content.toString() + "<br/>");
+            }
+            // end parse definition
+
+            reader.readWhitespace();
+        }
+
+        document.writeln(reader.readToken() + "<br/>");
     }
-    
-    
 }
 
-class Expression
+interface ExpressionBase
 {
-    
+    apply(stack: ExpressionBase[]): boolean;
+    reduce(): boolean;
 }
 
+class Expression implements ExpressionBase
+{
+    public static createADTo(arity: number, index: number, ...args: ExpressionBase[]): ExpressionBase
+    {
+        return new BuiltinExpression("ADTo_" + index + "_" + arity, stack => stack.length >= arity, stack =>
+        {
+            var result: ExpressionBase;
+            for (var i = 0; i < arity; i++)
+                if (i == index)
+                    result = Expression.createApplication.apply(null, [stack.pop()].concat(args));
+                else
+                    stack.pop();
+            return result;
+        });
+    }
+    public static createNumber(n: number): ExpressionBase
+    {
+        var res = Expression.createADTo(2, 0);
+        while (n-- != 0)
+            res = Expression.createADTo(2, 1, res);
+        return res;
+    }
+    public static createList(exprs: ExpressionBase[]): ExpressionBase
+    {
+        var res = Expression.createADTo(2, 0);
+        exprs.forEach(ex => res = Expression.createADTo(2, 1, ex, res));
+        return res;
+    }
+    public static createString(s: string): ExpressionBase
+    {
+        return Expression.createList(s.split("").map(ch => Expression.createNumber(ch.charCodeAt(0))));
+    }
+
+    public static createApplication(...expressions: ExpressionBase[]): ExpressionBase
+    {
+        var e = new Expression();
+        Array.prototype.push.apply(e.stack, expressions);
+        e.stack.reverse();
+        return e;
+    }
+
+    public stack: ExpressionBase[];
+
+    public constructor()
+    {
+        this.stack = [];
+    }
+
+    public apply(stack: ExpressionBase[]): boolean
+    {
+        Array.prototype.push.apply(stack, this.stack);
+        return true;
+    }
+
+    public reduce(): boolean
+    {
+        var top = this.stack.pop();
+        if (top.reduce())
+            this.stack.push(top);
+        else if (!top.apply(this.stack))
+        {
+            this.stack.push(top);
+            return false;
+        }
+        return true;
+    }
+
+    public toString(): string
+    {
+        var res = "";
+        this.stack.forEach(x => res = x.toString() + " " + res);
+        return "(" + res.trim() + ")";
+    }
+}
+class BuiltinExpression implements ExpressionBase
+{
+    public constructor(
+        private name: string,
+        private test: (stack: ExpressionBase[]) => boolean,
+        private applyTo: (stack: ExpressionBase[]) => void = x => { })
+    {
+    }
+
+    public apply(stack: ExpressionBase[]): boolean
+    {
+        var result = this.test(stack);
+        if (result) this.applyTo(stack);
+        return result;
+    }
+
+    public reduce(): boolean
+    {
+        return false;
+    }
+
+    public toString(): string
+    {
+        return this.name;
+    }
+}

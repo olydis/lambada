@@ -76,10 +76,10 @@ a.sel
         {
             $.get( "playground/prelude.native.txt", main);
         })
-        
+        var rt;
         function main(binary) 
         {
-            var rt = Runtime.create(binary);
+            rt = Runtime.create(binary);
         }
     </script>
   </head>
