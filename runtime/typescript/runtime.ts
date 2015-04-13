@@ -164,29 +164,56 @@ class Runtime
                 expressionStack.push(def);
             }
 
-            console.log(name);
             if (this.defs[name] == undefined)
             {
                 var content = expressionStack.pop();
-                this.defs[name] = new BuiltinExpression(name, stack => true, stack => stack.push(content));
-                document.writeln(name + " = " + content.toString() + "<br/>");
+                console.log(name + " = " + content.toString());
+                this.defs[name] = (function(content: ExpressionBase)
+                {
+                    return new BuiltinExpression(name, stack => true, stack => stack.push(content));
+                })(content);
             }
             // end parse definition
 
             reader.readWhitespace();
         }
-
-        document.writeln(reader.readToken() + "<br/>");
     }
 }
 
-interface ExpressionBase
+class ExpressionBase
 {
-    apply(stack: ExpressionBase[]): boolean;
-    reduce(): boolean;
+    public apply(stack: ExpressionBase[]): boolean { return false; }
+    public reduce(): boolean { return false; }
+    public fullReduce(): void { while (this.reduce()); }
+    
+    
+    public asNumber(): number
+    {
+        var n = 0;
+        var probeN: ExpressionBase;
+        var probeZero = new BuiltinExpression("probeZero", stack => false);
+        var probeSucc = new BuiltinExpression("probeSucc", stack => stack.length >= 1, stack =>
+        {
+            n++;
+            stack.push(Expression.createApplication(probeN, stack.pop()));
+        });
+        probeN = new BuiltinExpression("probeN", 
+            stack => stack.length >= 1, 
+            stack => 
+            {
+                var num = stack.pop();
+                stack.push(probeSucc);
+                stack.push(probeZero);
+                stack.push(num);
+            });
+        
+        var expr = Expression.createApplication(probeN, this);
+        expr.fullReduce();
+        return n;
+    }
 }
 
-class Expression implements ExpressionBase
+class Expression extends ExpressionBase
 {
     public static createADTo(arity: number, index: number, ...args: ExpressionBase[]): ExpressionBase
     {
@@ -227,13 +254,19 @@ class Expression implements ExpressionBase
         return e;
     }
 
+    private static createDummy(name: string): ExpressionBase
+    {
+        return new BuiltinExpression(name, stack => false);
+    }
+    
     public stack: ExpressionBase[];
 
     public constructor()
     {
+        super();
         this.stack = [];
     }
-
+    
     public apply(stack: ExpressionBase[]): boolean
     {
         Array.prototype.push.apply(stack, this.stack);
@@ -260,13 +293,14 @@ class Expression implements ExpressionBase
         return "(" + res.trim() + ")";
     }
 }
-class BuiltinExpression implements ExpressionBase
+class BuiltinExpression extends ExpressionBase
 {
     public constructor(
         private name: string,
         private test: (stack: ExpressionBase[]) => boolean,
         private applyTo: (stack: ExpressionBase[]) => void = x => { })
     {
+        super();
     }
 
     public apply(stack: ExpressionBase[]): boolean

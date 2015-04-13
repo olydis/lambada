@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8">
@@ -72,15 +73,16 @@ a.sel
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
     <script src="runtime/typescript/runtime.js"></script>
     <script>
-        $(function() 
-        {
-            $.get( "playground/prelude.native.txt", main);
-        })
         var rt;
         function main(binary) 
         {
             rt = Runtime.create(binary);
         }
+        
+        $(function() 
+        {
+            $.get("playground/prelude.native.txt", main, "text");
+        })
     </script>
   </head>
   <body id='body'>
