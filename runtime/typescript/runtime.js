@@ -172,11 +172,7 @@ var Runtime = (function () {
                 var content = expressionStack.pop();
                 console.log(name + " = " + content.toString());
                 this.defs[name] = (function (content) {
-                    return new BuiltinExpression(name, function (stack) {
-                        return true;
-                    }, function (stack) {
-                        return stack.push(content);
-                    });
+                    return new AliasExpression(name, content);
                 })(content);
             }
 
@@ -226,8 +222,58 @@ var ExpressionBase = (function () {
         expr.fullReduce();
         return n;
     };
+
+    ExpressionBase.prototype.asString = function () {
+        var s = "";
+        var probeS;
+        var probeEmpty = new BuiltinExpression("probeEmpty", function (stack) {
+            return false;
+        });
+        var probeCons = new BuiltinExpression("probeCons", function (stack) {
+            return stack.length >= 2;
+        }, function (stack) {
+            s += String.fromCharCode(stack.pop().asNumber());
+            stack.push(Expression.createApplication(probeS, stack.pop()));
+        });
+        probeS = new BuiltinExpression("probeS", function (stack) {
+            return stack.length >= 1;
+        }, function (stack) {
+            var num = stack.pop();
+            stack.push(probeCons);
+            stack.push(probeEmpty);
+            stack.push(num);
+        });
+
+        var expr = Expression.createApplication(probeS, this);
+        expr.fullReduce();
+        return s;
+    };
     return ExpressionBase;
 })();
+
+var AliasExpression = (function (_super) {
+    __extends(AliasExpression, _super);
+    function AliasExpression(alias, slave) {
+        _super.call(this);
+        this.alias = alias;
+        this.slave = slave;
+    }
+    AliasExpression.prototype.apply = function (stack) {
+        return this.slave.apply(stack);
+    };
+    AliasExpression.prototype.reduce = function () {
+        return this.slave.reduce();
+    };
+
+    AliasExpression.prototype.toString = function () {
+        // DEBUG
+        if (arguments.callee.caller == null || arguments.callee.caller.toString().indexOf("toString") == -1)
+            return this.slave.toString();
+
+        return this.alias;
+    };
+    return AliasExpression;
+})(ExpressionBase);
 
 var Expression = (function (_super) {
     __extends(Expression, _super);
@@ -249,7 +295,7 @@ var Expression = (function (_super) {
                     result = Expression.createApplication.apply(null, [stack.pop()].concat(args));
                 else
                     stack.pop();
-            return result;
+            stack.push(result);
         });
     };
     Expression.createNumber = function (n) {
@@ -260,9 +306,8 @@ var Expression = (function (_super) {
     };
     Expression.createList = function (exprs) {
         var res = Expression.createADTo(2, 0);
-        exprs.forEach(function (ex) {
-            return res = Expression.createADTo(2, 1, ex, res);
-        });
+        for (var i = exprs.length - 1; i >= 0; i--)
+            res = Expression.createADTo(2, 1, exprs[i], res);
         return res;
     };
     Expression.createString = function (s) {
@@ -322,8 +367,10 @@ var BuiltinExpression = (function (_super) {
         this.name = name;
         this.test = test;
         this.applyTo = applyTo;
+        this.called = 0;
     }
     BuiltinExpression.prototype.apply = function (stack) {
+        this.called++;
         var result = this.test(stack);
         if (result)
             this.applyTo(stack);

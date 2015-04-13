@@ -77,6 +77,38 @@ a.sel
         function main(binary) 
         {
             rt = Runtime.create(binary);
+            $.get("playground/prelude.txt", compile, "text");
+        }
+        
+        function compile(sources)
+        {
+            var lines = sources.split("\n");
+            var binary = [];
+            var index = 0;
+            
+            var intervalId = 0;
+            var comp = function()
+            {
+                if (index >= lines.length)
+                    clearInterval(intervalId);
+                else
+                {
+                    var result = Expression.createApplication(
+                        rt.defs["pipe"], 
+                        Expression.createString(lines[index])).asString();
+                    console.log(result);
+                    binary.push(result);
+                
+                    index++;
+                }
+            };
+            
+            intervalId = setInterval(comp, 1);
+            
+            
+            clearInterval(intervalId);
+            comp();
+            comp();
         }
         
         $(function() 

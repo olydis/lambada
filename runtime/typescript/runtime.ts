@@ -170,7 +170,7 @@ class Runtime
                 console.log(name + " = " + content.toString());
                 this.defs[name] = (function(content: ExpressionBase)
                 {
-                    return new BuiltinExpression(name, stack => true, stack => stack.push(content));
+                    return new AliasExpression(name, content);
                 })(content);
             }
             // end parse definition
@@ -211,6 +211,52 @@ class ExpressionBase
         expr.fullReduce();
         return n;
     }
+    
+    public asString(): string
+    {
+        var s = "";
+        var probeS: ExpressionBase;
+        var probeEmpty = new BuiltinExpression("probeEmpty", stack => false);
+        var probeCons = new BuiltinExpression("probeCons", stack => stack.length >= 2, stack =>
+        {
+            s += String.fromCharCode(stack.pop().asNumber());
+            stack.push(Expression.createApplication(probeS, stack.pop()));
+        });
+        probeS = new BuiltinExpression("probeS", 
+            stack => stack.length >= 1, 
+            stack => 
+            {
+                var num = stack.pop();
+                stack.push(probeCons);
+                stack.push(probeEmpty);
+                stack.push(num);
+            });
+        
+        var expr = Expression.createApplication(probeS, this);
+        expr.fullReduce();
+        return s;
+    }
+}
+
+class AliasExpression extends ExpressionBase
+{
+    public constructor(private alias: string, private slave: ExpressionBase)
+    {
+        super();
+    }
+    
+    public apply(stack: ExpressionBase[]): boolean { return this.slave.apply(stack); }
+    public reduce(): boolean { return this.slave.reduce(); }
+    
+    public toString(): string
+    {
+        // DEBUG
+        if (arguments.callee.caller == null 
+        || arguments.callee.caller.toString().indexOf("toString") == -1)
+            return this.slave.toString();
+        
+        return this.alias;
+    }
 }
 
 class Expression extends ExpressionBase
@@ -225,7 +271,7 @@ class Expression extends ExpressionBase
                     result = Expression.createApplication.apply(null, [stack.pop()].concat(args));
                 else
                     stack.pop();
-            return result;
+            stack.push(result);
         });
     }
     public static createNumber(n: number): ExpressionBase
@@ -238,7 +284,8 @@ class Expression extends ExpressionBase
     public static createList(exprs: ExpressionBase[]): ExpressionBase
     {
         var res = Expression.createADTo(2, 0);
-        exprs.forEach(ex => res = Expression.createADTo(2, 1, ex, res));
+        for (var i = exprs.length - 1; i >= 0; i--)
+            res = Expression.createADTo(2, 1, exprs[i], res);
         return res;
     }
     public static createString(s: string): ExpressionBase
@@ -295,6 +342,8 @@ class Expression extends ExpressionBase
 }
 class BuiltinExpression extends ExpressionBase
 {
+    private called: number = 0;
+    
     public constructor(
         private name: string,
         private test: (stack: ExpressionBase[]) => boolean,
@@ -305,6 +354,7 @@ class BuiltinExpression extends ExpressionBase
 
     public apply(stack: ExpressionBase[]): boolean
     {
+        this.called++;
         var result = this.test(stack);
         if (result) this.applyTo(stack);
         return result;
