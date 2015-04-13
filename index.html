@@ -74,11 +74,35 @@ a.sel
     <script src="runtime/typescript/runtime.js"></script>
     <script>
         var rt;
+        
+        var app;
+        var d;
+        var s;
+        var n;
+        var stats;
+        
         function main(binary) 
         {
             rt = Runtime.create(binary);
+            d = rt.defs;
+            app = Expression.createApplication;
+            s = ShortcutExpression.createString;
+            n = ShortcutExpression.createNumber;
+            
+            stats = function ()
+            {
+                var x = [];
+                for (var prop in d) x.push(d[prop]);
+                x = x.sort(function(a, b) { return b.called - a.called; });
+                return x.slice(0, 10).map(function(y) { return "{ n: " + y.alias + ", " + "c: " + y.called + " }"; }).join("\n");
+            };
+            
             $.get("playground/prelude.txt", compile, "text");
         }
+        
+        var comp;
+        var com = function(n) { while (n-- != 0) comp(); };
+        var run;
         
         function compile(sources)
         {
@@ -87,28 +111,30 @@ a.sel
             var index = 0;
             
             var intervalId = 0;
-            var comp = function()
+            comp = function()
             {
                 if (index >= lines.length)
                     clearInterval(intervalId);
                 else
                 {
+                    var stmt = lines[index].split("'")[0];
+                    index++;
+                    while (lines[index][0] == " ")
+                    {
+                        stmt += lines[index].split("'")[0];
+                        index++;
+                    }
+                
                     var result = Expression.createApplication(
                         rt.defs["pipe"], 
-                        Expression.createString(lines[index])).asString();
+                        ShortcutExpression.createString(stmt)).asString();
                     console.log(result);
                     binary.push(result);
-                
-                    index++;
                 }
             };
+            run = function() { return setInterval(comp, 1); }
             
-            intervalId = setInterval(comp, 1);
-            
-            
-            clearInterval(intervalId);
-            comp();
-            comp();
+            //intervalId = run();
         }
         
         $(function() 

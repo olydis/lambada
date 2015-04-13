@@ -1,0 +1,39 @@
+app(d.fullDebug, s("asd = add 3 4")).asString() + stats();
+
+
+{ n: b, c: 208683 }
+{ n: c, c: 180899 }
+{ n: k, c: 85712 }
+{ n: s, c: 50146 }
+{ n: i, c: 10961 }
+{ n: True, c: 6913 }
+{ n: ParseResultFail, c: 4888 }
+{ n: ListCons, c: 3450 }
+{ n: listAddFront, c: 3277 }
+{ n: sub, c: 1143 }
+
+// less aggressive application creation
+
+{ n: b, c: 115172 }
+{ n: c, c: 112630 }
+{ n: k, c: 23042 }
+{ n: s, c: 21872 }
+{ n: i, c: 9035 }
+{ n: ListCons, c: 3450 }
+{ n: listAddFront, c: 3277 }
+{ n: True, c: 2255 }
+{ n: ParseResultFail, c: 1620 }
+{ n: sub, c: 1040 }
+
+// strCons
+
+{ n: b, c: 29848 }
+{ n: c, c: 27257 }
+{ n: k, c: 13045 }
+{ n: i, c: 5449 }
+{ n: s, c: 4944 }
+{ n: True, c: 2255 }
+{ n: ParseResultFail, c: 1620 }
+{ n: sub, c: 1040 }
+{ n: False, c: 775 }
+{ n: isZero, c: 473 }
