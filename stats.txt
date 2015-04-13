@@ -37,3 +37,16 @@ app(d.fullDebug, s("asd = add 3 4")).asString() + stats();
 { n: sub, c: 1040 }
 { n: False, c: 775 }
 { n: isZero, c: 473 }
+
+// strEquals
+
+{ n: b, c: 28298 }
+{ n: c, c: 26382 }
+{ n: k, c: 12607 }
+{ n: i, c: 5311 }
+{ n: s, c: 4751 }
+{ n: True, c: 2154 }
+{ n: ParseResultFail, c: 1620 }
+{ n: sub, c: 1004 }
+{ n: False, c: 760 }
+{ n: isZero, c: 455 }

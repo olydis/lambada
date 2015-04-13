@@ -89,12 +89,13 @@ a.sel
             s = ShortcutExpression.createString;
             n = ShortcutExpression.createNumber;
             
-            stats = function ()
+            stats = function (cnt)
             {
+                if (cnt == undefined) cnt = 10;
                 var x = [];
                 for (var prop in d) x.push(d[prop]);
                 x = x.sort(function(a, b) { return b.called - a.called; });
-                return x.slice(0, 10).map(function(y) { return "{ n: " + y.alias + ", " + "c: " + y.called + " }"; }).join("\n");
+                return x.slice(0, cnt).map(function(y) { return "{ n: " + y.alias + ", " + "c: " + y.called + " }"; }).join("\n");
             };
             
             $.get("playground/prelude.txt", compile, "text");
@@ -119,7 +120,7 @@ a.sel
                 {
                     var stmt = lines[index].split("'")[0];
                     index++;
-                    while (lines[index][0] == " ")
+                    while (index < lines.length && lines[index][0] == " ")
                     {
                         stmt += lines[index].split("'")[0];
                         index++;

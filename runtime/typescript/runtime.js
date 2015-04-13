@@ -101,6 +101,18 @@ var Runtime = (function () {
             var y = stack.pop().asString();
             stack.push(ShortcutExpression.createString(x + y));
         }));
+        def("strEquals", new BuiltinExpression(function (stack) { return stack.length >= 2; }, function (stack) {
+            var x = stack.pop().asString();
+            var y = stack.pop().asString();
+            stack.push(ShortcutExpression.createBoolean(x == y));
+        }));
+        def("strEmpty", ShortcutExpression.createString(""));
+        //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
+        //{
+        //    var x = stack.pop().asString();
+        //    var y = stack.pop().asNumber();
+        //    stack.push(ShortcutExpression.createString(x.slice(y)));
+        //}));
         def("msgBox", new BuiltinExpression(function (stack) { return stack.length >= 1; }, function (stack) { return window.alert(stack[stack.length - 1].toString()); }));
     }
     Runtime.create = function (binary) {
@@ -249,43 +261,6 @@ var AliasExpression = (function (_super) {
     };
     return AliasExpression;
 })(ExpressionBase);
-var ShortcutType;
-(function (ShortcutType) {
-    ShortcutType[ShortcutType["N"] = 0] = "N";
-    ShortcutType[ShortcutType["S"] = 1] = "S";
-})(ShortcutType || (ShortcutType = {}));
-var ShortcutExpression = (function (_super) {
-    __extends(ShortcutExpression, _super);
-    function ShortcutExpression(stype, value, alias, slave) {
-        _super.call(this, alias, slave);
-        this.stype = stype;
-        this.value = value;
-    }
-    ShortcutExpression.createNumber = function (n) {
-        var res = Expression.createADTo(2, 0);
-        for (var i = 0; i < n; i++)
-            res = Expression.createADTo(2, 1, res);
-        var se = new ShortcutExpression(0 /* N */, n, n.toString(), res);
-        se.asNumber = function () { return n; };
-        return se;
-    };
-    ShortcutExpression.createList = function (exprs) {
-        var res = Expression.createADTo(2, 0);
-        for (var i = exprs.length - 1; i >= 0; i--)
-            res = Expression.createADTo(2, 1, exprs[i], res);
-        return res;
-    };
-    ShortcutExpression.createString = function (s) {
-        var list = ShortcutExpression.createList(s.split("").map(function (ch) { return ShortcutExpression.createNumber(ch.charCodeAt(0)); }));
-        var se = new ShortcutExpression(1 /* S */, s, "\"" + s + "\"", list);
-        se.asString = function () { return s; };
-        return se;
-    };
-    ShortcutExpression.isType = function (expression, stype) {
-        return expression.stype == stype;
-    };
-    return ShortcutExpression;
-})(AliasExpression);
 var Expression = (function (_super) {
     __extends(Expression, _super);
     function Expression() {
@@ -397,4 +372,46 @@ var BuiltinExpression = (function (_super) {
     };
     return BuiltinExpression;
 })(ExpressionBase);
+var ShortcutType;
+(function (ShortcutType) {
+    ShortcutType[ShortcutType["N"] = 0] = "N";
+    ShortcutType[ShortcutType["S"] = 1] = "S";
+})(ShortcutType || (ShortcutType = {}));
+var ShortcutExpression = (function (_super) {
+    __extends(ShortcutExpression, _super);
+    function ShortcutExpression(stype, value, alias, slave) {
+        _super.call(this, alias, slave);
+        this.stype = stype;
+        this.value = value;
+    }
+    ShortcutExpression.createNumber = function (n) {
+        var res = ShortcutExpression.ADTo_2_0;
+        for (var i = 0; i < n; i++)
+            res = Expression.createADTo(2, 1, res);
+        var se = new ShortcutExpression(0 /* N */, n, n.toString(), res);
+        se.asNumber = function () { return n; };
+        return se;
+    };
+    ShortcutExpression.createList = function (exprs) {
+        var res = ShortcutExpression.ADTo_2_0;
+        for (var i = exprs.length - 1; i >= 0; i--)
+            res = Expression.createADTo(2, 1, exprs[i], res);
+        return res;
+    };
+    ShortcutExpression.createString = function (s) {
+        var list = ShortcutExpression.createList(s.split("").map(function (ch) { return ShortcutExpression.createNumber(ch.charCodeAt(0)); }));
+        var se = new ShortcutExpression(1 /* S */, s, "\"" + s + "\"", list);
+        se.asString = function () { return s; };
+        return se;
+    };
+    ShortcutExpression.createBoolean = function (b) {
+        return b ? ShortcutExpression.ADTo_2_0 : ShortcutExpression.ADTo_2_1;
+    };
+    ShortcutExpression.isType = function (expression, stype) {
+        return expression.stype == stype;
+    };
+    ShortcutExpression.ADTo_2_0 = Expression.createADTo(2, 0);
+    ShortcutExpression.ADTo_2_1 = Expression.createADTo(2, 1);
+    return ShortcutExpression;
+})(AliasExpression);
 //# sourceMappingURL=runtime.js.map

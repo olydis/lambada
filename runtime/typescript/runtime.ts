@@ -59,7 +59,7 @@ class Runtime
         return rt;
     }
     
-    private defs: { [name: string]: AliasExpression };
+    private defs: { [name: string]: ExpressionBase };
     
     public constructor()
     {
@@ -130,6 +130,20 @@ class Runtime
             var y = stack.pop().asString();
             stack.push(ShortcutExpression.createString(x + y));
         }));
+        def("strEquals", new BuiltinExpression(stack => stack.length >= 2, stack =>
+        {
+            var x = stack.pop().asString();
+            var y = stack.pop().asString();
+            stack.push(ShortcutExpression.createBoolean(x == y));
+        }));
+        def("strEmpty", ShortcutExpression.createString(""));
+
+        //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
+        //{
+        //    var x = stack.pop().asString();
+        //    var y = stack.pop().asNumber();
+        //    stack.push(ShortcutExpression.createString(x.slice(y)));
+        //}));
 
         def("msgBox", new BuiltinExpression(stack => stack.length >= 1, stack => window.alert(stack[stack.length - 1].toString())));
     }
@@ -307,49 +321,6 @@ class AliasExpression extends ExpressionBase
     }
 }
 
-enum ShortcutType
-{
-    N,
-    S
-}
-
-class ShortcutExpression<T> extends AliasExpression
-{
-    public static createNumber(n: number): ShortcutExpression<number>
-    {
-        var res = Expression.createADTo(2, 0);
-        for (var i = 0; i < n; i++)
-            res = Expression.createADTo(2, 1, res);
-        var se = new ShortcutExpression<number>(ShortcutType.N, n, n.toString(), res);
-        se.asNumber = () => n;
-        return se;
-    }
-    private static createList(exprs: ExpressionBase[]): ExpressionBase
-    {
-        var res = Expression.createADTo(2, 0);
-        for (var i = exprs.length - 1; i >= 0; i--)
-            res = Expression.createADTo(2, 1, exprs[i], res);
-        return res;
-    }
-    public static createString(s: string): ShortcutExpression<string>
-    {
-        var list = ShortcutExpression.createList(s.split("").map(ch => ShortcutExpression.createNumber(ch.charCodeAt(0))));
-        var se = new ShortcutExpression<string>(ShortcutType.S, s, "\"" + s + "\"", list);
-        se.asString = () => s;
-        return se;
-    }
-
-    public static isType(expression: ExpressionBase, stype: ShortcutType): boolean
-    {
-        return (<ShortcutExpression<any>>expression).stype == stype;
-    }
-
-    public constructor(public stype: ShortcutType, public value: T, alias: string, slave: ExpressionBase)
-    {
-        super(alias, slave);
-    }
-}
-
 class Expression extends ExpressionBase
 {
     public static createADTo(arity: number, index: number, ...args: ExpressionBase[]): ExpressionBase
@@ -471,5 +442,54 @@ class BuiltinExpression extends ExpressionBase
     public reduce(): boolean
     {
         return false;
+    }
+}
+
+enum ShortcutType
+{
+    N,
+    S
+}
+
+class ShortcutExpression<T> extends AliasExpression
+{
+    private static ADTo_2_0 = Expression.createADTo(2, 0);
+    private static ADTo_2_1 = Expression.createADTo(2, 1);
+    public static createNumber(n: number): ShortcutExpression<number>
+    {
+        var res = ShortcutExpression.ADTo_2_0;
+        for (var i = 0; i < n; i++)
+            res = Expression.createADTo(2, 1, res);
+        var se = new ShortcutExpression<number>(ShortcutType.N, n, n.toString(), res);
+        se.asNumber = () => n;
+        return se;
+    }
+    private static createList(exprs: ExpressionBase[]): ExpressionBase
+    {
+        var res = ShortcutExpression.ADTo_2_0;
+        for (var i = exprs.length - 1; i >= 0; i--)
+            res = Expression.createADTo(2, 1, exprs[i], res);
+        return res;
+    }
+    public static createString(s: string): ShortcutExpression<string>
+    {
+        var list = ShortcutExpression.createList(s.split("").map(ch => ShortcutExpression.createNumber(ch.charCodeAt(0))));
+        var se = new ShortcutExpression<string>(ShortcutType.S, s, "\"" + s + "\"", list);
+        se.asString = () => s;
+        return se;
+    }
+    public static createBoolean(b: boolean): ExpressionBase
+    {
+        return b ? ShortcutExpression.ADTo_2_0 : ShortcutExpression.ADTo_2_1;
+    }
+
+    public static isType(expression: ExpressionBase, stype: ShortcutType): boolean
+    {
+        return (<ShortcutExpression<any>>expression).stype == stype;
+    }
+
+    public constructor(public stype: ShortcutType, public value: T, alias: string, slave: ExpressionBase)
+    {
+        super(alias, slave);
     }
 }
