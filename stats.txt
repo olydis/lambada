@@ -1,5 +1,5 @@
+====Command====
 app(d.fullDebug, s("asd = add 3 4")).asString() + stats();
-
 
 { n: b, c: 208683 }
 { n: c, c: 180899 }
@@ -65,9 +65,17 @@ app(d.fullDebug, s("asd = add 3 4")).asString() + stats();
 { n: not, c: 429 }
 
 
+====Command====
 com()
+
 6600
 // lazy ADTo generation
 2500
 // strFromN, mul, Zero
 1900
+
+
+====Command====
+run()
+
+49189

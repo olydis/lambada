@@ -105,6 +105,8 @@ a.sel
         var run;
         var com = function(n) { if (n == undefined) n = 100; var d1 = new Date(); while (n-- != 0) comp(); var d2 = new Date(); return (d2.getTime() - d1.getTime()); };
         
+        var runDstart;
+        
         function compile(sources)
         {
             var lines = sources.split("\n");
@@ -115,7 +117,10 @@ a.sel
             comp = function()
             {
                 if (index >= lines.length)
+                {
                     clearInterval(intervalId);
+                    console.log(new Date().getTime() - runDstart.getTime());
+                }
                 else
                 {
                     var stmt = lines[index].split("'")[0];
@@ -136,9 +141,7 @@ a.sel
                     }
                 }
             };
-            run = function() { return setInterval(comp, 1); }
-            
-            //intervalId = run();
+            run = function() { runDstart = new Date(); intervalId = setInterval(comp, 1); }
         }
         
         $(function() 
