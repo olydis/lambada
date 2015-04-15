@@ -67,6 +67,7 @@ sub = \a \b if(isZero b)
         a
         (sub (pred a) (pred b))
 
+diff = \a \b if (isLT a b) (sub b a) (sub a b)
 
 ''' Type: Pair
 Pair = Pair a b
@@ -270,7 +271,7 @@ toUpperCaseLetter = \c if(isLowerCaseLetter c) (add c 32) c
 toLowerCaseLetter = \c if(isUpperCaseLetter c) (sub c 32) c
 
 toUpperCaseString = \s listMap s toUpperCaseLetter
-toUpperCaseString = \s listMap s toLowerCaseLetter
+toLowerCaseString = \s listMap s toLowerCaseLetter
 
 toUpperCaseFirstLetter = \s ListCons (toUpperCaseLetter (strHead s)) (strTail s)
 toLowerCaseFirstLetter = \s ListCons (toLowerCaseLetter (strHead s)) (strTail s)
@@ -409,8 +410,6 @@ listDistinct = \l \eq snd (foldl l (Pair (idfCreate eq) ListEmpty) (\pair \x (\r
 newLine = strReturn 10
 
 empty = strReturn 32
-
-diff = \a \b if (isLT a b) (sub b a) (sub a b)
 
 gDrawL = \w \y \f listBind (listTake nats0 w) (\x (f x y))
 gDraw = \w \h \f listBind (listTake nats0 h) (\y listConcat (gDrawL w y f) newLine)

@@ -85,7 +85,7 @@ a.sel
         {
             rt = Runtime.create(binary);
             d = rt.defs;
-            app = Expression.createApplication;
+            app = Expression.createApplicationx;
             s = ShortcutExpression.createString;
             n = ShortcutExpression.createNumber;
             
@@ -102,8 +102,8 @@ a.sel
         }
         
         var comp;
-        var com = function(n) { while (n-- != 0) comp(); };
         var run;
+        var com = function(n) { if (n == undefined) n = 100; var d1 = new Date(); while (n-- != 0) comp(); var d2 = new Date(); return (d2.getTime() - d1.getTime()); };
         
         function compile(sources)
         {
@@ -129,8 +129,11 @@ a.sel
                     var result = Expression.createApplication(
                         rt.defs["pipe"], 
                         ShortcutExpression.createString(stmt)).asString();
-                    console.log(result);
-                    binary.push(result);
+                    if (result != "")
+                    {
+                        console.log(result);
+                        binary.push(result);
+                    }
                 }
             };
             run = function() { return setInterval(comp, 1); }
