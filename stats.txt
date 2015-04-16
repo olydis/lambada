@@ -1,5 +1,11 @@
+System
+Type    x64
+CPU     Intel Core i7-4770 @ 3.4 GHz
+RAM16   16,0 GB
+
+
 ====Command====
-app(d.fullDebug, s("asd = add 3 4")).asString() + stats();
+rstats(); app(d.fullDebug, s("asd = add 3 4")).asString() + stats();
 
 { n: b, c: 208683 }
 { n: c, c: 180899 }
@@ -64,6 +70,18 @@ app(d.fullDebug, s("asd = add 3 4")).asString() + stats();
 { n: False, c: 736 }
 { n: not, c: 429 }
 
+// preheat (testcases)
+
+{ n: b, c: 26632 }
+{ n: c, c: 25218 }
+{ n: k, c: 12211 }
+{ n: i, c: 4989 }
+{ n: s, c: 4375 }
+{ n: True, c: 2100 }
+{ n: ParseResultFail, c: 1620 }
+{ n: sub, c: 968 }
+{ n: False, c: 736 }
+{ n: not, c: 429 }
 
 ====Command====
 com()
@@ -73,9 +91,14 @@ com()
 2500
 // strFromN, mul, Zero
 1900
-
+// engineered fullReduce
+1300
 
 ====Command====
 run()
 
 49189
+// back-tracking fullReduce instead of reduce-loop
+38196
+// engineered fullReduce (smarter branching, less calls)
+23516

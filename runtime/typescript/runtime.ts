@@ -66,7 +66,6 @@ class ExpressionBase
 
     public fullReduce(): void
     {
-        while (this.reduce()) ExpressionBase.reductions++;
     }
 
     public _asNumber: (() => number) = undefined;
@@ -272,6 +271,43 @@ class Expression extends ExpressionBase
         return false;
     }
 
+    public fullReduce()
+    {
+        if (this.stack.length > 0)
+        {
+            var exprs = [this];
+            while (exprs.length > 0)
+            {
+                while (true)
+                {
+                    var top = exprs[exprs.length - 1].top;
+                    if (top instanceof Expression && top.stack.length > 0)
+                        exprs.push(top);
+                    else
+                        break;
+                }
+
+                while (exprs.length > 0)
+                {
+                    var expr = exprs.pop();
+                    if (expr.stack.length == 0)
+                        continue;
+                    var top = expr.stack.pop();
+                    top.fullReduce();
+                    if (top.apply(expr.stack))
+                    {
+                        exprs.push(expr);
+                        break;
+                    }
+                    {
+                        expr.stack.push(top);
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
     public get top(): ExpressionBase
     {
         return this.stack[this.stack.length - 1];
@@ -306,7 +342,7 @@ class ShortcutExpression
     {
         var se: any = n == 0
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1,() => ShortcutExpression.createNumber(n - 1));
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1));
         se._asNumber = se.asNumber = () => n;
         se.toString = () => n.toString();
         return se;

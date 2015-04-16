@@ -52,11 +52,13 @@ var ExpressionBase = (function () {
     ExpressionBase.init = function () {
         ExpressionBase.probeSTOP = new BuiltinExpression(undefined);
     };
-    ExpressionBase.prototype.apply = function (stack) { return false; };
-    ExpressionBase.prototype.reduce = function () { return false; };
+    ExpressionBase.prototype.apply = function (stack) {
+        return false;
+    };
+    ExpressionBase.prototype.reduce = function () {
+        return false;
+    };
     ExpressionBase.prototype.fullReduce = function () {
-        while (this.reduce())
-            ExpressionBase.reductions++;
     };
     ExpressionBase.prototype.asNumber = function () {
         var n = 0;
@@ -108,7 +110,8 @@ var ExpressionBase = (function () {
 var BuiltinExpressionx = (function (_super) {
     __extends(BuiltinExpressionx, _super);
     function BuiltinExpressionx(test, applyTo) {
-        if (applyTo === void 0) { applyTo = function (x) { }; }
+        if (applyTo === void 0) { applyTo = function (x) {
+        }; }
         _super.call(this);
         this.test = test;
         this.applyTo = applyTo;
@@ -124,7 +127,8 @@ var BuiltinExpressionx = (function (_super) {
 var BuiltinExpression = (function (_super) {
     __extends(BuiltinExpression, _super);
     function BuiltinExpression(arity, applyTo) {
-        if (applyTo === void 0) { applyTo = function (x) { }; }
+        if (applyTo === void 0) { applyTo = function (x) {
+        }; }
         _super.call(this);
         this.arity = arity;
         this.applyTo = applyTo;
@@ -146,9 +150,16 @@ var AliasExpression = (function (_super) {
         this.slave = slave;
         this.called = 0;
     }
-    AliasExpression.prototype.apply = function (stack) { this.called++; return this.slave.apply(stack); };
-    AliasExpression.prototype.reduce = function () { return this.slave.reduce(); };
-    AliasExpression.prototype.fullReduce = function () { this.slave.fullReduce(); };
+    AliasExpression.prototype.apply = function (stack) {
+        this.called++;
+        return this.slave.apply(stack);
+    };
+    AliasExpression.prototype.reduce = function () {
+        return this.slave.reduce();
+    };
+    AliasExpression.prototype.fullReduce = function () {
+        this.slave.fullReduce();
+    };
     AliasExpression.prototype.toString = function () {
         // DEBUG
         //if (arguments.callee.caller == null 
@@ -223,6 +234,35 @@ var Expression = (function (_super) {
         this.hnf = true;
         return false;
     };
+    Expression.prototype.fullReduce = function () {
+        if (this.stack.length > 0) {
+            var exprs = [this];
+            while (exprs.length > 0) {
+                while (true) {
+                    var top = exprs[exprs.length - 1].top;
+                    if (top instanceof Expression && top.stack.length > 0)
+                        exprs.push(top);
+                    else
+                        break;
+                }
+                while (exprs.length > 0) {
+                    var expr = exprs.pop();
+                    if (expr.stack.length == 0)
+                        continue;
+                    var top = expr.stack.pop();
+                    top.fullReduce();
+                    if (top.apply(expr.stack)) {
+                        exprs.push(expr);
+                        break;
+                    }
+                    {
+                        expr.stack.push(top);
+                        continue;
+                    }
+                }
+            }
+        }
+    };
     Object.defineProperty(Expression.prototype, "top", {
         get: function () {
             return this.stack[this.stack.length - 1];
@@ -256,17 +296,13 @@ var ShortcutExpression = (function () {
     function ShortcutExpression() {
     }
     ShortcutExpression.createNumber = function (n) {
-        var se = n == 0
-            ? ShortcutExpression.ADTo_2_0
-            : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
+        var se = n == 0 ? ShortcutExpression.ADTo_2_0 : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
         se._asNumber = se.asNumber = function () { return n; };
         se.toString = function () { return n.toString(); };
         return se;
     };
     ShortcutExpression.createString2 = function (s, offset) {
-        var se = s.length == offset
-            ? ShortcutExpression.ADTo_2_0
-            : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
+        var se = s.length == offset ? ShortcutExpression.ADTo_2_0 : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
         se._asString = se.asString = function () { return s.slice(offset); };
         se.toString = function () { return "\"" + s.slice(offset) + "\""; };
         return se;
@@ -411,3 +447,4 @@ var Runtime = (function (_super) {
     Runtime.maybeNothing = Expression.createADTo(2, 1);
     return Runtime;
 })(BuiltinExpression);
+//# sourceMappingURL=runtime.js.map

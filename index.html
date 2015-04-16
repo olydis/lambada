@@ -73,6 +73,14 @@ a.sel
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
     <script src="runtime/typescript/runtime.js"></script>
     <script>
+        function measure(f)
+        {
+            var d1 = new Date().getTime(); 
+            f();
+            var d2 = new Date().getTime(); 
+            return d2 - d1;
+        }
+    
         var rt;
         
         var app;
@@ -80,21 +88,29 @@ a.sel
         var s;
         var n;
         var stats;
+        var rstats;
         
         function runTests()
         {
+            // automated
             var tc = d.testCount.asNumber();
             for (var i = 0; i < tc; i++)
             {
                 var prop = "test" + i;
-                var dtime = new Date().getTime();
-                var succ = app(d.strFromB, d[prop]).asString() != "True"
-                var ddiff = new Date().getTime() - dtime;
+                var succ;
+                var ddiff = measure(function() { succ = app(d.strFromB, d[prop]).asString() != "True"; });
                 if (succ)
                     throw prop + " failed";
                 else
                     console.log(prop + " passed in " + ddiff + "ms");
             }
+            
+            // execution speed (1.000.000 x operation)
+            // K
+            var kTest = d.k;
+            for (var i = 0; i < 1000000 * 2; i++)
+                kTest = app(kTest, d.k);
+            console.log("K: " + measure(function() { kTest.fullReduce(); }) + "ms");
         }
         
         function main(binary) 
@@ -116,13 +132,14 @@ a.sel
                 x = x.sort(function(a, b) { return b.called - a.called; });
                 return x.slice(0, cnt).map(function(y) { return "{ n: " + y.alias + ", " + "c: " + y.called + " }"; }).join("\n");
             };
+            rstats = function (cnt) { for (var prop in d) d[prop].called = 0; };
             
             $.get("playground/prelude.txt", compile, "text");
         }
         
         var comp;
         var run;
-        var com = function(n) { if (n == undefined) n = 100; var d1 = new Date(); while (n-- != 0) comp(); var d2 = new Date(); return (d2.getTime() - d1.getTime()); };
+        var com = function(n) { if (n == undefined) n = 100; return measure(function() { while (n-- != 0) comp(); }); };
         
         var runDstart;
         
