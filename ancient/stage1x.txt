@@ -1,11 +1,17 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' lambAda stage1 (the extra "A" is for extra awesomeness) '
 '                                                         '
-' Last changed: 16.04.2015         Author: Johannes Bader '
+' Last changed: 24.11.2013         Author: Johannes Bader '
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-' import: u
-' import: msgBox
+' EXTERN
+'u = u
+'write = write           ' S => IO ()
+'writeLine = writeLine   ' S => IO ()
+'readLine = readLine     ' IO S
+'ioBind = ioBind         ' IO a => (a => IO b) => IO b
+'ioReturn = ioReturn     ' x => IO x
+'msgBox = msgBox         ' x => x
 
 ''' basic runtime
 ' define SKI in terms of U to enable abstraction killing 
@@ -60,6 +66,7 @@ sub = \a \b if(isZero b)
         a
         (sub (pred a) (pred b))
 
+
 ''' Type: Pair
 Pair = Pair a b
 fst = \pair pair (\a \b a)
@@ -76,8 +83,6 @@ isGT = \a \b not (isLTE a b)
 
 min = \a \b if(isLT a b) a b
 max = \a \b if(isGT a b) a b
-
-diff = \a \b if (isLT a b) (sub b a) (sub a b)
 
 mod = \a \b if(isLT a b) a (mod (sub a b) b)
 div = \a \b if(isLT a b) Zero (Succ (div (sub a b) b))
@@ -204,25 +209,25 @@ listElementAt = \l \n listHead (listSkip l n)
 
 listStartsWith = \eq \l1 \l2 listEquals eq (listTake l1 (listCount l2)) l2
 
-strIsEmpty = i listIsEmpty
-strIsNotEmpty = i b not strIsEmpty
-strHead = i listHead
-strTail = i listTail
-strEmpty = i ListEmpty
-straddFront = i listAddFront
-straddBack = i listAddBack
-strCons = i listConcat
-strSkip = i listSkip
-strTake = i listTake
-strReturn = i listReturn
-strWhere = i listWhere
-strLength = i listCount
-strStartsWith = i listStartsWith isEQ
+strIsEmpty = listIsEmpty
+strIsNotEmpty = b not strIsEmpty
+strHead = listHead
+strTail = listTail
+strEmpty = ListEmpty
+straddFront = listAddFront
+straddBack = listAddBack
+strCons = listConcat
+strSkip = listSkip
+strTake = listTake
+strReturn = listReturn
+strWhere = listWhere
+strLength = listCount
+strStartsWith = listStartsWith isEQ
 
 listJoin = \lists \sepa lists
     ListEmpty 
     (\head \tail foldl tail head (\cur \new listConcat (listConcat cur sepa) new))
-strJoin = \strs \sepa if(listIsEmpty strs) strEmpty (foldl (listTail strs) (listHead strs) (\cur \new strCons (strCons cur sepa) new))
+strJoin = \strs \sepa if(strIsEmpty strs) strEmpty (foldl (listTail strs) (listHead strs) (\cur \new strCons (strCons cur sepa) new))
 strConss = \strs strJoin strs "" 
 
 
@@ -247,7 +252,7 @@ byteVals = listTake nats0 256
 
 toBinSeq = \n listMap (listTakeWhile (unfold n (c div 2)) (b not isZero)) (c mod 2)
 fromBinSeq = \l foldl (listZip l nats0 (\a \b mul a (pow 2 b))) 0 add
-nxor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y mod (add x y) 2))
+xor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y mod (add x y) 2))
 
 isUpperCaseLetter = \c and (isGT c 64) (isLT c 91)
 isLowerCaseLetter = \c or (and (isGT c 96) (isLT c 123)) (isEQ c 95)
@@ -264,7 +269,7 @@ toUpperCaseLetter = \c if(isLowerCaseLetter c) (add c 32) c
 toLowerCaseLetter = \c if(isUpperCaseLetter c) (sub c 32) c
 
 toUpperCaseString = \s listMap s toUpperCaseLetter
-toLowerCaseString = \s listMap s toLowerCaseLetter
+toUpperCaseString = \s listMap s toLowerCaseLetter
 
 toUpperCaseFirstLetter = \s ListCons (toUpperCaseLetter (strHead s)) (strTail s)
 toLowerCaseFirstLetter = \s ListCons (toLowerCaseLetter (strHead s)) (strTail s)
@@ -404,6 +409,8 @@ newLine = strReturn 10
 
 empty = strReturn 32
 
+diff = \a \b if (isLT a b) (sub b a) (sub a b)
+
 gDrawL = \w \y \f listBind (listTake nats0 w) (\x (f x y))
 gDraw = \w \h \f listBind (listTake nats0 h) (\y listConcat (gDrawL w y f) newLine)
 
@@ -447,248 +454,16 @@ switchCond = \cond \listpairxres \alt _switchCond listpairxres alt cond
 switch = \obj \listpairxres \cond \alt switchCond (cond obj) listpairxres alt
 switchN = \obj \listpairnumres \alt switch obj listpairnumres isEQ alt
 
+'------------------'
+' COMPILER SECTION '
+'------------------'
+
 '' vararg consumer
 getFirstConsumeMoreDeferred = \mf \v v 
                  (\a 
                     y(\self \n if(isZero n) a (k (self (pred n)))) (mf a)
                  )
 getFirstConsumeMore = \m getFirstConsumeMoreDeferred (k m)
-
-
-
-'------------------'
-' COMPILER SECTION '
-'------------------'
-
-
-
-_listIndexOfPred = \l \f \offset l Nothing (\head \tail if(f head) (Just offset) (_listIndexOfPred tail f (Succ offset)))
-listIndexOfPred = \l \f _listIndexOfPred l f 0
-listIndexOf = \l \eq \x listIndexOfPred l (eq x)
-
-
-'''''' TYPING
-
-' TYPES
-Type = TypeVariable uid     ' N
-     | TypeAbstraction a b  ' Type Type
-     | TypeIntersection a b ' Type Type
-
-'(((d -> (c -> b)) -> ((g -> c) -> (d^g -> b))) -> ((e -> (f -> e)) -> a)) -> a
-typeUa = TypeVariable 0
-typeUb = TypeVariable 1
-typeUc = TypeVariable 2
-typeUd = TypeVariable 3
-typeUe = TypeVariable 4
-typeUf = TypeVariable 5
-typeUg = TypeVariable 6
-typeU = TypeAbstraction 
-            (TypeAbstraction
-                (TypeAbstraction
-                    (TypeAbstraction typeUd (TypeAbstraction typeUc typeUb))
-                    (TypeAbstraction (TypeAbstraction typeUg typeUc) (TypeAbstraction (TypeIntersection typeUd typeUg) typeUb))
-                )
-                (TypeAbstraction
-                    (TypeAbstraction typeUe (TypeAbstraction typeUf typeUe))
-                    typeUa
-                )
-            )
-            typeUa
-
-u_Type = Just typeU
-
-typeKx = TypeAbstraction typeUe (TypeAbstraction typeUf typeUe)
-typeIx = TypeAbstraction typeUe typeUe
-typeSx = (TypeAbstraction
-            (TypeAbstraction typeUd (TypeAbstraction typeUc typeUb))
-            (TypeAbstraction (TypeAbstraction typeUg typeUc) (TypeAbstraction (TypeIntersection typeUd typeUg) typeUb))
-        )
-
-printType = \type type
-                (\uid strFromN uid)
-                (\a \b strConss ["(", printType a, " -> ", printType b, ")"])
-                (\a \b strConss ["(", printType a, " ^ ", printType b, ")"])
-printRestrictionList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [printType a, " = ", printType b]))) ", "
-printUnificationList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [strFromN a, " => ", printType b]))) ", "
-printUnificationResult = \mtypePairList strFromMaybe printUnificationList mtypePairList
-
-_typeEnumVariables = \type type
-                        (\uid listReturn uid)
-                        (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
-                        (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
-typeEnumVariables = \type listDistinct (_typeEnumVariables type) isEQ
-
-typeCountUsage = \type \uid type
-                        (\uidx if(isEQ uid uidx) 1 0)
-                        (\a \b add (typeCountUsage a uid) (typeCountUsage b uid))
-                        (\a \b add (typeCountUsage a uid) (typeCountUsage b uid))
-
-' strips singletons
-_removeSingletons = \type \removeUidPred type
-                        (\uid type)
-                        (\a \b TypeAbstraction (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
-                        (\a \b if (listAll (typeEnumVariables a) removeUidPred) b
-                              (if (listAll (typeEnumVariables b) removeUidPred) a 
-                              (TypeIntersection (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
-                              )
-                        )
-' renumbers vars
-_typeNormalize = \type \vars type
-                        (\uid TypeVariable (maybeTryGetValue (listIndexOf vars isEQ uid) 1337))
-                        (\a \b TypeAbstraction (_typeNormalize a vars) (_typeNormalize b vars))
-                        (\a \b TypeIntersection (_typeNormalize a vars) (_typeNormalize b vars))
-typeNormalize = \type (\type _typeNormalize type (typeEnumVariables type))
-                      (
-                        (\singletons _removeSingletons 
-                            type 
-                            (\uidx listAny 
-                                singletons
-                                (isEQ uidx)
-                            )
-                        ) (listWhere (typeEnumVariables type) (\uid isEQ 1 (typeCountUsage type uid)))
-                      )
-
-
-
-' offsets all variable uids by a constant (e.g. to prevent collisions) 
-_typeShift = \type \offset type
-                        (\uid TypeVariable (add offset uid))
-                        (\a \b TypeAbstraction (_typeShift a offset) (_typeShift b offset))
-                        (\a \b TypeIntersection (_typeShift a offset) (_typeShift b offset))
-
-typeNextSafeVariable = \type foldl (typeEnumVariables (_typeShift type 1)) 0 max
-typeContainsVariableUid = \uid \type listAny (typeEnumVariables type) (isEQ uid)
-
-typeReplaceUidWithType = \uid \type \containerType containerType
-                        (\uidx if(isEQ uid uidx) type containerType)
-                        (\a \b TypeAbstraction (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
-                        (\a \b TypeIntersection (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
-
-typeListReplaceUidWithType = \uid \type \tlist listMap tlist (\pair pair (\a \b Pair (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b)))
-
-
-
-_getSelfAppCenterHelper = \var \abs 
-        TypeVariable_Dispatch
-            (\uid TypeAbstraction_Dispatch
-                (\a \b TypeVariable_Dispatch (\uidx if (isEQ uid uidx) (Just b) Nothing) Nothing a)
-                Nothing
-                abs
-            )
-            Nothing
-            var
-
-' Type -> Maybe Type
-' (t -> <center>) ^ t
-_getSelfAppCenter = \t 
-        TypeIntersection_Dispatch
-            (\ax \bx TypeVariable_Dispatch (k (_getSelfAppCenterHelper ax bx)) (_getSelfAppCenterHelper bx ax) ax)
-            Nothing
-            t
-
-' Type -> Type -> Maybe [Pair Type Type]
-' (t -> a) ^ t = (u -> b) ^ u -> c
-_isFixPointComboHelper = \t1 \t2
-        TypeAbstraction_Dispatch
-            (\a \b
-                (\m1 \m2 \a3
-                    maybeBind m1
-                    (\a1 
-                        maybeMap m2
-                        (\a2 [Pair a1 a2, Pair a1 a3])
-                    )
-                )
-                (_getSelfAppCenter t1)
-                (_getSelfAppCenter a)
-                b
-            )
-            Nothing
-            t2
-
-fpTest1 = TypeIntersection (TypeVariable 0) (TypeAbstraction (TypeVariable 0) (TypeVariable 1))
-fpTest2 = TypeAbstraction (_typeShift fpTest1 2) (TypeVariable 4)
-fpTest3 = [Pair fpTest1 fpTest2]
-
-' unify -> N -> iaType -> ibType -> otherType -> [Pair Type Type] -> Maybe Type
-_intersectionSplit = \unify \nextSafeUid \ia \ib \other \c2
-    maybeTryGetValue
-    ( ' fix point       
-        maybeMap
-            (_isFixPointComboHelper (TypeIntersection ia ib) other)
-            (\list unify nextSafeUid (listConcat c2 list))
-    )
-    ( ' el classico
-        (\otherA \otherB
-            maybeMap 
-                (unify (mul 3 nextSafeUid) (listConcat c2 [Pair ia otherA, Pair ib otherB])) 
-                i'(listConcat (listMap (typeEnumVariables other) (\uid Pair uid (TypeIntersection (TypeVariable (add uid nextSafeUid)) (TypeVariable (add uid (mul 2 nextSafeUid)))))))
-        ) (_typeShift other nextSafeUid) (_typeShift other (mul 2 nextSafeUid))
-    )
-
-' N -> Type -> N -> [Pair Type Type] -> Maybe Type
-_typeUnify = \breakN \interesting \nextSafeUid \c breakN 
-            Nothing
-            (\pred c
-                (Just interesting)
-                (\head \c2 head
-                    (\l \r l
-                        (\uid 
-                            (\rContainsL \innerResult 
-                                if(rContainsL) 
-                                (TypeVariable_Dispatch (\uidx _typeUnify pred interesting nextSafeUid c2) Nothing r)
-                                innerResult
-                            ) (typeContainsVariableUid uid r) (_typeUnify pred (typeReplaceUidWithType uid r interesting) nextSafeUid (typeListReplaceUidWithType uid r c2))
-                        )
-                        (\a \b r
-                            (\uidx if(typeContainsVariableUid uidx l) Nothing (_typeUnify pred (typeReplaceUidWithType uidx l interesting) nextSafeUid (typeListReplaceUidWithType uidx l c2)))
-                            (\ax \bx _typeUnify pred interesting nextSafeUid (listConcat c2 [Pair a ax, Pair b bx]))
-                            (\ax \bx _intersectionSplit (_typeUnify pred interesting) nextSafeUid ax bx l c2)
-                        )
-                        (\a \b r
-                            (\uidx if(typeContainsVariableUid uidx l) Nothing (_typeUnify pred (typeReplaceUidWithType uidx l interesting) nextSafeUid (typeListReplaceUidWithType uidx l c2)))
-                            (\ax \bx _intersectionSplit (_typeUnify pred interesting) nextSafeUid a b r c2)
-                            (\ax \bx _typeUnify pred interesting nextSafeUid (listConcat c2 [Pair a ax, Pair b bx]))
-                        )
-                    )
-                )
-            )
-
-' Type -> [Pair Type Type] -> Maybe Type
-typeUnify = \interesting \c _typeUnify 40 interesting (foldl (listMap c (\pair pair (\a \b max (typeNextSafeVariable a) (typeNextSafeVariable b)))) 0 max) c
-
-' Type -> Type -> Maybe Type
-typeApply = \a \b maybeMap ((\oa \ob typeUnify (TypeVariable (add oa ob)) [Pair a (TypeAbstraction (_typeShift b oa) (TypeVariable (add oa ob)))]) (typeNextSafeVariable a) (typeNextSafeVariable b)) typeNormalize
-
-
-typeErr = TypeVariable 42
-typeI = maybeTryGetValue (typeApply typeU typeU) typeErr 
-typeUI = maybeTryGetValue (typeApply typeU typeI) typeErr 
-typeK = maybeTryGetValue (typeApply typeU typeUI) typeErr 
-typeKI = maybeTryGetValue (typeApply typeK typeI) typeErr 
-typeS = maybeTryGetValue (typeApply typeU typeK) typeErr 
-typeSI = maybeTryGetValue (typeApply typeS typeI) typeErr 
-typeM = maybeTryGetValue (typeApply typeSI typeI) typeErr
-typeKS = maybeTryGetValue (typeApply typeK typeS) typeErr
-typeSKS = maybeTryGetValue (typeApply typeS typeKS) typeErr
-typeB = maybeTryGetValue (typeApply typeSKS typeK) typeErr
-typeSB = maybeTryGetValue (typeApply typeS typeB) typeErr
-typeT = maybeTryGetValue (typeApply typeSB typeI) typeErr
-typeTM = maybeTryGetValue (typeApply typeT typeM) typeErr
-
-typeI1 = maybeTryGetValue (typeApply typeM typeI) typeErr
-typeI2 = maybeTryGetValue (typeApply typeTM typeI) typeErr
-typeI3 = maybeTryGetValue (typeApply typeB typeI) typeErr
-typeI4 = maybeTryGetValue (typeApply typeM typeU) typeErr
-typeI5 = maybeTryGetValue (typeApply typeM typeKI) typeErr
-
-typeCB = TypeAbstraction (TypeAbstraction typeUa typeUb)
-                         (TypeAbstraction (TypeAbstraction typeUb typeUc) (TypeAbstraction typeUa typeUc))
-typeCBM = maybeTryGetValue (typeApply typeCB typeM) typeErr
-typeBM = maybeTryGetValue (typeApply typeB typeM) typeErr
-typeY = maybeTryGetValue (typeApply typeBM typeCBM) typeErr
-
-typeMM = maybeTryGetValue (typeApply typeM typeM) typeErr
-
 
 '' CONSTANTS
 _eCharBrOpen = strHead "("
@@ -750,18 +525,18 @@ token_String = \x x
 token_String_list = \xs strJoin (listMap xs token_String) " "
 
 ' :: Parser Token
-eatParenOpen        = parseBindOperation (parseChar _eCharBrOpen)    (k (TokenSpecialChar ScharParenOpen))
-eatParenClose       = parseBindOperation (parseChar _eCharBrClose)   (k (TokenSpecialChar ScharParenClose))
-eatSqBracketOpen    = parseBindOperation (parseChar _eCharSqBrOpen)  (k (TokenSpecialChar ScharSqBracketOpen))
-eatSqBracketClose   = parseBindOperation (parseChar _eCharSqBrClose) (k (TokenSpecialChar ScharSqBracketClose))
-eatComma            = parseBindOperation (parseChar _eCharComma)     (k (TokenSpecialChar ScharComma))
-eatAbstraction      = parseBindOperation (parseChar _eCharAbstr)     (k (TokenSpecialChar ScharAbstraction))
-eatAssign           = parseBindOperation (parseChar _eCharAssign)    (k (TokenSpecialChar ScharAssign))
-eatSingleOr         = parseBindOperation (parseChar _eCharOr)        (k (TokenSpecialChar ScharSingleOr))
+eatParenOpen = parseBindOperation (parseChar _eCharBrOpen) (k (TokenSpecialChar ScharParenOpen))
+eatParenClose = parseBindOperation (parseChar _eCharBrClose) (k (TokenSpecialChar ScharParenClose))
+eatSqBracketOpen = parseBindOperation (parseChar _eCharSqBrOpen) (k (TokenSpecialChar ScharSqBracketOpen))
+eatSqBracketClose = parseBindOperation (parseChar _eCharSqBrClose) (k (TokenSpecialChar ScharSqBracketClose))
+eatComma = parseBindOperation (parseChar _eCharComma) (k (TokenSpecialChar ScharComma))
+eatAbstraction = parseBindOperation (parseChar _eCharAbstr) (k (TokenSpecialChar ScharAbstraction))
+eatAssign = parseBindOperation (parseChar _eCharAssign) (k (TokenSpecialChar ScharAssign))
+eatSingleOr = parseBindOperation (parseChar _eCharOr) (k (TokenSpecialChar ScharSingleOr))
 
 eatLiteral = parseBindOperation parseToken (\x tokenLiteral x)
-eatConstS  = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\x TokenConstS x)
-eatConstN  = parseBindOperation parsenumber (\x TokenConstN x)
+eatConstS = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\x TokenConstS x)
+eatConstN = parseBindOperation parsenumber (\x TokenConstN x)
 eatComment = parseBindOperation (parseBindOverride (parseChar _eCharComment) (parseUntil _eIsNewLine)) (\x TokenComment x)
 
 eatSpecialChar = parseOptions
@@ -865,14 +640,10 @@ cstrParseSingleOr = cstrParseSChar ScharSingleOr
 cstrParseListTail = \e parseBindDiscard 
                     (parseBindOperation 
                         (
-                            parseOption
-                            (
-                                parseBind
-                                    ListCons
-                                    e
-                                    (parseWhilesuccessful (parseBindOverride cstrParseComma e))
-                            )
-                            (parseReturn ListEmpty)
+                            parseBind
+                                ListCons
+                                e
+                                (parseWhilesuccessful (parseBindOverride cstrParseComma e))
                         )
                         (\list listReturn (SyntaxList list))
                     )
@@ -1156,35 +927,6 @@ _syntaxToNativeDefs = \syntax
         )
 syntaxToNative = \s listMap (_syntaxToNativeDefs s) finalizeNativeDefs
 
-' NATIVE => NATIVE
-_nlB = NativeLiteral "b"
-_nlMB = NativeLiteral "maybeBind"
-_nlTA = NativeLiteral "typeApply"
-nativeToTypeNative = \native native
-            (\literal NativeLiteral (strCons literal "_Type"))
-            (\value NativeLiteral "Zero_Type")
-            (\value NativeLiteral "ListEmpty_Type")
-            (\o1 \o2 
-                NativeApplication
-                    (NativeApplication _nlMB (nativeToTypeNative o1))
-                    (NativeApplication 
-                        (NativeApplication 
-                            _nlB
-                            (NativeApplication _nlMB (nativeToTypeNative o2))) 
-                        _nlTA)
-            )
-nativeDefToTypeNative = \native native
-            (\literal \o NativeAssignment
-                (strCons literal "_Type")
-                (nativeToTypeNative o)
-            )
-
-NativeDefinition = NativeAssignment literal o   ' S Native
-NativeExpression = NativeLiteral literal        ' S
-                 | NativeConstN value           ' N
-                 | NativeConstS value           ' S
-                 | NativeApplication o1 o2      ' Native Native            
-
 ' NATIVE => S
 nativeExprToExe = \n n
             (\literal literal)
@@ -1220,21 +962,6 @@ native_Process = \synts maybeReturn (listBind synts syntaxToNative)
 
 ' [NATIVE] => S
 output_Process = \natives strConss (listMap natives nativeDefToExe)
-
-' [NATIVE] => S
-output_ProcessType = \natives strConss (listMap natives (b nativeDefToExe nativeDefToTypeNative))
-' S => S
-pipeType = \s
-    maybeTryGetValue (
-    maybeMap (
-    maybeBind (
-    maybeBind 
-        (token_Process s)
-        syntax_Process)
-        native_Process)
-        output_ProcessType)
-    ""
-
 
 ' S => S
 pipe = \s
@@ -1283,7 +1010,7 @@ million = mul 1000 1000
 millionS = (strFromN million)
 
 ' tests
-testCount = 100
+testCount = 83
 
 ' bool and basic combis
 test0 = True
@@ -1361,7 +1088,7 @@ test61 = isEQ 1 (listHead nats)
 test62 = isEQ 0 (listHead nats0)
 test63 = isEQ 0 (listHead byteVals)
 test64 = isEQ 256 (listCount byteVals)
-test65 = isEQ 435 (nxor 123 456)
+test65 = isEQ 435 (xor 123 456)
 test66 = isAlpha 65
 test67 = not (isAlpha 64)
 test68 = isNum (listHead "0")
@@ -1379,28 +1106,10 @@ test79 = strContains "asd" (listHead "s")
 test80 = not (strContains "asd" (listHead "w"))
 test81 = strEquals "asd" (strTrim "   asd   ")
 
-' types
-test82 = strEquals "(0 -> 0)" (printType typeI)
-test83 = strEquals "(0 -> (1 -> 0))" (printType typeK)
-test84 = strEquals "((0 -> (1 -> 2)) -> ((3 -> 1) -> ((0 ^ 3) -> 2)))" (printType typeS)
-test85 = strEquals "(((0 -> 1) ^ 0) -> 1)" (printType typeM)
-test86 = strEquals "((0 -> 1) -> ((2 -> 0) -> (2 -> 1)))" (printType typeB)
-test87 = strEquals "(((0 -> 1) ^ (2 -> 0)) -> (2 -> 1))" (printType typeT)
+' maybe
+test82 = True
 
-test88 = strEquals "(0 -> 0)" (printType typeI1)
-test89 = strEquals "(0 -> 0)" (printType typeI2)
-test90 = strEquals "((0 -> 1) -> (0 -> 1))" (printType typeI3)
-test91 = strEquals "(0 -> 0)" (printType typeI4)
-test92 = strEquals "(0 -> 0)" (printType typeI5)
 
-test93 = strEquals "((0 -> 0) -> 0)" (printType typeY)
-
-test94 = True
-test95 = True
-test96 = True
-test97 = True
-test98 = True
-test99 = True
 
 
 ' testx
@@ -1430,15 +1139,7 @@ scenario2 = \a foldl (listTake nats 5) "0" (\b \_ calledOften2 "42" (strCons a b
 ' : (native_Run "\opId \arg  (\arg  \opId (lengthyOp (c (c (c (c opId))))) (c (c (c (c arg))))) arg opId")
 
 
-
-
-
-
-
-
-
-
-
-
-
+' IO
+ioRun = \io snd (io 0)
+' : ((ioRun (ioBind readLine writeLine)) "asd")
 

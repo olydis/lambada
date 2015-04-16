@@ -1,0 +1,16 @@
+﻿: (K "aa" (\var (\contains Y(\trans \expr IF(contains expr) (IF(isEQ (fst expr) 2) ((\p (\pf \ps IF(contains pf) (IF(contains ps) (makeApplication (cccS (trans pf)) (trans ps)) (makeApplication (cccC (trans pf)) ps)) (IF(contains ps) (makeApplication (cccB pf) (trans ps)) (cccK p))) (fst p) (snd p)) (snd expr)) cccI) (cccK expr))) (containsDeferred var)))
+
+
+: (K "aa" (\var var))
+
+333s
+306s
+73s
+65s
+62s
+
+: (eval "1 + 2 * 3 + 12 + 45 + 36 + 999899 + 43 + 100000 + 10000 + 1000 + 100 + 1000*10000")
+
+: (K "aa" "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+: (K "aa" (listTake listTake listTake listTake listTake listTake listTake listTake listTake listTake listTake listTake listTake listTake listTake listTake))
+

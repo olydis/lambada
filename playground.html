@@ -142,7 +142,7 @@ a.sel
             };
             rstats = function (cnt) { for (var prop in d) d[prop].called = 0; };
             
-            $.get("playground/prelude.txt", compile, "text");
+            $.get("library/prelude.txt", compile, "text");
         }
         
         var comp;
@@ -214,7 +214,7 @@ a.sel
         
         $(function() 
         {
-            $.get("playground/prelude.native.txt", main, "text");
+            $.get("library/prelude.native.txt", main, "text");
         })
     </script>
   </head>
