@@ -50,200 +50,13 @@ class StringReader
     }
 }
 
-class Runtime
-{
-    public static create(binary: string): Runtime
-    {
-        var rt = new Runtime();
-        rt.define(binary);
-        return rt;
-    }
-
-    private defs: { [name: string]: ExpressionBase };
-
-    public constructor()
-    {
-        this.defs = {};
-
-        var def = (name: string, expr: ExpressionBase) =>
-        {
-            this.defs[name] = new AliasExpression(name, expr);
-        };
-
-        def("i", new BuiltinExpression(stack => stack.length >= 0));
-        def("k", new BuiltinExpression(stack => stack.length >= 2, stack =>
-        {
-            var x = stack.pop();
-            stack.pop();
-            stack.push(x);
-        }));
-        def("s", new BuiltinExpression(stack => stack.length >= 3, stack =>
-        {
-            var a = stack.pop();
-            var b = stack.pop();
-            var c = stack.pop();
-            stack.push(Expression.createApplication(b, c));
-            stack.push(c);
-            stack.push(a);
-        }));
-        def("b", new BuiltinExpression(stack => stack.length >= 3, stack =>
-        {
-            var a = stack.pop();
-            var b = stack.pop();
-            var c = stack.pop();
-            stack.push(Expression.createApplication(b, c));
-            stack.push(a);
-        }));
-        def("c", new BuiltinExpression(stack => stack.length >= 3, stack =>
-        {
-            var a = stack.pop();
-            var b = stack.pop();
-            var c = stack.pop();
-            stack.push(b);
-            stack.push(c);
-            stack.push(a);
-        }));
-        def("u", new BuiltinExpression(stack => stack.length >= 1, stack =>
-        {
-            var x = stack.pop();
-            stack.push(this.defs["k"]);
-            stack.push(this.defs["s"]);
-            stack.push(x);
-        }));
-
-        def("Zero", ShortcutExpression.createNumber(0));
-        def("add", new BuiltinExpression(stack => stack.length >= 2, stack =>
-        {
-            var x = stack.pop().asNumber();
-            var y = stack.pop().asNumber();
-            stack.push(ShortcutExpression.createNumber(x + y));
-        }));
-        def("mul", new BuiltinExpression(stack => stack.length >= 2, stack =>
-        {
-            var x = stack.pop().asNumber();
-            var y = stack.pop().asNumber();
-            stack.push(ShortcutExpression.createNumber(x * y));
-        }));
-        def("sub", new BuiltinExpression(stack => stack.length >= 2, stack =>
-        {
-            var x = stack.pop().asNumber();
-            var y = stack.pop().asNumber();
-            stack.push(ShortcutExpression.createNumber(Math.max(x - y, 0)));
-        }));
-
-        def("strCons", new BuiltinExpression(stack => stack.length >= 2, stack =>
-        {
-            var x = stack.pop().asString();
-            var y = stack.pop().asString();
-            stack.push(ShortcutExpression.createString(x + y));
-        }));
-        def("strEquals", new BuiltinExpression(stack => stack.length >= 2, stack =>
-        {
-            var x = stack.pop().asString();
-            var y = stack.pop().asString();
-            stack.push(ShortcutExpression.createBoolean(x == y));
-        }));
-        def("strFromN", new BuiltinExpression(stack => stack.length >= 1, stack =>
-        {
-            var x = stack.pop().asNumber();
-            stack.push(ShortcutExpression.createString(x.toString()));
-        }));
-        def("strEmpty", ShortcutExpression.createString(""));
-
-        //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
-        //{
-        //    var x = stack.pop().asString();
-        //    var y = stack.pop().asNumber();
-        //    stack.push(ShortcutExpression.createString(x.slice(y)));
-        //}));
-
-        def("msgBox", new BuiltinExpression(stack => stack.length >= 1, stack => window.alert(stack[stack.length - 1].toString())));
-    }
-
-    public define(binaryDefinition: string): void
-    {
-        var reader = new StringReader(binaryDefinition);
-
-        reader.readWhitespace();
-        while (reader.charsLeft > 0)
-        {
-            // begin parse definition
-            var name = reader.readToken();
-
-            var expressionStack: ExpressionBase[] = [];
-
-            while (true)
-            {
-                reader.readWhitespace();
-
-                // apply
-                if (reader.readChar("."))
-                {
-                    if (expressionStack.length < 2)
-                        break;
-                    var b = expressionStack.pop();
-                    var a = expressionStack.pop();
-                    if (a instanceof Expression)
-                    {
-                        (<Expression>a).stack.unshift(b);
-                        expressionStack.push(a);
-                    }
-                    else
-                    {
-                        expressionStack.push(Expression.createApplication(a, b));
-                    }
-                    continue;
-                }
-
-                // num
-                var num = reader.readNaturalNumber();
-                if (num != null)
-                {
-                    expressionStack.push(ShortcutExpression.createNumber(num));
-                    continue;
-                }
-
-                // string
-                if (reader.readChar("\""))
-                {
-                    var s = reader.readWhile(ch => ch != "\"");
-                    reader.readChar("\"");
-                    expressionStack.push(ShortcutExpression.createString(s));
-                    continue;
-                }
-
-                // defref
-                var defRef = reader.readToken();
-                var def = this.defs[defRef];
-                if (def == undefined)
-                    throw "undefined reference: " + defRef;
-                expressionStack.push(def);
-            }
-
-            if (this.defs[name] == undefined)
-            {
-                var content = expressionStack.pop();
-                console.log(name + " = " + content.toString());
-                this.defs[name] = (function (content: ExpressionBase)
-                {
-                    return new AliasExpression(name, content);
-                })(content);
-            }
-            // end parse definition
-
-            reader.readWhitespace();
-        }
-    }
-}
-
 class ExpressionBase
 {
     private static probeSTOP: ExpressionBase;
 
     public static init(): void
     {
-        ExpressionBase.probeSTOP = new BuiltinExpression(stack => false);
-
+        ExpressionBase.probeSTOP = new BuiltinExpression(undefined);
     }
 
     public apply(stack: ExpressionBase[]): boolean { return false; }
@@ -256,23 +69,22 @@ class ExpressionBase
         while (this.reduce()) ExpressionBase.reductions++;
     }
 
+    public _asNumber: (() => number) = undefined;
     public asNumber(): number
     {
         var n = 0;
         var probeN: ExpressionBase;
-        var probeSucc = new BuiltinExpression(stack => stack.length >= 1, stack =>
+        var probeSucc = new BuiltinExpression(1, stack =>
         {
             n++;
             stack.push(probeN);
         });
-        probeN = new BuiltinExpression(
-            stack => stack.length >= 1,
-            stack => 
+        probeN = new BuiltinExpression(1, stack => 
             {
-                var num = stack.pop();
-                if (ShortcutExpression.isType(num, ShortcutType.N))
+                var num: any = stack.pop();
+                if (num._asNumber)
                 {
-                    n += num.asNumber();
+                    n += num._asNumber();
                     return;
                 }
                 stack.push(probeSucc);
@@ -282,26 +94,28 @@ class ExpressionBase
 
         var expr = Expression.createApplication(probeN, this);
         expr.fullReduce();
+        
+        this._asNumber = this.asNumber = () => n;
+        
         return n;
     }
 
+    public _asString: (() => string) = undefined;
     public asString(): string
     {
         var s = "";
         var probeS: ExpressionBase;
-        var probeCons = new BuiltinExpression(stack => stack.length >= 2, stack =>
+        var probeCons = new BuiltinExpression(2, stack =>
         {
             s += String.fromCharCode(stack.pop().asNumber());
             stack.push(probeS);
         });
-        probeS = new BuiltinExpression(
-            stack => stack.length >= 1,
-            stack => 
+        probeS = new BuiltinExpression(1, stack => 
             {
-                var num = stack.pop();
-                if (ShortcutExpression.isType(num, ShortcutType.S))
+                var num: any = stack.pop();
+                if (num._asString)
                 {
-                    s += num.asString();
+                    s += num._asString();
                     return;
                 }
                 stack.push(probeCons);
@@ -311,11 +125,14 @@ class ExpressionBase
 
         var expr = Expression.createApplication(probeS, this);
         expr.fullReduce();
+        
+        this._asString = this.asString = () => s;
+        
         return s;
     }
 }
 
-class BuiltinExpression extends ExpressionBase
+class BuiltinExpressionx extends ExpressionBase
 {
     public constructor(
         private test: (stack: ExpressionBase[]) => boolean,
@@ -329,6 +146,26 @@ class BuiltinExpression extends ExpressionBase
         var result = this.test(stack);
         if (result) this.applyTo(stack);
         return result;
+    }
+}
+
+class BuiltinExpression extends ExpressionBase
+{
+    public constructor(
+        private arity: number,
+        private applyTo: (stack: ExpressionBase[]) => void = x => { })
+    {
+        super();
+    }
+
+    public apply(stack: ExpressionBase[]): boolean
+    {
+        if (stack.length >= this.arity)
+        {
+            this.applyTo(stack);
+            return true;
+        }
+        return false;
     }
 }
 
@@ -360,7 +197,7 @@ class Expression extends ExpressionBase
 {
     public static createADTo(arity: number, index: number, ...args: (() => ExpressionBase)[]): ExpressionBase
     {
-        return new AliasExpression("ADTo_" + index + "_" + arity, new BuiltinExpression(stack => stack.length >= arity, stack =>
+        return new AliasExpression("ADTo_" + index + "_" + arity, new BuiltinExpression(arity, stack =>
         {
             var head: ExpressionBase = stack[stack.length - index - 1];
 
@@ -387,11 +224,6 @@ class Expression extends ExpressionBase
         Array.prototype.push.apply(e.stack, expressions);
         e.stack.reverse();
         return e;
-    }
-
-    private static createDummy(name: string): ExpressionBase
-    {
-        return new AliasExpression(name, new BuiltinExpression(stack => false));
     }
 
     public stack: ExpressionBase[];
@@ -461,41 +293,36 @@ class Expression extends ExpressionBase
     public toString(): string
     {
         var res = "";
-        this.stack.forEach(x => res = x.toString() + " " + res);
-        return "(" + res.trim() + ")";
+        this.stack.forEach((x, i) => res = (i == this.stack.length - 1  ? x.toString() : "(" + x.toString() + ")") + " " + res);
+        return res.trim();
     }
 }
 
-enum ShortcutType
-{
-    N,
-    S
-}
-
-class ShortcutExpression<T> extends AliasExpression
+class ShortcutExpression
 {
     private static ADTo_2_0 = Expression.createADTo(2, 0);
     private static ADTo_2_1 = Expression.createADTo(2, 1);
-    public static createNumber(n: number): ShortcutExpression<number>
+    public static createNumber(n: number): ExpressionBase
     {
-        var se = new ShortcutExpression<number>(ShortcutType.N, n.toString(),
-            n == 0
+        var se: any = n == 0
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1,() => ShortcutExpression.createNumber(n - 1)));
-        se.asNumber = () => n;
+                : Expression.createADTo(2, 1,() => ShortcutExpression.createNumber(n - 1));
+        se._asNumber = se.asNumber = () => n;
+        se.toString = () => n.toString();
         return se;
     }
-    private static createString2(s: string, offset: number): ShortcutExpression<string>
+    private static createString2(s: string, offset: number): ExpressionBase
     {
-        var se = new ShortcutExpression<string>(ShortcutType.S, "\"" + s.slice(offset) + "\"", s.length == offset
+        var se: any = s.length == offset
             ? ShortcutExpression.ADTo_2_0
             : Expression.createADTo(2, 1,
                 () => ShortcutExpression.createNumber(s.charCodeAt(offset)),
-                () => ShortcutExpression.createString2(s, offset + 1)));
-        se.asString = () => s.slice(offset);
+                () => ShortcutExpression.createString2(s, offset + 1));
+        se._asString = se.asString = () => s.slice(offset);
+        se.toString = () => "\"" + s.slice(offset) + "\"";
         return se;
     }
-    public static createString(s: string): ShortcutExpression<string>
+    public static createString(s: string): ExpressionBase
     {
         return ShortcutExpression.createString2(s, 0);
     }
@@ -503,16 +330,183 @@ class ShortcutExpression<T> extends AliasExpression
     {
         return b ? ShortcutExpression.ADTo_2_0 : ShortcutExpression.ADTo_2_1;
     }
-
-    public static isType(expression: ExpressionBase, stype: ShortcutType): boolean
-    {
-        return (<ShortcutExpression<any>>expression).stype == stype;
-    }
-
-    public constructor(public stype: ShortcutType, alias: string, slave: ExpressionBase)
-    {
-        super(alias, slave);
-    }
 }
 
 ExpressionBase.init();
+
+
+
+class Runtime extends BuiltinExpression
+{
+    private static maybeNothing = Expression.createADTo(2, 1);
+    
+    public static create(binary: string): Runtime
+    {
+        var rt = new Runtime();
+        rt.define(binary);
+        return rt;
+    }
+
+    private defs: { [name: string]: ExpressionBase };
+
+    public constructor()
+    {
+        super(1, stack => 
+            {
+                var result = this.defs[stack.pop().asString()];
+                if (result)
+                    stack.push(Expression.createADTo(2, 0, () => result));
+                else
+                    stack.push(Runtime.maybeNothing);
+            });
+        
+        this.defs = {};
+
+        var def = (name: string, expr: ExpressionBase) =>
+        {
+            this.defs[name] = new AliasExpression(name, expr);
+        };
+
+        def("i", new BuiltinExpression(0));
+        def("k", new BuiltinExpression(2, stack =>
+        {
+            var x = stack.pop();
+            stack.pop();
+            stack.push(x);
+        }));
+        def("s", new BuiltinExpression(3, stack =>
+        {
+            var a = stack.pop();
+            var b = stack.pop();
+            var c = stack.pop();
+            stack.push(Expression.createApplication(b, c));
+            stack.push(c);
+            stack.push(a);
+        }));
+        def("b", new BuiltinExpression(3, stack =>
+        {
+            var a = stack.pop();
+            var b = stack.pop();
+            var c = stack.pop();
+            stack.push(Expression.createApplication(b, c));
+            stack.push(a);
+        }));
+        def("c", new BuiltinExpression(3, stack =>
+        {
+            var a = stack.pop();
+            var b = stack.pop();
+            var c = stack.pop();
+            stack.push(b);
+            stack.push(c);
+            stack.push(a);
+        }));
+        def("u", new BuiltinExpression(1, stack =>
+        {
+            var x = stack.pop();
+            stack.push(this.defs["k"]);
+            stack.push(this.defs["s"]);
+            stack.push(x);
+        }));
+
+        def("Zero", ShortcutExpression.createNumber(0));
+        def("add", new BuiltinExpression(2, 
+            stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber()))));
+        def("mul", new BuiltinExpression(2, 
+            stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber()))));
+        def("sub", new BuiltinExpression(2,
+            stack => stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber())))));
+
+        def("strCons", new BuiltinExpression(2,
+            stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
+        def("strEquals", new BuiltinExpression(2,
+            stack => stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString()))));
+        def("strFromN", new BuiltinExpression(1, 
+            stack => stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString()))));
+        def("strEmpty", ShortcutExpression.createString(""));
+
+        //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
+        //{
+        //    var x = stack.pop().asString();
+        //    var y = stack.pop().asNumber();
+        //    stack.push(ShortcutExpression.createString(x.slice(y)));
+        //}));
+
+        def("msgBox", new BuiltinExpression(1, 
+            stack => window.alert(stack[stack.length - 1].toString())));
+    }
+
+    public define(binaryDefinition: string): void
+    {
+        var reader = new StringReader(binaryDefinition);
+
+        reader.readWhitespace();
+        while (reader.charsLeft > 0)
+        {
+            // begin parse definition
+            var name = reader.readToken();
+
+            var expressionStack: ExpressionBase[] = [];
+
+            while (true)
+            {
+                reader.readWhitespace();
+
+                // apply
+                if (reader.readChar("."))
+                {
+                    if (expressionStack.length < 2)
+                        break;
+                    var b = expressionStack.pop();
+                    var a = expressionStack.pop();
+                    if (a instanceof Expression)
+                    {
+                        (<Expression>a).stack.unshift(b);
+                        expressionStack.push(a);
+                    }
+                    else
+                    {
+                        expressionStack.push(Expression.createApplication(a, b));
+                    }
+                    continue;
+                }
+
+                // num
+                var num = reader.readNaturalNumber();
+                if (num != null)
+                {
+                    expressionStack.push(ShortcutExpression.createNumber(num));
+                    continue;
+                }
+
+                // string
+                if (reader.readChar("\""))
+                {
+                    var s = reader.readWhile(ch => ch != "\"");
+                    reader.readChar("\"");
+                    expressionStack.push(ShortcutExpression.createString(s));
+                    continue;
+                }
+
+                // defref
+                var defRef = reader.readToken();
+                var def = this.defs[defRef];
+                if (def == undefined)
+                    throw "undefined reference: " + defRef;
+                expressionStack.push(def);
+            }
+
+            if (this.defs[name] == undefined)
+            {
+                var content = expressionStack.pop();
+                //console.log(name + " = " + content.toString());
+                this.defs[name] = (function (content: ExpressionBase)
+                {
+                    return new AliasExpression(name, content);
+                })(content);
+            }
+            // end parse definition
+
+            reader.readWhitespace();
+        }
+    }
+}

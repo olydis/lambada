@@ -81,13 +81,32 @@ a.sel
         var n;
         var stats;
         
+        function runTests()
+        {
+            var tc = d.testCount.asNumber();
+            for (var i = 0; i < tc; i++)
+            {
+                var prop = "test" + i;
+                var dtime = new Date().getTime();
+                var succ = app(d.strFromB, d[prop]).asString() != "True"
+                var ddiff = new Date().getTime() - dtime;
+                if (succ)
+                    throw prop + " failed";
+                else
+                    console.log(prop + " passed in " + ddiff + "ms");
+            }
+        }
+        
         function main(binary) 
         {
             rt = Runtime.create(binary);
+            
             d = rt.defs;
             app = Expression.createApplicationx;
             s = ShortcutExpression.createString;
             n = ShortcutExpression.createNumber;
+            
+            runTests();
             
             stats = function (cnt)
             {
@@ -131,9 +150,9 @@ a.sel
                         index++;
                     }
                 
-                    var result = Expression.createApplication(
-                        rt.defs["pipe"], 
-                        ShortcutExpression.createString(stmt)).asString();
+                    var result = app(
+                        d.pipe, 
+                        s(stmt)).asString();
                     if (result != "")
                     {
                         console.log(result);
@@ -142,6 +161,27 @@ a.sel
                 }
             };
             run = function() { runDstart = new Date(); intervalId = setInterval(comp, 1); }
+        }
+        
+        function leval(expr)
+        {
+            return app(
+                d.maybeTryGetValue,
+                app(d.run2, rt, s(expr)),
+                s("error"));
+        }
+        function exec(expr)
+        {
+            var result = leval(expr);
+            result.fullReduce();
+            return result.toString();
+        }
+        
+        function debug(expr)
+        {
+            console.log(expr.toString());
+            while (expr.reduce())
+                console.log(expr.toString());
         }
         
         $(function() 
