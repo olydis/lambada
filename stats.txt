@@ -93,6 +93,8 @@ com()
 1900
 // engineered fullReduce
 1300
+// non-aliased ADT-objects
+1200
 
 ====Command====
 run()

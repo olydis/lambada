@@ -1,4 +1,4 @@
-module LambadaRuntime
+module LambadaRuntimeMinimal
 {
     class StringReader
     {
@@ -66,9 +66,9 @@ module LambadaRuntime
 
         public fullReduce(): void
         {
+            while (this.reduce());
         }
 
-        public _asNumber: (() => number) = undefined;
         public asNumber(): number
         {
             var n = 0;
@@ -81,11 +81,6 @@ module LambadaRuntime
             probeN = new BuiltinExpression(1, stack => 
             {
                 var num: any = stack.pop();
-                if (num._asNumber)
-                {
-                    n += num._asNumber();
-                    return;
-                }
                 stack.push(probeSucc);
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
@@ -93,13 +88,9 @@ module LambadaRuntime
 
             var expr = Expression.createApplication(probeN, this);
             expr.fullReduce();
-
-            this._asNumber = this.asNumber = () => n;
-
             return n;
         }
 
-        public _asString: (() => string) = undefined;
         public asString(): string
         {
             var s = "";
@@ -112,11 +103,6 @@ module LambadaRuntime
             probeS = new BuiltinExpression(1, stack => 
             {
                 var num: any = stack.pop();
-                if (num._asString)
-                {
-                    s += num._asString();
-                    return;
-                }
                 stack.push(probeCons);
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
@@ -124,9 +110,6 @@ module LambadaRuntime
 
             var expr = Expression.createApplication(probeS, this);
             expr.fullReduce();
-
-            this._asString = this.asString = () => s;
-
             return s;
         }
     }
@@ -166,11 +149,6 @@ module LambadaRuntime
 
         public toString(): string
         {
-            // DEBUG
-            //if (arguments.callee.caller == null 
-            //|| arguments.callee.caller.toString().indexOf("toString") == -1)
-            //    return this.slave.toString();
-        
             return this.alias;
         }
     }
@@ -222,11 +200,9 @@ module LambadaRuntime
             return true;
         }
 
-        private hnf: boolean = false;
-
         public reduce(): boolean
         {
-            if (this.hnf || this.stack.length == 0)
+            if (this.stack.length == 0)
                 return false;
             var exprs = [this];
             while (true)
@@ -252,42 +228,7 @@ module LambadaRuntime
                 else
                     return true;
             }
-            this.hnf = true;
             return false;
-        }
-
-        public fullReduce()
-        {
-            if (this.stack.length > 0)
-            {
-                var exprs = [this];
-                while (exprs.length > 0)
-                {
-                    while (true)
-                    {
-                        var top = exprs[exprs.length - 1].top;
-                        if (top instanceof Expression && top.stack.length > 0)
-                            exprs.push(top);
-                        else
-                            break;
-                    }
-
-                    do
-                    {
-                        var expr = exprs.pop();
-                        if (expr.stack.length == 0)
-                            continue;
-                        var top = expr.stack.pop();
-                        top.fullReduce();
-                        if (top.apply(expr.stack))
-                        {
-                            exprs.push(expr);
-                            break;
-                        }
-                        expr.stack.push(top);
-                    } while (exprs.length > 0);
-                }
-            }
         }
 
         public get top(): ExpressionBase
@@ -297,8 +238,6 @@ module LambadaRuntime
 
         public toString(): string
         {
-            if (this.stack.length == 0)
-                return "i";
             var res = "";
             this.stack.forEach((x, i) => res = (i == this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res);
             return res.trim();
@@ -394,63 +333,6 @@ module LambadaRuntime
                 }));
                 stack.push(x);
             }));
-
-            def("i", new BuiltinExpression(0));
-            def("k", new BuiltinExpression(2, stack =>
-            {
-                var x = stack.pop();
-                stack.pop();
-                stack.push(x);
-            }));
-            def("s", new BuiltinExpression(3, stack =>
-            {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
-                stack.push(Expression.createApplication(b, c));
-                stack.push(c);
-                stack.push(a);
-            }));
-            def("b", new BuiltinExpression(3, stack =>
-            {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
-                stack.push(Expression.createApplication(b, c));
-                stack.push(a);
-            }));
-            def("c", new BuiltinExpression(3, stack =>
-            {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
-                stack.push(b);
-                stack.push(c);
-                stack.push(a);
-            }));
-
-            def("Zero", ShortcutExpression.createNumber(0));
-            def("add", new BuiltinExpression(2, 
-                stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber()))));
-            def("mul", new BuiltinExpression(2, 
-                stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber()))));
-            def("sub", new BuiltinExpression(2,
-                stack => stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber())))));
-
-            def("strCons", new BuiltinExpression(2,
-                stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
-            def("strEquals", new BuiltinExpression(2,
-                stack => stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString()))));
-            def("strFromN", new BuiltinExpression(1, 
-                stack => stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString()))));
-            def("strEmpty", ShortcutExpression.createString(""));
-
-            //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
-            //{
-            //    var x = stack.pop().asString();
-            //    var y = stack.pop().asNumber();
-            //    stack.push(ShortcutExpression.createString(x.slice(y)));
-            //}));
 
             def("msgBox", new BuiltinExpression(1,
                 stack => window.alert(stack[stack.length - 1].toString())));

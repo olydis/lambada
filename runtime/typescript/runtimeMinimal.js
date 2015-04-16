@@ -4,8 +4,8 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-var LambadaRuntime;
-(function (LambadaRuntime) {
+var LambadaRuntimeMinimal;
+(function (LambadaRuntimeMinimal) {
     var StringReader = (function () {
         function StringReader(str) {
             this.str = str;
@@ -48,8 +48,6 @@ var LambadaRuntime;
     })();
     var ExpressionBase = (function () {
         function ExpressionBase() {
-            this._asNumber = undefined;
-            this._asString = undefined;
         }
         ExpressionBase.init = function () {
             ExpressionBase.probeSTOP = new BuiltinExpression(undefined);
@@ -61,6 +59,8 @@ var LambadaRuntime;
             return false;
         };
         ExpressionBase.prototype.fullReduce = function () {
+            while (this.reduce())
+                ;
         };
         ExpressionBase.prototype.asNumber = function () {
             var n = 0;
@@ -71,17 +71,12 @@ var LambadaRuntime;
             });
             probeN = new BuiltinExpression(1, function (stack) {
                 var num = stack.pop();
-                if (num._asNumber) {
-                    n += num._asNumber();
-                    return;
-                }
                 stack.push(probeSucc);
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
             });
             var expr = Expression.createApplication(probeN, this);
             expr.fullReduce();
-            this._asNumber = this.asNumber = function () { return n; };
             return n;
         };
         ExpressionBase.prototype.asString = function () {
@@ -93,17 +88,12 @@ var LambadaRuntime;
             });
             probeS = new BuiltinExpression(1, function (stack) {
                 var num = stack.pop();
-                if (num._asString) {
-                    s += num._asString();
-                    return;
-                }
                 stack.push(probeCons);
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
             });
             var expr = Expression.createApplication(probeS, this);
             expr.fullReduce();
-            this._asString = this.asString = function () { return s; };
             return s;
         };
         return ExpressionBase;
@@ -145,10 +135,6 @@ var LambadaRuntime;
             this.slave.fullReduce();
         };
         AliasExpression.prototype.toString = function () {
-            // DEBUG
-            //if (arguments.callee.caller == null 
-            //|| arguments.callee.caller.toString().indexOf("toString") == -1)
-            //    return this.slave.toString();
             return this.alias;
         };
         return AliasExpression;
@@ -157,7 +143,6 @@ var LambadaRuntime;
         __extends(Expression, _super);
         function Expression() {
             _super.call(this);
-            this.hnf = false;
             this.stack = [];
         }
         Expression.createADTo = function (arity, index) {
@@ -195,7 +180,7 @@ var LambadaRuntime;
             return true;
         };
         Expression.prototype.reduce = function () {
-            if (this.hnf || this.stack.length == 0)
+            if (this.stack.length == 0)
                 return false;
             var exprs = [this];
             while (true) {
@@ -217,34 +202,7 @@ var LambadaRuntime;
                 else
                     return true;
             }
-            this.hnf = true;
             return false;
-        };
-        Expression.prototype.fullReduce = function () {
-            if (this.stack.length > 0) {
-                var exprs = [this];
-                while (exprs.length > 0) {
-                    while (true) {
-                        var top = exprs[exprs.length - 1].top;
-                        if (top instanceof Expression && top.stack.length > 0)
-                            exprs.push(top);
-                        else
-                            break;
-                    }
-                    do {
-                        var expr = exprs.pop();
-                        if (expr.stack.length == 0)
-                            continue;
-                        var top = expr.stack.pop();
-                        top.fullReduce();
-                        if (top.apply(expr.stack)) {
-                            exprs.push(expr);
-                            break;
-                        }
-                        expr.stack.push(top);
-                    } while (exprs.length > 0);
-                }
-            }
         };
         Object.defineProperty(Expression.prototype, "top", {
             get: function () {
@@ -255,15 +213,13 @@ var LambadaRuntime;
         });
         Expression.prototype.toString = function () {
             var _this = this;
-            if (this.stack.length == 0)
-                return "i";
             var res = "";
             this.stack.forEach(function (x, i) { return res = (i == _this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res; });
             return res.trim();
         };
         return Expression;
     })(ExpressionBase);
-    LambadaRuntime.Expression = Expression;
+    LambadaRuntimeMinimal.Expression = Expression;
     var ShortcutExpression = (function () {
         function ShortcutExpression() {
         }
@@ -289,7 +245,7 @@ var LambadaRuntime;
         ShortcutExpression.ADTo_2_1 = Expression.createADTo(2, 1);
         return ShortcutExpression;
     })();
-    LambadaRuntime.ShortcutExpression = ShortcutExpression;
+    LambadaRuntimeMinimal.ShortcutExpression = ShortcutExpression;
     ExpressionBase.init();
     var Runtime = (function (_super) {
         __extends(Runtime, _super);
@@ -323,49 +279,6 @@ var LambadaRuntime;
                 }));
                 stack.push(x);
             }));
-            def("i", new BuiltinExpression(0));
-            def("k", new BuiltinExpression(2, function (stack) {
-                var x = stack.pop();
-                stack.pop();
-                stack.push(x);
-            }));
-            def("s", new BuiltinExpression(3, function (stack) {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
-                stack.push(Expression.createApplication(b, c));
-                stack.push(c);
-                stack.push(a);
-            }));
-            def("b", new BuiltinExpression(3, function (stack) {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
-                stack.push(Expression.createApplication(b, c));
-                stack.push(a);
-            }));
-            def("c", new BuiltinExpression(3, function (stack) {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
-                stack.push(b);
-                stack.push(c);
-                stack.push(a);
-            }));
-            def("Zero", ShortcutExpression.createNumber(0));
-            def("add", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber())); }));
-            def("mul", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber())); }));
-            def("sub", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber()))); }));
-            def("strCons", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString())); }));
-            def("strEquals", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString())); }));
-            def("strFromN", new BuiltinExpression(1, function (stack) { return stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString())); }));
-            def("strEmpty", ShortcutExpression.createString(""));
-            //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
-            //{
-            //    var x = stack.pop().asString();
-            //    var y = stack.pop().asNumber();
-            //    stack.push(ShortcutExpression.createString(x.slice(y)));
-            //}));
             def("msgBox", new BuiltinExpression(1, function (stack) { return window.alert(stack[stack.length - 1].toString()); }));
         }
         Runtime.create = function (binary) {
@@ -431,6 +344,6 @@ var LambadaRuntime;
         Runtime.maybeNothing = Expression.createADTo(2, 1);
         return Runtime;
     })(BuiltinExpression);
-    LambadaRuntime.Runtime = Runtime;
-})(LambadaRuntime || (LambadaRuntime = {}));
-//# sourceMappingURL=runtime.js.map
+    LambadaRuntimeMinimal.Runtime = Runtime;
+})(LambadaRuntimeMinimal || (LambadaRuntimeMinimal = {}));
+//# sourceMappingURL=runtimeMinimal.js.map

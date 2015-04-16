@@ -28,6 +28,10 @@ p
 {
     margin: 10px;
 }
+#target
+{
+    white-space: nowrap;
+}
 td
 {
     vertical-align: top;
@@ -72,7 +76,11 @@ a.sel
     </style>
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
     <script src="runtime/typescript/runtime.js"></script>
+    <script src="runtime/typescript/runtimeMinimal.js"></script>
     <script>
+        //var lrt = LambadaRuntimeMinimal;
+        var lrt = LambadaRuntime;
+    
         function measure(f)
         {
             var d1 = new Date().getTime(); 
@@ -115,14 +123,14 @@ a.sel
         
         function main(binary) 
         {
-            rt = Runtime.create(binary);
+            rt = lrt.Runtime.create(binary);
             
             d = rt.defs;
-            app = Expression.createApplicationx;
-            s = ShortcutExpression.createString;
-            n = ShortcutExpression.createNumber;
+            app = lrt.Expression.createApplicationx;
+            s = lrt.ShortcutExpression.createString;
+            n = lrt.ShortcutExpression.createNumber;
             
-            runTests();
+            //runTests();
             
             stats = function (cnt)
             {
@@ -156,6 +164,7 @@ a.sel
                 {
                     clearInterval(intervalId);
                     console.log(new Date().getTime() - runDstart.getTime());
+                    document.title = "done";
                 }
                 else
                 {
@@ -172,8 +181,10 @@ a.sel
                         s(stmt)).asString();
                     if (result != "")
                     {
-                        console.log(result);
+                        document.title = index + " / " + lines.length;
                         binary.push(result);
+                        $("#target").append(result + "<br/>");
+                        //$("#target").prepend(result + "<br/>");
                     }
                 }
             };
