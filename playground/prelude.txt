@@ -1,18 +1,11 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' lambAda stage1 (the extra "A" is for extra awesomeness) '
 '                                                         '
-' Last changed: 15.04.2014         Author: Johannes Bader '
+' Last changed: 16.04.2015         Author: Johannes Bader '
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-' EXTERN
-_builtin_ = _builtin_
-u = _builtin_
-write = _builtin_        ' S => IO ()
-writeLine = _builtin_    ' S => IO ()
-readLine = _builtin_     ' IO S
-ioBind = _builtin_       ' IO a => (a => IO b) => IO b
-ioReturn = _builtin_     ' x => IO x
-msgBox = _builtin_       ' x => x
+' import: u
+' import: msgBox
 
 ''' basic runtime
 ' define SKI in terms of U to enable abstraction killing 
@@ -67,8 +60,6 @@ sub = \a \b if(isZero b)
         a
         (sub (pred a) (pred b))
 
-diff = \a \b if (isLT a b) (sub b a) (sub a b)
-
 ''' Type: Pair
 Pair = Pair a b
 fst = \pair pair (\a \b a)
@@ -85,6 +76,8 @@ isGT = \a \b not (isLTE a b)
 
 min = \a \b if(isLT a b) a b
 max = \a \b if(isGT a b) a b
+
+diff = \a \b if (isLT a b) (sub b a) (sub a b)
 
 mod = \a \b if(isLT a b) a (mod (sub a b) b)
 div = \a \b if(isLT a b) Zero (Succ (div (sub a b) b))
@@ -254,7 +247,7 @@ byteVals = listTake nats0 256
 
 toBinSeq = \n listMap (listTakeWhile (unfold n (c div 2)) (b not isZero)) (c mod 2)
 fromBinSeq = \l foldl (listZip l nats0 (\a \b mul a (pow 2 b))) 0 add
-xor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y mod (add x y) 2))
+nxor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y mod (add x y) 2))
 
 isUpperCaseLetter = \c and (isGT c 64) (isLT c 91)
 isLowerCaseLetter = \c or (and (isGT c 96) (isLT c 123)) (isEQ c 95)
@@ -1368,7 +1361,7 @@ test61 = isEQ 1 (listHead nats)
 test62 = isEQ 0 (listHead nats0)
 test63 = isEQ 0 (listHead byteVals)
 test64 = isEQ 256 (listCount byteVals)
-test65 = isEQ 435 (xor 123 456)
+test65 = isEQ 435 (nxor 123 456)
 test66 = isAlpha 65
 test67 = not (isAlpha 64)
 test68 = isNum (listHead "0")
@@ -1435,11 +1428,6 @@ scenario1 = \a foldl (listTake nats 5) "0" (\b \_ calledOften1 "42" (strCons a b
 scenario2 = \a foldl (listTake nats 5) "0" (\b \_ calledOften2 "42" (strCons a b))
 
 ' : (native_Run "\opId \arg  (\arg  \opId (lengthyOp (c (c (c (c opId))))) (c (c (c (c arg))))) arg opId")
-
-
-' IO
-ioRun = \io snd (io 0)
-' : ((ioRun (ioBind readLine writeLine)) "asd")
 
 
 
