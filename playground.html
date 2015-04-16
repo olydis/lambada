@@ -75,8 +75,8 @@ a.sel
 
     </style>
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
-    <script src="lambada/runtime/typescript/runtime.js"></script>
-    <script src="lambada/runtime/typescript/runtimeMinimal.js"></script>
+    <script src="runtime/typescript/runtime.js"></script>
+    <script src="runtime/typescript/runtimeMinimal.js"></script>
     <script>
         //var lrt = LambadaRuntimeMinimal;
         var lrt = LambadaRuntime;
@@ -142,7 +142,7 @@ a.sel
             };
             rstats = function (cnt) { for (var prop in d) d[prop].called = 0; };
             
-            $.get("lambada/library/prelude.txt", compile, "text");
+            $.get("library/prelude.txt", compile, "text");
         }
         
         var comp;
@@ -214,7 +214,7 @@ a.sel
         
         $(function() 
         {
-            $.get("lambada/library/prelude.native.txt", main, "text");
+            $.get("library/prelude.native.txt", main, "text");
         })
     </script>
   </head>
