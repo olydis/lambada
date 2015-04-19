@@ -1,7 +1,7 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ' lambAda stage1 (the extra "A" is for extra awesomeness) '
 '                                                         '
-' Last changed: 16.04.2015         Author: Johannes Bader '
+' Last changed: 19.04.2015         Author: Johannes Bader '
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 ' import: u
@@ -990,6 +990,10 @@ nativeY = NativeLiteral ":bound:y"
 nativeListEmpty = NativeLiteral "ListEmpty"
 nativeListCons = NativeLiteral "ListCons"
 nativeStrToN = NativeLiteral "strToN"
+nativeZero = NativeLiteral "Zero"
+nativeSucc = NativeLiteral "Succ"
+nativeMul = NativeLiteral "mul"
+nativeTwo = NativeLiteral "two"
 
 isNativeLiteral = \lit \nat NativeLiteral_Dispatch 
         (\literal strEquals lit literal)
@@ -1034,12 +1038,15 @@ finalizeNativeExpr =
     )
 finalizeNativeDefs = \n n (\literal \o NativeAssignment literal (finalizeNativeExpr o))
 
+_nToNative = \n if (isZero n) nativeZero (if (isZero (mod n 2)) (NativeApplication (NativeApplication nativeMul nativeTwo) (_nToNative (div n 2))) (NativeApplication nativeSucc (_nToNative (pred n))))
+_sToNative = \value foldr value nativeListEmpty (\value \item NativeApplication (NativeApplication nativeListCons (_nToNative item)) value)
+
 ' SYNTAX => NATIVE
 _syntaxToNative = y(\this \syntax
     syntax
         (\literal NativeLiteral literal)
-        (\value NativeConstN value) ' NativeApplication nativeStrToN (NativeConstS (strFromN value)))
-        (\value NativeConstS value)
+        _nToNative
+        _sToNative
         (\list foldr list nativeListEmpty (\list \item NativeApplication (NativeApplication nativeListCons (this item)) list))
         (\literal \body 
             (y(\strip \lit \nbody
