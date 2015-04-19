@@ -47,7 +47,8 @@ eq = \a \b not (xor a b)
 ''' Type: Nat
 Nat = Zero | Succ n
 one = Succ Zero
-
+two = Succ one
+three = Succ two
 
 add = \n \m m n (\dm add (Succ n) dm)
 mul = \n \m m Zero (\dm add n (mul n dm))
@@ -196,7 +197,7 @@ listMerge = \lt \l1 \l2
                 )
         )
 
-listSort = y(\sort \lt \l if(isGT (listCount l) 1) ((\mid listMerge lt (sort lt (listTake l mid))  (sort lt (listSkip l mid))) (div (listCount l) 2)) l)
+listSort = y(\sort \lt \l if(isGT (listCount l) one) ((\mid listMerge lt (sort lt (listTake l mid))  (sort lt (listSkip l mid))) (div (listCount l) two)) l)
 
 intSort = listSort isLT
 
@@ -224,6 +225,23 @@ listJoin = \lists \sepa lists
     (\head \tail foldl tail head (\cur \new listConcat (listConcat cur sepa) new))
 strJoin = \strs \sepa if(listIsEmpty strs) strEmpty (foldl (listTail strs) (listHead strs) (\cur \new strCons (strCons cur sepa) new))
 strConss = \strs strJoin strs "" 
+
+
+' formatters\
+_4 = Succ three
+_16 = mul _4 _4
+_32 = mul two _16
+_48 = mul three _16
+_10 = add two (add _4 _4)
+xstrFromNat = y(\temp \acc \n if(isZero n) acc (temp (straddFront acc (add _48 (mod n _10))) (div n _10)))
+strFromN = \n if(isZero n) (strReturn _48) (xstrFromNat strEmpty n)
+strFromNs = \ns listBind ns (\n straddBack (strFromN n) _32)
+strToN = \str foldl str Zero (\i \c add (mul i _10) (sub c _48))
+strFromB = \b if(b) "True" "False"
+strFromS = \s strConss [strReturn 96, s, strReturn 96]
+
+strFromPair = \fa \fb \p strConss ["(", fa (fst p), " ; ", fb (snd p), ")"]
+
 
 
 ''' Type: LabeledTree
@@ -286,17 +304,6 @@ fibs = listAddFront (listAddFront (listZip fibs (listTail fibs) add) 1) 1
 'randoms = \seed listTail (listMap (unfold (Pair (Pair seed 842502087) (Pair 3579807591 273326509)) _randomPermut) _randomGet)
 'randomsBound = \seed \min \max listMap (randoms seed) (\x add min (mod x (sub max min)))
 
-
-
-' formatters
-xstrFromNat = y(\temp \acc \n if(isZero n) acc (temp (straddFront acc (add 48 (mod n 10))) (div n 10)))
-strFromN = \n if(isZero n) (strReturn 48) (xstrFromNat strEmpty n)
-strFromNs = \ns listBind ns (\n straddBack (strFromN n) 32)
-strToN = \str foldl str 0 (\i \c add (mul i 10) (sub c 48))
-strFromB = \b if(b) "True" "False"
-strFromS = \s strConss [strReturn 96, s, strReturn 96]
-
-strFromPair = \fa \fb \p strConss ["(", fa (fst p), " ; ", fb (snd p), ")"]
 
 
 listCutAt = \l \f if(or (listIsEmpty l) (f (listHead l))) (Pair ListEmpty l) (changeFst (listCutAt (listTail l) f) (ListCons (listHead l)))
@@ -718,7 +725,8 @@ Schar = ScharParenOpen
       | ScharComma
       | ScharSingleOr
 
-scharEQ = \a \b isEQ (Schar_ID a) (Schar_ID b)
+scharID = \s s 0 1 2 3 4 5 6 7
+scharEQ = \a \b isEQ (scharID a) (scharID b)
 
 schar_String = \x x
         "<PAR_OPEN>"
@@ -981,6 +989,7 @@ nativeS = NativeLiteral ":bound:s"
 nativeY = NativeLiteral ":bound:y"
 nativeListEmpty = NativeLiteral "ListEmpty"
 nativeListCons = NativeLiteral "ListCons"
+nativeStrToN = NativeLiteral "strToN"
 
 isNativeLiteral = \lit \nat NativeLiteral_Dispatch 
         (\literal strEquals lit literal)
@@ -1029,7 +1038,7 @@ finalizeNativeDefs = \n n (\literal \o NativeAssignment literal (finalizeNativeE
 _syntaxToNative = y(\this \syntax
     syntax
         (\literal NativeLiteral literal)
-        (\value NativeConstN value)
+        (\value NativeConstN value) ' NativeApplication nativeStrToN (NativeConstS (strFromN value)))
         (\value NativeConstS value)
         (\list foldr list nativeListEmpty (\list \item NativeApplication (NativeApplication nativeListCons (this item)) list))
         (\literal \body 
@@ -1101,8 +1110,7 @@ _syntaxEmitTypeInstance = \items \ctrArgList \index \args \name
                 )
             )
     ]
-_syntaxEmitTypeStuff = \typeName \items \ctrArgList
-    listConcat
+_syntaxEmitTypeStuff = \typeName \items \ctrArgList ' listConcat
     (
         listBind items
         (\item 
@@ -1111,26 +1119,26 @@ _syntaxEmitTypeStuff = \typeName \items \ctrArgList
             (snd item)
         )
     )
-    [
-        NativeAssignment
-            (strCons typeName "_ID")
-            (
-                _syntaxToNative
-                (
-                    (\argItem SyntaxAbstraction argItem
-                        (syntaxCreateApplication 
-                            (ListCons 
-                                (SyntaxName argItem)
-                                (listMap items (\item 
-                                    syntaxCreateAbstraction (snd (fst item)) (SyntaxConstN (snd item))
-                                ))
-                            )
-                        )
-                    )
-                    (_createUniqueNameFromS "item")
-                )
-            )
-    ]
+'    [
+'        NativeAssignment
+'            (strCons typeName "_ID")
+'            (
+'                _syntaxToNative
+'                (
+'                    (\argItem SyntaxAbstraction argItem
+'                        (syntaxCreateApplication 
+'                            (ListCons 
+'                                (SyntaxName argItem)
+'                                (listMap items (\item 
+'                                    syntaxCreateAbstraction (snd (fst item)) (SyntaxConstN (snd item))
+'                                ))
+'                            )
+'                        )
+'                    )
+'                    (_createUniqueNameFromS "item")
+'                )
+'            )
+'    ]
 
 ' SYNTAX => [NATIVE defs]
 _syntaxToNativeDefs = \syntax

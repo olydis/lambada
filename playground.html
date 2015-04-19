@@ -102,6 +102,7 @@ a.sel
         {
             // automated
             var tc = d.testCount.asNumber();
+            var dddiff = measure(function() { 
             for (var i = 0; i < tc; i++)
             {
                 var prop = "test" + i;
@@ -109,9 +110,10 @@ a.sel
                 var ddiff = measure(function() { succ = app(d.strFromB, d[prop]).asString() != "True"; });
                 if (succ)
                     throw prop + " failed";
-                else
-                    console.log(prop + " passed in " + ddiff + "ms");
-            }
+                //else
+                //    console.log(prop + " passed in " + ddiff + "ms");
+            }});
+            console.log(tc + " tests passed in " + dddiff + "ms");
             
             // execution speed (1.000.000 x operation)
             // K
@@ -143,6 +145,8 @@ a.sel
             rstats = function (cnt) { for (var prop in d) d[prop].called = 0; };
             
             $.get("library/prelude.txt", compile, "text");
+            
+            console.log("Loaded binary. Ready.");
         }
         
         var comp;
@@ -154,7 +158,7 @@ a.sel
         function compile(sources)
         {
             var lines = sources.split("\n");
-            var binary = [];
+            var binary = "";
             var index = 0;
             
             var intervalId = 0;
@@ -165,6 +169,7 @@ a.sel
                     clearInterval(intervalId);
                     console.log(new Date().getTime() - runDstart.getTime());
                     document.title = "done";
+                    main(binary);
                 }
                 else
                 {
@@ -182,13 +187,20 @@ a.sel
                     if (result != "")
                     {
                         document.title = index + " / " + lines.length;
-                        binary.push(result);
+                        binary += result;
+                        
                         $("#target").append(result.trim() + "<br/>");
+                        window.scrollTo(0, $("#target").height());
+                        
                         //$("#target").prepend(result + "<br/>");
                     }
                 }
             };
-            run = function() { runDstart = new Date(); intervalId = setInterval(comp, 1); }
+            run = function() 
+            { 
+                $("#target").empty();
+                runDstart = new Date(); intervalId = setInterval(comp, 1); 
+            };
         }
         
         function leval(expr)
