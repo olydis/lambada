@@ -30,7 +30,7 @@ p
 }
 #target
 {
-    white-space: nowrap;
+    /*white-space: nowrap;*/
 }
 td
 {
@@ -146,7 +146,7 @@ a.sel
             
             $.get("library/prelude.txt", compile, "text");
             
-            console.log("Loaded binary. Ready.");
+            console.log("Loaded binary (" + binary.length + " bytes). Ready.");
         }
         
         var comp;
@@ -186,10 +186,12 @@ a.sel
                         s(stmt)).asString();
                     if (result != "")
                     {
+                        result = result.replace(/\.\s/g, ".").trim();
+                    
                         document.title = index + " / " + lines.length;
                         binary += result;
                         
-                        $("#target").append(result.trim() + "<br/>");
+                        $("#target").text($("#target").text() + result);
                         window.scrollTo(0, $("#target").height());
                         
                         //$("#target").prepend(result + "<br/>");
