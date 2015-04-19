@@ -21,10 +21,6 @@ var LambadaRuntime;
         StringReader.prototype.readWhitespace = function () {
             return this.readWhile(function (ch) { return /^\s$/.test(ch); });
         };
-        StringReader.prototype.readNaturalNumber = function () {
-            var num = this.readWhile(function (ch) { return /^[0-9]$/.test(ch); });
-            return num == "" ? null : parseInt(num);
-        };
         StringReader.prototype.readToken = function () {
             return this.readWhile(function (ch) { return /^[a-zA-Z0-9_]$/.test(ch); });
         };
@@ -395,19 +391,6 @@ var LambadaRuntime;
                         else {
                             expressionStack.push(Expression.createApplication(a, b));
                         }
-                        continue;
-                    }
-                    // num
-                    var num = reader.readNaturalNumber();
-                    if (num != null) {
-                        expressionStack.push(ShortcutExpression.createNumber(num));
-                        continue;
-                    }
-                    // string
-                    if (reader.readChar("\"")) {
-                        var s = reader.readWhile(function (ch) { return ch != "\""; });
-                        reader.readChar("\"");
-                        expressionStack.push(ShortcutExpression.createString(s));
                         continue;
                     }
                     // defref

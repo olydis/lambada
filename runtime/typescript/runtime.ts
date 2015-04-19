@@ -24,12 +24,6 @@ module LambadaRuntime
             return this.readWhile(ch => /^\s$/.test(ch));
         }
 
-        public readNaturalNumber(): number
-        {
-            var num = this.readWhile(ch => /^[0-9]$/.test(ch));
-            return num == "" ? null : parseInt(num);
-        }
-
         public readToken(): string
         {
             return this.readWhile(ch => /^[a-zA-Z0-9_]$/.test(ch));
@@ -488,23 +482,6 @@ module LambadaRuntime
                         {
                             expressionStack.push(Expression.createApplication(a, b));
                         }
-                        continue;
-                    }
-
-                    // num
-                    var num = reader.readNaturalNumber();
-                    if (num != null)
-                    {
-                        expressionStack.push(ShortcutExpression.createNumber(num));
-                        continue;
-                    }
-
-                    // string
-                    if (reader.readChar("\""))
-                    {
-                        var s = reader.readWhile(ch => ch != "\"");
-                        reader.readChar("\"");
-                        expressionStack.push(ShortcutExpression.createString(s));
                         continue;
                     }
 
