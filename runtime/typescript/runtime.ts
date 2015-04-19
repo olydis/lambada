@@ -426,10 +426,12 @@ module LambadaRuntime
             def("Zero", ShortcutExpression.createNumber(0));
             def("add", new BuiltinExpression(2, 
                 stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber()))));
-            def("mul", new BuiltinExpression(2, 
-                stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber()))));
             def("sub", new BuiltinExpression(2,
                 stack => stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber())))));
+            def("mul", new BuiltinExpression(2,
+                stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber()))));
+            def("div", new BuiltinExpression(2,
+                stack => stack.push(ShortcutExpression.createNumber((stack.pop().asNumber() / stack.pop().asNumber()) | 0))));
 
             def("strCons", new BuiltinExpression(2,
                 stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
