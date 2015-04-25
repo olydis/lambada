@@ -104,6 +104,7 @@ var LambadaRuntime;
         };
         return ExpressionBase;
     })();
+    LambadaRuntime.ExpressionBase = ExpressionBase;
     var BuiltinExpression = (function (_super) {
         __extends(BuiltinExpression, _super);
         function BuiltinExpression(arity, applyTo) {
@@ -369,6 +370,12 @@ var LambadaRuntime;
             var rt = new Runtime();
             rt.define(binary);
             return rt;
+        };
+        Runtime.prototype.getNames = function () {
+            var names = [];
+            for (name in this.defs)
+                names.push(name);
+            return names;
         };
         Runtime.prototype.define = function (binaryDefinition) {
             var reader = new StringReader(binaryDefinition);

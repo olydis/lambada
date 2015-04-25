@@ -46,7 +46,7 @@ module LambadaRuntime
         }
     }
 
-    class ExpressionBase
+    export class ExpressionBase
     {
         private static probeSTOP: ExpressionBase;
 
@@ -450,6 +450,14 @@ module LambadaRuntime
 
             def("msgBox", new BuiltinExpression(1,
                 stack => window.alert(stack[stack.length - 1].toString())));
+        }
+
+        public getNames(): string[]
+        {
+            var names: string[] = [];
+            for (name in this.defs)
+                names.push(name);
+            return names;
         }
 
         public define(binaryDefinition: string): void
