@@ -36,9 +36,7 @@ function runTests() {
     var kTest = d["k"];
     for (var i = 0; i < 1000000 * 2; i++)
         kTest = app(kTest, d["k"]);
-    console.log("K: " + measure(function () {
-        kTest.fullReduce();
-    }) + "ms");
+    console.log("K: " + measure(function () { return kTest.fullReduce(); }) + "ms");
 }
 function init(binary) {
     rt = lrt.Runtime.create(binary);
@@ -122,4 +120,54 @@ function debug(expr) {
     while (expr.reduce())
         console.log(expr.toString());
 }
+var compareStrings = function (a, b) { return a.toLowerCase() <= b.toLowerCase() ? -1 : 1; };
+function bsearch(x, xs) {
+    var s = -1;
+    var e = xs.length;
+    while (s < e - 1) {
+        var m = (s + e) / 2 | 0;
+        var res = compareStrings(x, xs[m]);
+        if (res < 0)
+            e = m;
+        else
+            s = m;
+    }
+    return s + 1;
+}
+$(function () {
+    $.get("library/prelude.native.txt", init, "text");
+    var input = $("#input");
+    var inputNative = input[0];
+    input.focus();
+    input.on("input", function () {
+        // extract current identifier
+        var v = input.val();
+        v = v.slice(0, inputNative.selectionStart);
+        var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(v);
+        if (vv == null)
+            return;
+        v = vv[0];
+        // extract pixel position
+        var tr = inputNative.createTextRange();
+        tr.moveStart("character", inputNative.selectionStart);
+        document.title = tr.getBoundingClientRect().toString();
+        var t = rt.getNames().sort(compareStrings);
+        /*
+        var index = bsearch(v, t);
+        console.log(index);
+        t = t.slice(index);
+        */
+        var resultStart = [];
+        var resultAny = [];
+        var vLower = v.toLowerCase();
+        var vLen = v.length;
+        t.forEach(function (tt) {
+            var index = tt.toLowerCase().indexOf(vLower);
+            if (index != -1)
+                (index == 0 ? resultStart : resultAny).push({ x: tt, i: index });
+        });
+        Array.prototype.push.apply(resultStart, resultAny);
+        $("#target").html(resultStart.map(function (x) { return x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen); }).join("<br/>"));
+    });
+});
 //# sourceMappingURL=runtimeTools.js.map

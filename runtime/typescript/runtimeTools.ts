@@ -26,13 +26,13 @@ function runTests()
 {
     // automated
     var tc = d["testCount"].asNumber();
-    var dddiff = measure(function ()
+    var dddiff = measure(() =>
     {
         for (var i = 0; i < tc; i++)
         {
             var prop = "test" + i;
             var succ: boolean;
-            var ddiff = measure(function () { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
+            var ddiff = measure(() => { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
             if (succ)
                 throw prop + " failed";
             //else
@@ -46,7 +46,7 @@ function runTests()
     var kTest = d["k"];
     for (var i = 0; i < 1000000 * 2; i++)
         kTest = app(kTest, d["k"]);
-    console.log("K: " + measure(function () { kTest.fullReduce(); }) + "ms");
+    console.log("K: " + measure(() => kTest.fullReduce()) + "ms");
 }
 
 function init(binary: string) 
@@ -77,7 +77,7 @@ function init(binary: string)
 
 var comp: () => void;
 var run: () => void;
-var com = function (n: number) { if (n == undefined) n = 100; return measure(function () { while (n-- != 0) comp(); }); };
+var com = (n: number) => { if (n == undefined) n = 100; return measure(() => { while (n-- != 0) comp(); }); };
 
 var runDstart: Date;
 
@@ -88,7 +88,7 @@ function compile(sources: string)
     var index = 0;
 
     var intervalId = 0;
-    comp = function ()
+    comp = () =>
     {
         if (index >= lines.length)
         {
@@ -125,7 +125,7 @@ function compile(sources: string)
             }
         }
     };
-    run = function () 
+    run = () =>
     {
         $("#target").empty();
         runDstart = new Date(); intervalId = setInterval(comp, 1);
@@ -152,3 +152,67 @@ function debug(expr: LambadaRuntime.ExpressionBase)
     while (expr.reduce())
         console.log(expr.toString());
 }
+
+var compareStrings = (a: string, b: string) => a.toLowerCase() <= b.toLowerCase() ? -1 : 1;
+
+function bsearch(x: string, xs: string[]): number
+{
+    var s = -1;
+    var e = xs.length;
+    while (s < e - 1)
+    {
+        var m = (s + e) / 2 | 0;
+        var res = compareStrings(x, xs[m]);
+        if (res < 0)
+            e = m;
+        else
+            s = m;
+    }
+    return s + 1;
+}
+
+$(function () 
+{
+    $.get("library/prelude.native.txt", init, "text");
+    var input = $("#input");
+    var inputNative = <HTMLInputElement>input[0];
+    input.focus();
+    input.on("input",() =>
+    {
+        // extract current identifier
+        var v: string = input.val();
+        v = v.slice(0, inputNative.selectionStart);
+        var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(v);
+        if (vv == null)
+            return;
+        v = vv[0];
+
+        // extract pixel position
+        var tr = inputNative.createTextRange();
+        tr.moveStart("character", inputNative.selectionStart);
+        document.title = tr.getBoundingClientRect().toString();
+
+        var t = rt.getNames().sort(compareStrings);
+
+        /*
+        var index = bsearch(v, t);
+        console.log(index);
+        t = t.slice(index);
+        */
+
+        var resultStart: { x: string; i: number }[] = [];
+        var resultAny: { x: string; i: number }[] = [];
+        var vLower = v.toLowerCase();
+        var vLen = v.length;
+        t.forEach(tt =>
+        {
+            var index = tt.toLowerCase().indexOf(vLower);
+            if (index != -1)
+                (index == 0 ? resultStart : resultAny).push({ x: tt, i: index });
+        });
+
+        Array.prototype.push.apply(resultStart, resultAny);
+
+        $("#target").html(resultStart.map(x => x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen)).join("<br/>"));
+    });
+})
