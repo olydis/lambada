@@ -93,6 +93,8 @@ class IntelliHTML
         this.acList.width(200);
         this.acList.css("position", "relative");
         this.acList.css("top", "1.5em");
+        this.acList.css("max-height", "10em");
+        this.acList.css("overflow", "hidden");
 
         this.acList.css("border", "1px solid white");
         this.acList.text("asd");
@@ -164,7 +166,7 @@ class IntelliHTML
             this.codeStyled.text(codeText);
 
             // hide ac
-            this.acList.hide();
+            this.acSpan.hide();
 
             // get caret information
             var range: Range = this.caretPosition;
@@ -185,7 +187,8 @@ class IntelliHTML
             //range.setStart(range.startContainer, idStart);
 
             // move AC span
-            this.acSpan.offset({ left: x, top: y });
+            this.acSpan.css("left", x + "px");
+            this.acSpan.css("top", y + "px");
             //this.acSpan.offset($(container).offset());
 
             var t = rt.getNames().sort(compareStrings);
@@ -196,7 +199,7 @@ class IntelliHTML
             t = t.slice(index);
             */
 
-            var resultStart: { x: string; i: number }[] = [];
+            var result: { x: string; i: number }[] = [];
             var resultAny: { x: string; i: number }[] = [];
             var vLower = v.toLowerCase();
             var vLen = v.length;
@@ -204,16 +207,18 @@ class IntelliHTML
             {
                 var index = tt.toLowerCase().indexOf(vLower);
                 if (index != -1)
-                    (index == 0 ? resultStart : resultAny).push({ x: tt, i: index });
+                    (index == 0 ? result : resultAny).push({ x: tt, i: index });
             });
 
-            Array.prototype.push.apply(resultStart, resultAny);
+            Array.prototype.push.apply(result, resultAny);
 
-            this.acList.html(resultStart.map(x => x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen)).join("<br/>"));
-            //this.acList.show();
+            this.acList.html(result.map(x => x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen)).join("<br/>"));
+            if (result.length > 0)
+                this.acSpan.show();
         };
 
         code.on("input",() => { this.onTextChanged(this.code.text()); update(); });
+        code.mousedown(() => this.acSpan.hide());
         //setInterval(() => update(), 1000);
     }
 

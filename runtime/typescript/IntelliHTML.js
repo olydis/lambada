@@ -63,6 +63,8 @@ var IntelliHTML = (function () {
         this.acList.width(200);
         this.acList.css("position", "relative");
         this.acList.css("top", "1.5em");
+        this.acList.css("max-height", "10em");
+        this.acList.css("overflow", "hidden");
         this.acList.css("border", "1px solid white");
         this.acList.text("asd");
         //this.acPos = 0;
@@ -118,7 +120,7 @@ var IntelliHTML = (function () {
             // mirror
             _this.codeStyled.text(codeText);
             // hide ac
-            _this.acList.hide();
+            _this.acSpan.hide();
             // get caret information
             var range = _this.caretPosition;
             if (range == null)
@@ -135,7 +137,8 @@ var IntelliHTML = (function () {
             //var idStart = text.length - v.length;
             //range.setStart(range.startContainer, idStart);
             // move AC span
-            _this.acSpan.offset({ left: x, top: y });
+            _this.acSpan.css("left", x + "px");
+            _this.acSpan.css("top", y + "px");
             //this.acSpan.offset($(container).offset());
             var t = rt.getNames().sort(compareStrings);
             /*
@@ -143,23 +146,25 @@ var IntelliHTML = (function () {
             console.log(index);
             t = t.slice(index);
             */
-            var resultStart = [];
+            var result = [];
             var resultAny = [];
             var vLower = v.toLowerCase();
             var vLen = v.length;
             t.forEach(function (tt) {
                 var index = tt.toLowerCase().indexOf(vLower);
                 if (index != -1)
-                    (index == 0 ? resultStart : resultAny).push({ x: tt, i: index });
+                    (index == 0 ? result : resultAny).push({ x: tt, i: index });
             });
-            Array.prototype.push.apply(resultStart, resultAny);
-            _this.acList.html(resultStart.map(function (x) { return x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen); }).join("<br/>"));
-            //this.acList.show();
+            Array.prototype.push.apply(result, resultAny);
+            _this.acList.html(result.map(function (x) { return x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen); }).join("<br/>"));
+            if (result.length > 0)
+                _this.acSpan.show();
         };
         code.on("input", function () {
             _this.onTextChanged(_this.code.text());
             update();
         });
+        code.mousedown(function () { return _this.acSpan.hide(); });
         //setInterval(() => update(), 1000);
     };
     Object.defineProperty(IntelliHTML.prototype, "element", {
