@@ -1,4 +1,6 @@
 /// <reference path="jquery.d.ts" />
+var tabSpaces = "    ";
+var tabWidth = tabSpaces.length;
 var IntelliHTML = (function () {
     //private acPos: number;
     function IntelliHTML(onTextChanged) {
@@ -15,18 +17,24 @@ var IntelliHTML = (function () {
         wrapCode.css("height", "0px");
         wrapCode.append(this.code);
         wrapCode.appendTo(this.pre);
-        this.code.attr("spellcheck", false);
-        this.code.attr("contentEditable", true);
+        this.code.attr("spellcheck", "false");
+        this.code.attr("contentEditable", "true");
         this.code.keydown(function (eo) {
             if (eo.which == 9) {
                 eo.preventDefault();
                 var range = _this.caretPosition;
-                console.log(_this.caretPosition.startOffset);
                 if (range != null) {
                     var text = _this.text;
-                    var start = Math.max(0, text.lastIndexOf("\n", range.startOffset));
-                    text = text.substring(start, range.startOffset);
-                    document.title = text;
+                    var startOffset = _this.caretIndex(range);
+                    var start = text.lastIndexOf("\n", startOffset - 1);
+                    text = text.substring(start + 1, startOffset);
+                    var insert = tabWidth - text.length % tabWidth;
+                    var spacesNode = document.createTextNode(tabSpaces.substr(0, insert));
+                    range.insertNode(spacesNode);
+                    range.setStartAfter(spacesNode);
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
                 }
             }
         });
@@ -63,7 +71,6 @@ var IntelliHTML = (function () {
             var container;
             try {
                 range = window.getSelection().getRangeAt(0);
-                //range.selectNodeContents(
                 var cont = range.startContainer;
                 while (cont.nodeType != 1)
                     cont = cont.parentNode;
@@ -80,6 +87,12 @@ var IntelliHTML = (function () {
         enumerable: true,
         configurable: true
     });
+    IntelliHTML.prototype.caretIndex = function (caretPosition) {
+        var range = caretPosition.cloneRange();
+        range.selectNodeContents(this.codeNative);
+        range.setEnd(caretPosition.startContainer, caretPosition.startOffset);
+        return range.toString().length;
+    };
     IntelliHTML.prototype.init = function () {
         var _this = this;
         this.text = "asd pre sub";
@@ -99,7 +112,7 @@ var IntelliHTML = (function () {
             x = range.getClientRects()[0].left | 0;
             y = range.getClientRects()[0].top | 0;
             // extract current identifier
-            var text = codeText.slice(0, range.startOffset);
+            var text = codeText.slice(0, _this.caretIndex(range));
             var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
             if (vv == null)
                 return;

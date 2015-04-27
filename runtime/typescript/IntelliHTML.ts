@@ -1,5 +1,8 @@
 ﻿/// <reference path="jquery.d.ts" />
 
+var tabSpaces = "    ";
+var tabWidth = tabSpaces.length;
+
 class IntelliHTML
 {
     private pre: JQuery;
@@ -36,21 +39,28 @@ class IntelliHTML
         wrapCode.append(this.code);
         wrapCode.appendTo(this.pre);
 
-        this.code.attr("spellcheck", false);
-        this.code.attr("contentEditable", true);
+        this.code.attr("spellcheck", "false");
+        this.code.attr("contentEditable", "true");
         this.code.keydown(eo =>
         {
             if (eo.which == 9)
             {
                 eo.preventDefault();
                 var range = this.caretPosition;
-                console.log(this.caretPosition.startOffset);
                 if (range != null)
                 {
                     var text = this.text;
-                    var start = Math.max(0, text.lastIndexOf("\n", range.startOffset));
-                    text = text.substring(start, range.startOffset);
-                    document.title = text;
+                    var startOffset = this.caretIndex(range);
+                    var start = text.lastIndexOf("\n", startOffset - 1);
+                    text = text.substring(start + 1, startOffset);
+                    var insert = tabWidth - text.length % tabWidth;
+                    var spacesNode = document.createTextNode(tabSpaces.substr(0, insert));
+                    range.insertNode(spacesNode);
+                    range.setStartAfter(spacesNode);
+
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
                 }
             }
         });
@@ -92,9 +102,9 @@ class IntelliHTML
     {
         var range: Range;
         var container: HTMLElement;
-        try {
+        try
+        {
             range = window.getSelection().getRangeAt(0);
-            //range.selectNodeContents(
 
             var cont = range.startContainer;
             while (cont.nodeType != 1)
@@ -103,9 +113,21 @@ class IntelliHTML
 
             if (!this.codeNative.contains(container))
                 return null; // caret not in code!
-        } catch (e) { console.log(e); return null; }
+        }
+        catch (e)
+        {
+            console.log(e);
+            return null;
+        }
 
         return range;
+    }
+    private caretIndex(caretPosition: Range): number
+    {
+        var range = caretPosition.cloneRange();
+        range.selectNodeContents(this.codeNative);
+        range.setEnd(caretPosition.startContainer, caretPosition.startOffset);
+        return range.toString().length;
     }
 
     private init()
@@ -135,7 +157,7 @@ class IntelliHTML
             y = range.getClientRects()[0].top | 0;
 
             // extract current identifier
-            var text = codeText.slice(0, range.startOffset);
+            var text = codeText.slice(0, this.caretIndex(range));
             var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
             if (vv == null)
                 return;
