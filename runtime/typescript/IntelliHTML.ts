@@ -3,6 +3,13 @@
 var tabSpaces = "    ";
 var tabWidth = tabSpaces.length;
 
+function setCaret(range: Range)
+{
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
 class IntelliHTML
 {
     private pre: JQuery;
@@ -57,10 +64,7 @@ class IntelliHTML
                     var spacesNode = document.createTextNode(tabSpaces.substr(0, insert));
                     range.insertNode(spacesNode);
                     range.setStartAfter(spacesNode);
-
-                    var sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                    setCaret(range);
                 }
             }
         });
@@ -140,6 +144,20 @@ class IntelliHTML
         
         var update = () =>
         {
+            // normalize HTML
+            var html = this.code.html();
+            var html2 = html.replace(/\<br\>/gi, '\n');
+            if (html != html2)
+            {
+                var range = this.caretPosition;
+                var pos = this.caretIndex(range);
+                console.log(pos);
+                this.code.html(html2);
+                range.setStart(this.codeNative.firstChild, pos + 1);
+                setCaret(range);
+                return;
+            }
+
             var codeText = this.text;
 
             // mirror

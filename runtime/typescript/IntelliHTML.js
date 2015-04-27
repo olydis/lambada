@@ -1,6 +1,11 @@
 /// <reference path="jquery.d.ts" />
 var tabSpaces = "    ";
 var tabWidth = tabSpaces.length;
+function setCaret(range) {
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
 var IntelliHTML = (function () {
     //private acPos: number;
     function IntelliHTML(onTextChanged) {
@@ -32,9 +37,7 @@ var IntelliHTML = (function () {
                     var spacesNode = document.createTextNode(tabSpaces.substr(0, insert));
                     range.insertNode(spacesNode);
                     range.setStartAfter(spacesNode);
-                    var sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                    setCaret(range);
                 }
             }
         });
@@ -99,6 +102,18 @@ var IntelliHTML = (function () {
         this.codeStyled.css("color", "transparent");
         var code = this.code;
         var update = function () {
+            // normalize HTML
+            var html = _this.code.html();
+            var html2 = html.replace(/\<br\>/gi, '\n');
+            if (html != html2) {
+                var range = _this.caretPosition;
+                var pos = _this.caretIndex(range);
+                console.log(pos);
+                _this.code.html(html2);
+                range.setStart(_this.codeNative.firstChild, pos + 1);
+                setCaret(range);
+                return;
+            }
             var codeText = _this.text;
             // mirror
             _this.codeStyled.text(codeText);

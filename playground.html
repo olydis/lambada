@@ -6,8 +6,6 @@
     <style type="text/css">
 span, input, body, textarea, a
 {
-    margin: 0px;
-    padding: 0px;
     font-family: monospace;
     border: none;
     color: white;
@@ -26,15 +24,11 @@ pre
     box-shadow: rgba(255, 255, 255, 0.1) 0 1px 0, rgba(0, 0, 0, 0.8) 0 1px 7px 0px inset;
     background: #202020;
     border-radius: 4px;
-    margin: 20px;
     padding: 10px;
-}
-body
-{
 }
 p
 {
-    margin: 10px;
+    margin: 0px;
 }
 #target
 {
@@ -64,7 +58,7 @@ a
     margin: -1px;
     padding: 5px;
     font-size: 12pt;
-    color: rgb(255,255,255);
+    color: rgb(150,150,255);
     text-decoration: none;
 }
 a.sel
@@ -93,5 +87,6 @@ a.sel
   </head>
   <body id='body'>
     <pre id='target' style='word-wrap: break-word;'></pre>
+    <a href="javascript:run()">compile prelude</a>
   </body>
 </html>

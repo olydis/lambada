@@ -61,12 +61,6 @@ function init(binary) {
     };
     $.get("library/prelude.txt", compile, "text");
     console.log("Loaded binary (" + binary.length + " bytes). Ready.");
-    // layout
-    var intelliElem = new IntelliHTML(function (text) { return $("#target").text(app(d["pipe"], s("temp = " + text)).asString()); });
-    var elem = intelliElem.element;
-    elem.height(512);
-    $("body").prepend(elem);
-    intelliElem.focus();
 }
 var comp;
 var run;
@@ -142,6 +136,14 @@ function bsearch(x, xs) {
     return s + 1;
 }
 $(function () {
-    $.get("library/prelude.native.txt", init, "text");
+    $.get("library/prelude.native.txt", function (binary) {
+        init(binary);
+        // layout
+        var intelliElem = new IntelliHTML(function (text) { return $("#target").text(app(d["pipe"], s("temp = " + text)).asString()); });
+        var elem = intelliElem.element;
+        elem.height(512);
+        $("body").prepend(elem);
+        intelliElem.focus();
+    }, "text");
 });
 //# sourceMappingURL=runtimeTools.js.map

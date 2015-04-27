@@ -75,15 +75,6 @@ function init(binary: string)
 
     console.log("Loaded binary (" + binary.length + " bytes). Ready.");
 
-
-    // layout
-
-    var intelliElem = new IntelliHTML(text => $("#target").text(app(d["pipe"], s("temp = " + text)).asString()));
-    var elem = intelliElem.element;
-    elem.height(512);
-
-    $("body").prepend(elem);
-    intelliElem.focus();
 }
 
 var comp: () => void;
@@ -184,5 +175,17 @@ function bsearch(x: string, xs: string[]): number
 
 $(function () 
 {
-    $.get("library/prelude.native.txt", init, "text");
+    $.get("library/prelude.native.txt", binary =>
+    {
+        init(binary);
+
+        // layout
+
+        var intelliElem = new IntelliHTML(text => $("#target").text(app(d["pipe"], s("temp = " + text)).asString()));
+        var elem = intelliElem.element;
+        elem.height(512);
+
+        $("body").prepend(elem);
+        intelliElem.focus();
+    }, "text");
 })
