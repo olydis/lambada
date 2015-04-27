@@ -87,16 +87,24 @@ class IntelliHTML
         this.acSpan.css("position", "absolute");
         this.acSpan.hide();
 
+        var acListNative2 = document.createElement("div");
+        var acList2 = $(acListNative2);
+        acList2.appendTo(this.acSpan);
+        acList2.css("position", "relative");
+        acList2.css("top", "1.5em");
+
         this.acListNative = document.createElement("div");
         this.acList = $(this.acListNative);
-        this.acList.appendTo(this.acSpan);
+        this.acList.appendTo(acList2);
         this.acList.width(200);
         this.acList.css("position", "relative");
-        this.acList.css("top", "1.5em");
-        this.acList.css("max-height", "10em");
         this.acList.css("overflow", "hidden");
+        this.acList.css("margin", "-4px");
+        this.acList.css("padding", "4px");
+        this.acList.css("background-color", "#2a2a2a");
+        this.acList.css("border-radius", "4px");
+        this.acList.css("box-shadow", "rgba(100, 100, 100, 0.9) 0 0 3px 0px inset");
 
-        this.acList.css("border", "1px solid white");
         this.acList.text("asd");
 
         //this.acPos = 0;
@@ -138,8 +146,6 @@ class IntelliHTML
 
     private init()
     {
-        this.text = "asd pre sub";
-
         this.codeStyled.css("color", "transparent");
 
         var code = this.code;
@@ -171,20 +177,21 @@ class IntelliHTML
             // get caret information
             var range: Range = this.caretPosition;
             if (range == null) return;
-            var x: number, y: number;
-
-            x = range.getClientRects()[0].left | 0;
-            y = range.getClientRects()[0].top | 0;
+            range = range.cloneRange();
 
             // extract current identifier
-            var text = codeText.slice(0, this.caretIndex(range));
+            var caretIndex = this.caretIndex(range);
+            var text = codeText.slice(0, caretIndex);
             var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
             if (vv == null)
                 return;
             var v = vv == null ? "" : vv[0];
 
-            //var idStart = text.length - v.length;
-            //range.setStart(range.startContainer, idStart);
+            range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+
+            var x: number, y: number;
+            x = range.getClientRects()[0].left | 0;
+            y = range.getClientRects()[0].top | 0;
 
             // move AC span
             this.acSpan.css("left", x + "px");
@@ -212,13 +219,15 @@ class IntelliHTML
 
             Array.prototype.push.apply(result, resultAny);
 
-            this.acList.html(result.map(x => x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen)).join("<br/>"));
+            result = result.slice(0, 10);
+
+            this.acList.html(result.map(x => x.x.slice(0, x.i) + "<span style='color: salmon;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen)).join("<br/>"));
             if (result.length > 0)
                 this.acSpan.show();
         };
 
         code.on("input",() => { this.onTextChanged(this.code.text()); update(); });
-        code.mousedown(() => this.acSpan.hide());
+        this.pre.mousedown(() => this.acSpan.hide());
         //setInterval(() => update(), 1000);
     }
 
