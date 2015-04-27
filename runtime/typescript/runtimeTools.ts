@@ -1,6 +1,7 @@
 /// <reference path="jquery.d.ts" />
 /// <reference path="runtime.ts" />
 /// <reference path="runtimeMinimal.ts" />
+/// <reference path="IntelliHTML.ts" />
 
 //var lrt = LambadaRuntimeMinimal;
 var lrt = LambadaRuntime;
@@ -73,6 +74,16 @@ function init(binary: string)
     $.get("library/prelude.txt", compile, "text");
 
     console.log("Loaded binary (" + binary.length + " bytes). Ready.");
+
+
+    // layout
+
+    var intelliElem = new IntelliHTML(text => $("#target").text(app(d["pipe"], s("temp = " + text)).asString()));
+    var elem = intelliElem.element;
+    elem.height(512);
+
+    $("body").prepend(elem);
+    intelliElem.focus();
 }
 
 var comp: () => void;
@@ -174,45 +185,4 @@ function bsearch(x: string, xs: string[]): number
 $(function () 
 {
     $.get("library/prelude.native.txt", init, "text");
-    var input = $("#input");
-    var inputNative = <HTMLInputElement>input[0];
-    input.focus();
-    input.on("input",() =>
-    {
-        // extract current identifier
-        var v: string = input.val();
-        v = v.slice(0, inputNative.selectionStart);
-        var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(v);
-        if (vv == null)
-            return;
-        v = vv[0];
-
-        // extract pixel position
-        var tr = inputNative.createTextRange();
-        tr.moveStart("character", inputNative.selectionStart);
-        document.title = tr.getBoundingClientRect().toString();
-
-        var t = rt.getNames().sort(compareStrings);
-
-        /*
-        var index = bsearch(v, t);
-        console.log(index);
-        t = t.slice(index);
-        */
-
-        var resultStart: { x: string; i: number }[] = [];
-        var resultAny: { x: string; i: number }[] = [];
-        var vLower = v.toLowerCase();
-        var vLen = v.length;
-        t.forEach(tt =>
-        {
-            var index = tt.toLowerCase().indexOf(vLower);
-            if (index != -1)
-                (index == 0 ? resultStart : resultAny).push({ x: tt, i: index });
-        });
-
-        Array.prototype.push.apply(resultStart, resultAny);
-
-        $("#target").html(resultStart.map(x => x.x.slice(0, x.i) + "<span style='color: red;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen)).join("<br/>"));
-    });
 })
