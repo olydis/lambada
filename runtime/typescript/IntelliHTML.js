@@ -7,11 +7,11 @@ function setCaret(range) {
     sel.addRange(range);
 }
 var IntelliHTML = (function () {
-    //private acPos: number;
     function IntelliHTML(onTextChanged) {
         var _this = this;
         if (onTextChanged === void 0) { onTextChanged = function (_) {
         }; }
+        this.lastACitem = "";
         this.onTextChanged = onTextChanged;
         this.preNative = document.createElement("pre");
         this.pre = $(this.preNative);
@@ -38,8 +38,47 @@ var IntelliHTML = (function () {
                     range.insertNode(spacesNode);
                     range.setStartAfter(spacesNode);
                     setCaret(range);
+                    _this.acSpan.hide();
                 }
             }
+            if ((eo.which == 40 || eo.which == 38) && _this.acSpan.is(":visible")) {
+                eo.preventDefault();
+                _this.updateAC(eo.which == 40 ? 1 : -1);
+            }
+            if (eo.which == 13 && _this.acSpan.is(":visible")) {
+                eo.preventDefault();
+                _this.acSpan.hide();
+                var range = _this.caretPosition;
+                if (range == null)
+                    return;
+                range = range.cloneRange();
+                // extract current identifier
+                var caretIndex = _this.caretIndex(range);
+                var text = _this.text.slice(0, caretIndex);
+                var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
+                if (vv == null)
+                    return;
+                var v = vv == null ? "" : vv[0];
+                range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+                range.deleteContents();
+                var acNode = document.createTextNode(_this.lastACitem);
+                range.insertNode(acNode);
+                range.setStartAfter(acNode);
+                setCaret(range);
+            }
+            if (eo.which == 32 && eo.ctrlKey) {
+                eo.preventDefault();
+                _this.updateAC();
+            }
+            console.log(eo.which);
+        });
+        this.code.keyup(function (eo) {
+            if ((eo.which == 37 || eo.which == 39) && _this.acSpan.is(":visible"))
+                _this.updateAC();
+        });
+        this.code.on("input", function () {
+            _this.onTextChanged(_this.code.text());
+            _this.updateAC();
         });
         this.pre.click(function (eo) { return _this.code.focus(); });
         this.codeStyledNative = document.createElement("code");
@@ -57,25 +96,22 @@ var IntelliHTML = (function () {
         this.acSpan.width(0);
         this.acSpan.css("position", "absolute");
         this.acSpan.hide();
-        var acListNative2 = document.createElement("div");
-        var acList2 = $(acListNative2);
-        acList2.appendTo(this.acSpan);
-        acList2.css("position", "relative");
-        acList2.css("top", "1.5em");
         this.acListNative = document.createElement("div");
         this.acList = $(this.acListNative);
-        this.acList.appendTo(acList2);
-        this.acList.width(200);
+        this.acList.appendTo(this.acSpan);
+        this.acList.css("min-width", "200px");
         this.acList.css("position", "relative");
-        this.acList.css("overflow", "hidden");
+        this.acList.css("display", "inline-block");
         this.acList.css("margin", "-4px");
         this.acList.css("padding", "4px");
+        this.acList.css("top", "1.5em");
         this.acList.css("background-color", "#2a2a2a");
         this.acList.css("border-radius", "4px");
         this.acList.css("box-shadow", "rgba(100, 100, 100, 0.9) 0 0 3px 0px inset");
-        this.acList.text("asd");
-        //this.acPos = 0;
-        this.init();
+        // INIT
+        this.codeStyled.css("color", "transparent"); // TODO: make right
+        this.pre.mousedown(function () { return _this.acSpan.hide(); });
+        //setInterval(() => update(), 1000);
     }
     Object.defineProperty(IntelliHTML.prototype, "caretPosition", {
         get: function () {
@@ -105,75 +141,91 @@ var IntelliHTML = (function () {
         range.setEnd(caretPosition.startContainer, caretPosition.startOffset);
         return range.toString().length;
     };
-    IntelliHTML.prototype.init = function () {
+    IntelliHTML.prototype.updateAC = function (moveSelection) {
         var _this = this;
-        this.codeStyled.css("color", "transparent");
-        var code = this.code;
-        var update = function () {
-            // normalize HTML
-            var html = _this.code.html();
-            var html2 = html.replace(/\<br\>/gi, '\n');
-            if (html != html2) {
-                var range = _this.caretPosition;
-                var pos = _this.caretIndex(range);
-                console.log(pos);
-                _this.code.html(html2);
-                range.setStart(_this.codeNative.firstChild, pos + 1);
-                setCaret(range);
-                return;
-            }
-            var codeText = _this.text;
-            // mirror
-            _this.codeStyled.text(codeText);
-            // hide ac
-            _this.acSpan.hide();
-            // get caret information
-            var range = _this.caretPosition;
-            if (range == null)
-                return;
-            range = range.cloneRange();
-            // extract current identifier
-            var caretIndex = _this.caretIndex(range);
-            var text = codeText.slice(0, caretIndex);
-            var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
-            if (vv == null)
-                return;
-            var v = vv == null ? "" : vv[0];
-            range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
-            var x, y;
-            x = range.getClientRects()[0].left | 0;
-            y = range.getClientRects()[0].top | 0;
-            // move AC span
-            _this.acSpan.css("left", x + "px");
-            _this.acSpan.css("top", y + "px");
-            //this.acSpan.offset($(container).offset());
-            var t = rt.getNames().sort(compareStrings);
-            /*
-            var index = bsearch(v, t);
-            console.log(index);
-            t = t.slice(index);
-            */
-            var result = [];
-            var resultAny = [];
-            var vLower = v.toLowerCase();
-            var vLen = v.length;
-            t.forEach(function (tt) {
-                var index = tt.toLowerCase().indexOf(vLower);
-                if (index != -1)
-                    (index == 0 ? result : resultAny).push({ x: tt, i: index });
-            });
-            Array.prototype.push.apply(result, resultAny);
-            result = result.slice(0, 10);
-            _this.acList.html(result.map(function (x) { return x.x.slice(0, x.i) + "<span style='color: salmon;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen); }).join("<br/>"));
-            if (result.length > 0)
-                _this.acSpan.show();
-        };
-        code.on("input", function () {
-            _this.onTextChanged(_this.code.text());
-            update();
+        if (moveSelection === void 0) { moveSelection = 0; }
+        // normalize HTML
+        var html = this.code.html();
+        var html2 = html.replace(/\<br\>/gi, '\n');
+        if (html != html2) {
+            var range = this.caretPosition;
+            var pos = this.caretIndex(range);
+            console.log(pos);
+            this.code.html(html2);
+            range.setStart(this.codeNative.firstChild, pos + 1);
+            setCaret(range);
+            return;
+        }
+        var codeText = this.text;
+        // mirror
+        this.codeStyled.text(codeText);
+        // hide ac
+        this.acSpan.hide();
+        // get caret information
+        var range = this.caretPosition;
+        if (range == null)
+            return;
+        range = range.cloneRange();
+        // extract current identifier
+        var caretIndex = this.caretIndex(range);
+        var text = codeText.slice(0, caretIndex);
+        var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
+        if (vv == null)
+            return;
+        var v = vv == null ? "" : vv[0];
+        // - check for "\" in front
+        var indexBefore = caretIndex - v.length - 1;
+        if (indexBefore >= 0 && text.charAt(indexBefore) == "\\")
+            return;
+        range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+        var x, y;
+        x = range.getClientRects()[0].left | 0;
+        y = range.getClientRects()[0].top | 0;
+        // move AC span
+        this.acSpan.css("left", x + "px");
+        this.acSpan.css("top", y + "px");
+        // get completion results
+        var names = rt.getNames();
+        // - add local names
+        var regex = /\\[a-zA-Z_][a-zA-Z0-9_]*/g;
+        while (vv = regex.exec(text))
+            names.push(vv[0].substr(1));
+        // - process
+        var t = names.sort(compareStrings);
+        t = t.filter(function (v, i) { return i == 0 || v != t[i - 1]; }); // distinct
+        var result = [];
+        var resultAny = [];
+        var vLower = v.toLowerCase();
+        var vLen = v.length;
+        t.forEach(function (tt) {
+            var index = tt.toLowerCase().indexOf(vLower);
+            if (index != -1)
+                (index == 0 ? result : resultAny).push({ x: tt, i: index });
         });
-        this.pre.mousedown(function () { return _this.acSpan.hide(); });
-        //setInterval(() => update(), 1000);
+        Array.prototype.push.apply(result, resultAny);
+        if (result.length == 0)
+            return;
+        // handle/update lastACitem
+        var indexs = result.map(function (x, i) {
+            return { x: x.x, i: i };
+        }).filter(function (t) { return t.x == _this.lastACitem; }).map(function (t) { return t.i; });
+        var index = indexs.length == 0 ? 0 : indexs[0];
+        index = (index + moveSelection + result.length) % result.length;
+        this.lastACitem = result[index].x;
+        // display results
+        result = result.slice(0, 10);
+        this.acList.empty();
+        result.forEach(function (x) {
+            var p = $("<p>");
+            p.append($("<span>").text(x.x.slice(0, x.i)));
+            p.append($("<span>").text(x.x.slice(x.i, x.i + vLen)).css("color", "salmon"));
+            p.append($("<span>").text(x.x.slice(x.i + vLen)));
+            // selection
+            if (x.x == _this.lastACitem)
+                p.css("background-color", "#444444");
+            _this.acList.append(p);
+        });
+        this.acSpan.show();
     };
     Object.defineProperty(IntelliHTML.prototype, "element", {
         get: function () {

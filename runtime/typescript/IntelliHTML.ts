@@ -28,8 +28,8 @@ class IntelliHTML
     private acListNative: HTMLDivElement;
 
     private onTextChanged: (text: string) => void;
-
-    //private acPos: number;
+    
+    private lastACitem: string = "";
 
     public constructor(onTextChanged: (text: string) => void = _ => { })
     {
@@ -65,8 +65,54 @@ class IntelliHTML
                     range.insertNode(spacesNode);
                     range.setStartAfter(spacesNode);
                     setCaret(range);
+                    this.acSpan.hide();
                 }
             }
+            if ((eo.which == 40 || eo.which == 38) && this.acSpan.is(":visible"))
+            {
+                eo.preventDefault();
+                this.updateAC(eo.which == 40 ? 1 : -1);
+            }
+            if (eo.which == 13 && this.acSpan.is(":visible"))
+            {
+                eo.preventDefault();
+                this.acSpan.hide();
+
+                var range: Range = this.caretPosition;
+                if (range == null) return;
+                range = range.cloneRange();
+
+                // extract current identifier
+                var caretIndex = this.caretIndex(range);
+                var text = this.text.slice(0, caretIndex);
+                var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
+                if (vv == null)
+                    return;
+                var v = vv == null ? "" : vv[0];
+
+                range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+                range.deleteContents();
+                var acNode = document.createTextNode(this.lastACitem);
+                range.insertNode(acNode);
+                range.setStartAfter(acNode);
+                setCaret(range);
+            }
+            if (eo.which == 32 && eo.ctrlKey)
+            {
+                eo.preventDefault();
+                this.updateAC();
+            }
+            console.log(eo.which);
+        });
+        this.code.keyup(eo =>
+        {
+            if ((eo.which == 37 || eo.which == 39) && this.acSpan.is(":visible"))
+                this.updateAC();
+        });
+        this.code.on("input",() =>
+        {
+            this.onTextChanged(this.code.text());
+            this.updateAC();
         });
         this.pre.click(eo => this.code.focus());
 
@@ -87,29 +133,25 @@ class IntelliHTML
         this.acSpan.css("position", "absolute");
         this.acSpan.hide();
 
-        var acListNative2 = document.createElement("div");
-        var acList2 = $(acListNative2);
-        acList2.appendTo(this.acSpan);
-        acList2.css("position", "relative");
-        acList2.css("top", "1.5em");
-
         this.acListNative = document.createElement("div");
         this.acList = $(this.acListNative);
-        this.acList.appendTo(acList2);
-        this.acList.width(200);
+        this.acList.appendTo(this.acSpan);
+        this.acList.css("min-width", "200px");
         this.acList.css("position", "relative");
-        this.acList.css("overflow", "hidden");
+        this.acList.css("display", "inline-block");
         this.acList.css("margin", "-4px");
         this.acList.css("padding", "4px");
+        this.acList.css("top", "1.5em");
         this.acList.css("background-color", "#2a2a2a");
         this.acList.css("border-radius", "4px");
         this.acList.css("box-shadow", "rgba(100, 100, 100, 0.9) 0 0 3px 0px inset");
+        
+        // INIT
 
-        this.acList.text("asd");
+        this.codeStyled.css("color", "transparent");// TODO: make right
 
-        //this.acPos = 0;
-
-        this.init();
+        this.pre.mousedown(() => this.acSpan.hide());
+        //setInterval(() => update(), 1000);
     }
 
     private get caretPosition(): Range
@@ -144,91 +186,112 @@ class IntelliHTML
         return range.toString().length;
     }
 
-    private init()
+    private updateAC(moveSelection: number = 0)
     {
-        this.codeStyled.css("color", "transparent");
-
-        var code = this.code;
-        
-        var update = () =>
+        // normalize HTML
+        var html = this.code.html();
+        var html2 = html.replace(/\<br\>/gi, '\n');
+        if (html != html2)
         {
-            // normalize HTML
-            var html = this.code.html();
-            var html2 = html.replace(/\<br\>/gi, '\n');
-            if (html != html2)
-            {
-                var range = this.caretPosition;
-                var pos = this.caretIndex(range);
-                console.log(pos);
-                this.code.html(html2);
-                range.setStart(this.codeNative.firstChild, pos + 1);
-                setCaret(range);
-                return;
-            }
+            var range = this.caretPosition;
+            var pos = this.caretIndex(range);
+            console.log(pos);
+            this.code.html(html2);
+            range.setStart(this.codeNative.firstChild, pos + 1);
+            setCaret(range);
+            return;
+        }
 
-            var codeText = this.text;
+        var codeText = this.text;
 
-            // mirror
-            this.codeStyled.text(codeText);
+        // mirror
+        this.codeStyled.text(codeText);
 
-            // hide ac
-            this.acSpan.hide();
+        // hide ac
+        this.acSpan.hide();
 
-            // get caret information
-            var range: Range = this.caretPosition;
-            if (range == null) return;
-            range = range.cloneRange();
+        // get caret information
+        var range: Range = this.caretPosition;
+        if (range == null) return;
+        range = range.cloneRange();
 
-            // extract current identifier
-            var caretIndex = this.caretIndex(range);
-            var text = codeText.slice(0, caretIndex);
-            var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
-            if (vv == null)
-                return;
-            var v = vv == null ? "" : vv[0];
+        // extract current identifier
+        var caretIndex = this.caretIndex(range);
+        var text = codeText.slice(0, caretIndex);
+        var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
+        if (vv == null)
+            return;
+        var v = vv == null ? "" : vv[0];
 
-            range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+        // - check for "\" in front
+        var indexBefore = caretIndex - v.length - 1;
+        if (indexBefore >= 0 && text.charAt(indexBefore) == "\\")
+            return;
 
-            var x: number, y: number;
-            x = range.getClientRects()[0].left | 0;
-            y = range.getClientRects()[0].top | 0;
+        range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
 
-            // move AC span
-            this.acSpan.css("left", x + "px");
-            this.acSpan.css("top", y + "px");
-            //this.acSpan.offset($(container).offset());
+        var x: number, y: number;
+        x = range.getClientRects()[0].left | 0;
+        y = range.getClientRects()[0].top | 0;
 
-            var t = rt.getNames().sort(compareStrings);
+        // move AC span
+        this.acSpan.css("left", x + "px");
+        this.acSpan.css("top", y + "px");
 
-            /*
-            var index = bsearch(v, t);
-            console.log(index);
-            t = t.slice(index);
-            */
+        // get completion results
+        var names = rt.getNames();
+        // - add local names
+        var regex = /\\[a-zA-Z_][a-zA-Z0-9_]*/g;
+        while (vv = regex.exec(text))
+            names.push(vv[0].substr(1));
 
-            var result: { x: string; i: number }[] = [];
-            var resultAny: { x: string; i: number }[] = [];
-            var vLower = v.toLowerCase();
-            var vLen = v.length;
-            t.forEach(tt =>
-            {
-                var index = tt.toLowerCase().indexOf(vLower);
-                if (index != -1)
-                    (index == 0 ? result : resultAny).push({ x: tt, i: index });
-            });
+        // - process
+        var t = names.sort(compareStrings);
+        t = t.filter((v, i) => i == 0 || v != t[i-1]); // distinct
+        var result: { x: string; i: number }[] = [];
+        var resultAny: { x: string; i: number }[] = [];
+        var vLower = v.toLowerCase();
+        var vLen = v.length;
+        t.forEach(tt =>
+        {
+            var index = tt.toLowerCase().indexOf(vLower);
+            if (index != -1)
+                (index == 0 ? result : resultAny).push({ x: tt, i: index });
+        });
+        Array.prototype.push.apply(result, resultAny);
 
-            Array.prototype.push.apply(result, resultAny);
+        if (result.length == 0)
+            return;
 
-            result = result.slice(0, 10);
+        // handle/update lastACitem
+        var indexs = result
+            .map((x, i) => { return { x: x.x, i: i }; })
+            .filter(t => t.x == this.lastACitem)
+            .map(t => t.i);
 
-            this.acList.html(result.map(x => x.x.slice(0, x.i) + "<span style='color: salmon;'>" + x.x.slice(x.i, x.i + vLen) + "</span>" + x.x.slice(x.i + vLen)).join("<br/>"));
-            if (result.length > 0)
-                this.acSpan.show();
-        };
+        var index = indexs.length == 0 ? 0 : indexs[0];
+        index = (index + moveSelection + result.length) % result.length;
+        this.lastACitem = result[index].x;
 
-        code.on("input",() => { this.onTextChanged(this.code.text()); update(); });
-        this.pre.mousedown(() => this.acSpan.hide());
-        //setInterval(() => update(), 1000);
+        // display results
+
+        result = result.slice(0, 10);
+
+        this.acList.empty();
+        result.forEach(x =>
+        {
+            var p = $("<p>");
+            p.append($("<span>").text(x.x.slice(0, x.i)));
+            p.append($("<span>").text(x.x.slice(x.i, x.i + vLen)).css("color", "salmon"));
+            p.append($("<span>").text(x.x.slice(x.i + vLen)));
+
+            // selection
+            if (x.x == this.lastACitem)
+                p.css("background-color", "#444444");
+
+            this.acList.append(p);
+        });
+        this.acSpan.show();
     }
 
     public get element(): JQuery
