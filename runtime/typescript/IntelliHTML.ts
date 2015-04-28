@@ -2,6 +2,7 @@
 
 var tabSpaces = "    ";
 var tabWidth = tabSpaces.length;
+var acCount = 11;
 
 function setCaret(range: Range)
 {
@@ -27,6 +28,7 @@ class IntelliHTML
     private acList: JQuery;
     private acListNative: HTMLDivElement;
 
+    private triggerOnTextChanged(): void { this.onTextChanged(this.text); }
     private onTextChanged: (text: string) => void;
     
     private lastACitem: string = "";
@@ -53,6 +55,7 @@ class IntelliHTML
             if (eo.which == 9)
             {
                 eo.preventDefault();
+                this.acSpan.hide();
                 var range = this.caretPosition;
                 if (range != null)
                 {
@@ -65,7 +68,7 @@ class IntelliHTML
                     range.insertNode(spacesNode);
                     range.setStartAfter(spacesNode);
                     setCaret(range);
-                    this.acSpan.hide();
+                    this.triggerOnTextChanged();
                 }
             }
             if ((eo.which == 40 || eo.which == 38) && this.acSpan.is(":visible"))
@@ -96,6 +99,7 @@ class IntelliHTML
                 range.insertNode(acNode);
                 range.setStartAfter(acNode);
                 setCaret(range);
+                this.triggerOnTextChanged();
             }
             if (eo.which == 32 && eo.ctrlKey)
             {
@@ -111,7 +115,7 @@ class IntelliHTML
         });
         this.code.on("input",() =>
         {
-            this.onTextChanged(this.code.text());
+            this.triggerOnTextChanged();
             this.updateAC();
         });
         this.pre.click(eo => this.code.focus());
@@ -144,7 +148,7 @@ class IntelliHTML
         this.acList.css("top", "1.5em");
         this.acList.css("background-color", "#2a2a2a");
         this.acList.css("border-radius", "4px");
-        this.acList.css("box-shadow", "rgba(100, 100, 100, 0.9) 0 0 3px 0px inset");
+        this.acList.css("border", "1.5px solid #555");
         
         // INIT
 
@@ -274,8 +278,21 @@ class IntelliHTML
         this.lastACitem = result[index].x;
 
         // display results
+        var acListOffset = Math.max(Math.min(1 + index - (acCount / 2) | 0, result.length - acCount), 0);
+        var hiddenFront = acListOffset > 0;
+        var hiddenBack = result.length > acListOffset + acCount;
 
-        result = result.slice(0, 10);
+        result = result.slice(acListOffset, acListOffset + acCount);
+
+        var boxShadow = "";
+        if (hiddenFront)
+            boxShadow += "#555 0px 20px 20px -10px inset";
+        if (hiddenFront && hiddenBack)
+            boxShadow += ",";
+        if (hiddenBack)
+            boxShadow += "#555 0px -20px 20px -10px inset";
+
+        this.acList.css("box-shadow", boxShadow);
 
         this.acList.empty();
         result.forEach(x =>

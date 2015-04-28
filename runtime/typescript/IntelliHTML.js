@@ -1,6 +1,7 @@
 /// <reference path="jquery.d.ts" />
 var tabSpaces = "    ";
 var tabWidth = tabSpaces.length;
+var acCount = 11;
 function setCaret(range) {
     var sel = window.getSelection();
     sel.removeAllRanges();
@@ -27,6 +28,7 @@ var IntelliHTML = (function () {
         this.code.keydown(function (eo) {
             if (eo.which == 9) {
                 eo.preventDefault();
+                _this.acSpan.hide();
                 var range = _this.caretPosition;
                 if (range != null) {
                     var text = _this.text;
@@ -38,7 +40,7 @@ var IntelliHTML = (function () {
                     range.insertNode(spacesNode);
                     range.setStartAfter(spacesNode);
                     setCaret(range);
-                    _this.acSpan.hide();
+                    _this.triggerOnTextChanged();
                 }
             }
             if ((eo.which == 40 || eo.which == 38) && _this.acSpan.is(":visible")) {
@@ -65,6 +67,7 @@ var IntelliHTML = (function () {
                 range.insertNode(acNode);
                 range.setStartAfter(acNode);
                 setCaret(range);
+                _this.triggerOnTextChanged();
             }
             if (eo.which == 32 && eo.ctrlKey) {
                 eo.preventDefault();
@@ -77,7 +80,7 @@ var IntelliHTML = (function () {
                 _this.updateAC();
         });
         this.code.on("input", function () {
-            _this.onTextChanged(_this.code.text());
+            _this.triggerOnTextChanged();
             _this.updateAC();
         });
         this.pre.click(function (eo) { return _this.code.focus(); });
@@ -107,12 +110,15 @@ var IntelliHTML = (function () {
         this.acList.css("top", "1.5em");
         this.acList.css("background-color", "#2a2a2a");
         this.acList.css("border-radius", "4px");
-        this.acList.css("box-shadow", "rgba(100, 100, 100, 0.9) 0 0 3px 0px inset");
+        this.acList.css("border", "1.5px solid #555");
         // INIT
         this.codeStyled.css("color", "transparent"); // TODO: make right
         this.pre.mousedown(function () { return _this.acSpan.hide(); });
         //setInterval(() => update(), 1000);
     }
+    IntelliHTML.prototype.triggerOnTextChanged = function () {
+        this.onTextChanged(this.text);
+    };
     Object.defineProperty(IntelliHTML.prototype, "caretPosition", {
         get: function () {
             var range;
@@ -213,7 +219,18 @@ var IntelliHTML = (function () {
         index = (index + moveSelection + result.length) % result.length;
         this.lastACitem = result[index].x;
         // display results
-        result = result.slice(0, 10);
+        var acListOffset = Math.max(Math.min(1 + index - (acCount / 2) | 0, result.length - acCount), 0);
+        var hiddenFront = acListOffset > 0;
+        var hiddenBack = result.length > acListOffset + acCount;
+        result = result.slice(acListOffset, acListOffset + acCount);
+        var boxShadow = "";
+        if (hiddenFront)
+            boxShadow += "#555 0px 20px 20px -10px inset";
+        if (hiddenFront && hiddenBack)
+            boxShadow += ",";
+        if (hiddenBack)
+            boxShadow += "#555 0px -20px 20px -10px inset";
+        this.acList.css("box-shadow", boxShadow);
         this.acList.empty();
         result.forEach(function (x) {
             var p = $("<p>");
