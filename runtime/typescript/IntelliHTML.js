@@ -8,12 +8,11 @@ function setCaret(range) {
     sel.addRange(range);
 }
 var IntelliHTML = (function () {
-    function IntelliHTML(onTextChanged) {
+    function IntelliHTML(onTextChanged, getACitems) {
         var _this = this;
-        if (onTextChanged === void 0) { onTextChanged = function (_) {
-        }; }
         this.lastACitem = "";
         this.onTextChanged = onTextChanged;
+        this.getACitems = getACitems;
         this.preNative = document.createElement("pre");
         this.pre = $(this.preNative);
         this.pre.css("cursor", "text");
@@ -196,7 +195,7 @@ var IntelliHTML = (function () {
         this.acSpan.css("left", x + "px");
         this.acSpan.css("top", y + "px");
         // get completion results
-        var names = rt.getNames();
+        var names = this.getACitems();
         // - add local names
         var regex = /\\[a-zA-Z_][a-zA-Z0-9_]*/g;
         while (vv = regex.exec(text))

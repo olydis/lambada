@@ -1,5 +1,4 @@
-
-' formatters\
+' formatters
 _4 = Succ three
 _16 = mul _4 _4
 _32 = mul two _16

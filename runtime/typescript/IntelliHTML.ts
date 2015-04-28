@@ -30,12 +30,15 @@ class IntelliHTML
 
     private triggerOnTextChanged(): void { this.onTextChanged(this.text); }
     private onTextChanged: (text: string) => void;
+
+    private getACitems: () => string[];
     
     private lastACitem: string = "";
 
-    public constructor(onTextChanged: (text: string) => void = _ => { })
+    public constructor(onTextChanged: (text: string) => void, getACitems: () => string[])
     {
         this.onTextChanged = onTextChanged;
+        this.getACitems = getACitems;
 
         this.preNative = document.createElement("pre");
         this.pre = $(this.preNative);
@@ -248,7 +251,7 @@ class IntelliHTML
         this.acSpan.css("top", y + "px");
 
         // get completion results
-        var names = rt.getNames();
+        var names = this.getACitems();
         // - add local names
         var regex = /\\[a-zA-Z_][a-zA-Z0-9_]*/g;
         while (vv = regex.exec(text))
