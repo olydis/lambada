@@ -1,0 +1,34 @@
+''' Type: Nat
+Nat = Zero | Succ n
+one = Succ Zero
+two = Succ one
+three = Succ two
+
+add = \n \m m n (\dm add (Succ n) dm)
+mul = \n \m m Zero (\dm add n (mul n dm))
+pow = \n \m m one (\dm mul n (pow n dm))
+
+isZero = \n n True (k False)
+
+pred = \n n Zero i
+sub = \a \b if(isZero b)
+        a
+        (sub (pred a) (pred b))
+        
+_qadd = \a \n add a (mul (Succ three) n)
+
+
+isEQ = \a \b and (isZero (sub a b)) (isZero (sub b a))
+isLTE = \a \b isZero (sub a b)
+isGTE = \a \b isLTE b a
+isLT = \a \b not (isGTE a b)
+isGT = \a \b not (isLTE a b)
+
+min = \a \b if(isLT a b) a b
+max = \a \b if(isGT a b) a b
+
+diff = \a \b if (isLT a b) (sub b a) (sub a b)
+
+mod = \a \b if(isLT a b) a (mod (sub a b) b)
+div = \a \b if(isLT a b) Zero (Succ (div (sub a b) b))
+

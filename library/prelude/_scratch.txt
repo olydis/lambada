@@ -1,0 +1,52 @@
+' basic evaluator
+evalnumber = parseWithWhitespace parsenumber
+evalProduct = y(\evalProduct parseOption (parseBind mul evalnumber (parseBindOverride (parseChar (strHead "*")) evalProduct)) evalnumber)
+evalSum = y(\evalSum parseOption (parseBind add evalProduct (parseBindOverride (parseChar (strHead "+")) evalSum)) evalProduct)
+eval = \s (strFromN (maybeTryGetValue (parseAcceptFullyConsumed (evalSum s)) 1337))    
+
+
+
+'million = (\s (maybeTryGetValue (parseAcceptFullyConsumed (evalSum s)) 1337)) "100 * 1000 + 20000 * 45"
+million = mul 1000 1000
+millionS = (strFromN million)
+
+
+' testx
+tfac1 = \a snd (Pair a 1)
+tfac2 = k 1
+tval1 = tfac1 i
+tval2 = tfac2 i
+
+tswitch = \n switchN(n)
+            [
+                Pair 0 "a",
+                Pair 1 "b",
+                Pair 2 "c",
+                Pair 3 "d",
+                Pair 4 "e"
+            ]
+            "x"
+
+lengthyOp = \opId if(strIsEmpty (msgBox opId)) i i
+calledOften1 = \opId \arg  (lengthyOp opId) arg
+calledOften2 = \opId \arg  (\arg  \opId (lengthyOp opId) arg) arg opId
+
+
+scenario1 = \a foldl (listTake nats 5) "0" (\b \_ calledOften1 "42" (strCons a b))
+scenario2 = \a foldl (listTake nats 5) "0" (\b \_ calledOften2 "42" (strCons a b))
+
+' : (native_Run "\opId \arg  (\arg  \opId (lengthyOp (c (c (c (c opId))))) (c (c (c (c arg))))) arg opId")
+
+
+
+
+
+
+
+
+
+
+
+
+
+

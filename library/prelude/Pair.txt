@@ -1,0 +1,7 @@
+''' Type: Pair
+Pair = Pair a b
+fst = \pair pair (\a \b a)
+snd = \pair pair (\a \b b)
+changeFst = \pair \f pair (\a \b Pair (f a) b)
+changeSnd = \pair \f pair (\a \b Pair a (f b))
+

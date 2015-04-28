@@ -1,0 +1,118 @@
+testCount = 100
+
+' bool and basic combis
+test0 = True
+test1 = i True
+test2 = k True False
+test3 = s (k i) i True
+
+test4 = not False
+test5 = b not not True
+test6 = or True False
+test7 = not (or False False)
+test8 = and True True
+test9 = not (and True False)
+test10 = implies False False
+test11 = implies False True
+test12 = implies True True
+test13 = not (implies True False)
+test14 = eq False False
+test15 = eq True True
+
+' N
+test16 = isZero 0
+test17 = not (isZero 1)
+test18 = isEQ 42 42
+test19 = not (isEQ 42 43)
+test20 = isEQ 1 (Succ 0)
+test21 = isEQ 43 (add 23 20)
+test22 = isEQ 69 (mul 3 23)
+test23 = isEQ 32 (pow 2 5)
+test24 = isEQ 31 (pred 32)
+test25 = isEQ 65 (sub 101 36)
+test26 = isEQ 3 (div 63 16)
+test27 = isEQ 3 (mod 91 4)
+test28 = isLTE 3 3
+test29 = isLTE 3 4
+test30 = not (isLTE 3 2)
+test31 = isGTE 4 3
+test32 = isLT 3 4
+test33 = not (isLT 3 3)
+test34 = isGT 4 3
+
+' pair
+_test35f = Pair 45 23
+test35 = isEQ 45 (fst _test35f)
+test36 = isEQ 23 (snd _test35f)
+
+' list
+_test37f = "Aa"
+test37 = listIsNotEmpty _test37f
+test38 = not (listIsEmpty _test37f)
+test39 = isEQ 65 (listHead _test37f)
+test40 = isEQ 97 (b listHead listTail _test37f)
+_test41f = listAddFront ListEmpty 66
+test41 = isEQ 66 (listHead _test41f)
+test42 = isEQ 2 (listCount _test37f)
+test43 = isEQ 97 (b listHead reverse _test37f)
+test44 = isEQ 3 (listCount (listConcat _test37f _test41f))
+test45 = isEQ 1 (listCount (listReturn 32))
+test46 = isEQ 3 (listCount (listAddBack _test37f 49))
+test47 = strEquals _test37f "Aa"
+test48 = not (strEquals _test37f "AA")
+test49 = strEquals "asd" (listTake "asdqwe" 3)
+test50 = strEquals "asd" (listTakeWhile "asdqwe" (\p not (isEQ p (listHead "q"))))
+test51 = strEquals "bte" (listMap "asd" Succ)
+test52 = strEquals "ade" (listWhere "asdqwe" (\p isLTE p (listHead "e")))
+test53 = strEquals "qwe" (listSkip "asdqwe" 3)
+test54 = strEquals "qwe" (listSkipWhile "asdqwe" (\p not (isEQ p (listHead "q"))))
+test55 = listAny "qwe" (\c isEQ c (listHead "w"))
+test56 = not (listAny "asd" (\c isEQ c (listHead "w")))
+test57 = listAll "qwe" (\c isGT c 65)
+test58 = not (listAll "qwe" (\c isGT c 110))
+test59 = strEquals "bte" (listZip "asd" (repeat 1) add)
+test60 = isEQ 65 (listElementAt "asdAqwe" 3)
+test61 = isEQ 1 (listHead nats)
+test62 = isEQ 0 (listHead nats0)
+test63 = isEQ 0 (listHead byteVals)
+test64 = isEQ 256 (listCount byteVals)
+test65 = isEQ 435 (nxor 123 456)
+test66 = isAlpha 65
+test67 = not (isAlpha 64)
+test68 = isNum (listHead "0")
+test69 = not (isNum (listHead "a"))
+test70 = isAlphaNum (listHead "a")
+test71 = isAlphaNum (listHead "0")
+test72 = not (isAlphaNum (listHead "!"))
+test73 = isWhiteSpace (listHead " ")
+test74 = not (isWhiteSpace (listHead "a"))
+test75 = isEQ 720 (fak 6)
+test76 = strEquals "23" (strFromN 23)
+test77 = strEquals "(12 ; 13)" (strFromPair strFromN strFromN (Pair 12 13))
+test78 = strEquals "(asd ; qwe)" (strFromPair i i (listCutAt "asdqwe" (\c isEQ c (listHead "q"))))
+test79 = strContains "asd" (listHead "s")
+test80 = not (strContains "asd" (listHead "w"))
+test81 = strEquals "asd" (strTrim "   asd   ")
+
+' types
+test82 = strEquals "(0 -> 0)" (printType typeI)
+test83 = strEquals "(0 -> (1 -> 0))" (printType typeK)
+test84 = strEquals "((0 -> (1 -> 2)) -> ((3 -> 1) -> ((0 ^ 3) -> 2)))" (printType typeS)
+test85 = strEquals "(((0 -> 1) ^ 0) -> 1)" (printType typeM)
+test86 = strEquals "((0 -> 1) -> ((2 -> 0) -> (2 -> 1)))" (printType typeB)
+test87 = strEquals "(((0 -> 1) ^ (2 -> 0)) -> (2 -> 1))" (printType typeT)
+
+test88 = strEquals "(0 -> 0)" (printType typeI1)
+test89 = strEquals "(0 -> 0)" (printType typeI2)
+test90 = strEquals "((0 -> 1) -> (0 -> 1))" (printType typeI3)
+test91 = strEquals "(0 -> 0)" (printType typeI4)
+test92 = strEquals "(0 -> 0)" (printType typeI5)
+
+test93 = strEquals "((0 -> 0) -> 0)" (printType typeY)
+
+test94 = True
+test95 = True
+test96 = True
+test97 = True
+test98 = True
+test99 = True

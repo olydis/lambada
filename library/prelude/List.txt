@@ -1,0 +1,123 @@
+''' Type: List
+List = ListEmpty | ListCons head tail
+
+listAddFront = \tail \head ListCons head tail
+listIsEmpty = \list list True (\head \tail False)
+listIsNotEmpty = b not listIsEmpty
+listHead = \list list i (\head \tail head)
+listTail = \list list i (\head \tail tail)
+
+foldl = \l \x \f l
+            x
+            (\head \tail foldl tail (f x head) f)
+foldr = \l \x \f l
+            x
+            (\head \tail f (foldr tail x f) head)
+
+reverseBag = \a \b a
+            b
+            (\head \tail reverseBag tail (ListCons head b))
+reverse = \l reverseBag l ListEmpty
+unfold = \x \f ListCons x (unfold (f x) f)
+repeat = \elem unfold elem i
+
+listConcat = \l \k foldr l k listAddFront
+    
+listReturn = listAddFront ListEmpty
+listAddBack = \l \x listConcat l (listReturn x)
+
+cfold = \l \x \f ListCons x (l ListEmpty (\head \tail cfold tail (f x head) f))
+
+listTake = \l \n 
+    l
+        ListEmpty
+        (\head \tail n 
+            ListEmpty
+            (\dn ListCons head (listTake tail dn))
+        )
+
+listTakeWhile = \l \p 
+    l
+        ListEmpty
+        (\head \tail
+            if(not (p head))
+                ListEmpty
+                (ListCons head (listTakeWhile tail p))
+        )
+
+
+listBind = \l \f foldl l ListEmpty (\a \b listConcat a (f b))
+listMap = \l \f listBind l (b listReturn f)
+listWhere = \l \f foldr l ListEmpty (\a \b if(f b) (ListCons b a) a)
+listSkip = \l \n 
+    l
+        ListEmpty
+        (\head \tail n 
+            l
+            (\dn listSkip tail dn)
+        )
+listSkipWhile = \l \p
+    l
+        ListEmpty
+        (\head \tail 
+            if(not (p head))
+                l
+                (listSkipWhile tail p)
+        )
+listAny = \l \f not (listIsEmpty (listWhere l f))
+listAll = \l \f not (listAny l (b not f))
+ors = \conds listAny conds i
+ands = \conds listAll conds i
+
+listCount = \l foldl l Zero (b k Succ)
+
+listZip = \l1 \l2 \op 
+    l1
+        ListEmpty
+        (\h1 \t1
+            l2
+                ListEmpty
+                (\h2 \t2
+                    ListCons 
+                        (op h1 h2)
+                        (listZip t1 t2 op) 
+                )
+        )
+listZipLonger = \l1 \l2 \pad \op 
+    l1
+        (listMap l2 (\item2 op pad item2))
+        (\h1 \t1
+            l2
+                (listMap l1 (\item1 op item1 pad))
+                (\h2 \t2
+                    ListCons 
+                        (op h1 h2)
+                        (listZipLonger t1 t2 pad op) 
+                )
+        )
+listEquals = \eq \l1 \l2 and (isEQ (listCount l1) (listCount l2)) (listAll (listZip l1 l2 eq) i)
+strEquals = listEquals isEQ
+listMerge = \lt \l1 \l2
+    l1
+        l2
+        (\h1 \t1
+            l2
+                l1
+                (\h2 \t2
+                    if (l1 h1 h2)
+                        (ListCons h1 (listMerge lt t1 l2))
+                        (ListCons h2 (listMerge lt l1 h2))
+                )
+        )
+
+listSort = y(\sort \lt \l if(isGT (listCount l) one) ((\mid listMerge lt (sort lt (listTake l mid))  (sort lt (listSkip l mid))) (div (listCount l) two)) l)
+
+intSort = listSort isLT
+
+listElementAt = \l \n listHead (listSkip l n)
+
+listStartsWith = \eq \l1 \l2 listEquals eq (listTake l1 (listCount l2)) l2
+
+listJoin = \lists \sepa lists
+    ListEmpty 
+    (\head \tail foldl tail head (\cur \new listConcat (listConcat cur sepa) new))

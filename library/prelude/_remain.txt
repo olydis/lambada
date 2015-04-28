@@ -1,0 +1,221 @@
+
+' formatters\
+_4 = Succ three
+_16 = mul _4 _4
+_32 = mul two _16
+_48 = mul three _16
+_10 = add two (add _4 _4)
+xstrFromNat = y(\temp \acc \n if(isZero n) acc (temp (straddFront acc (add _48 (mod n _10))) (div n _10)))
+strFromN = \n if(isZero n) (strReturn _48) (xstrFromNat strEmpty n)
+strFromNs = \ns listBind ns (\n straddBack (strFromN n) _32)
+strToN = \str foldl str Zero (\i \c add (mul i _10) (sub c _48))
+strFromB = \b if(b) "True" "False"
+strFromS = \s strConss [strReturn 96, s, strReturn 96]
+
+strFromPair = \fa \fb \p strConss ["(", fa (fst p), " ; ", fb (snd p), ")"]
+
+
+
+''' Type: LabeledTree
+LabeledTree = LabeledVertex label children
+
+''' Type: LabeledBinTree
+LabeledBinTree = LabeledBinLeaf label | LabeledBinVertex label left right
+
+''' Type: LabeledOrderedBinTree
+LabeledOrderedBinTree = LabeledOrderedBinLeaf label | LabeledOrderedBinVertex label left right lt
+
+''' Type: RBTree
+RBTree = RBTreeLeaf | RBTreeNodeRed label left right lt | RBTreeNodeBlack label left right lt
+
+
+' recursive functions
+nats0 = unfold Zero Succ
+nats = unfold one Succ
+zeroes = repeat 0
+byteVals = listTake nats0 256
+
+toBinSeq = \n listMap (listTakeWhile (unfold n (c div 2)) (b not isZero)) (c mod 2)
+fromBinSeq = \l foldl (listZip l nats0 (\a \b mul a (pow 2 b))) 0 add
+nxor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y mod (add x y) 2))
+
+isUpperCaseLetter = \c and (isGT c 64) (isLT c 91)
+isLowerCaseLetter = \c or (and (isGT c 96) (isLT c 123)) (isEQ c 95)
+isAlpha = \c or (isUpperCaseLetter c) (isLowerCaseLetter c)
+alpha = strWhere byteVals isAlpha
+isNum = \c and (isGT c 47) (isLT c 58)
+num = strWhere byteVals isNum
+isAlphaNum = \c or (isAlpha c) (isNum c)
+isWhiteSpace = \c isLT c 34
+whiteSpace = strWhere byteVals isWhiteSpace
+newLine = straddFront (strReturn 10) 13
+
+toUpperCaseLetter = \c if(isLowerCaseLetter c) (add c 32) c
+toLowerCaseLetter = \c if(isUpperCaseLetter c) (sub c 32) c
+
+toUpperCaseString = \s listMap s toUpperCaseLetter
+toLowerCaseString = \s listMap s toLowerCaseLetter
+
+toUpperCaseFirstLetter = \s ListCons (toUpperCaseLetter (strHead s)) (strTail s)
+toLowerCaseFirstLetter = \s ListCons (toLowerCaseLetter (strHead s)) (strTail s)
+
+halt = \x (if x halt i) x
+fak = \n foldl (listTake nats n) one mul
+
+' awesome sequences...
+_nextCandids = \prime \candids (listWhere candids (\n (not (isZero (mod n prime)))))
+_primes = \candids (\newPrime ListCons newPrime (_primes (_nextCandids newPrime candids))) (listHead candids)
+primes = _primes (listSkip nats one)
+fibs = listAddFront (listAddFront (listZip fibs (listTail fibs) add) 1) 1
+
+'_modUint = \x mod x (pow 2 32)
+'_quadEx = \quad \f f (fst (fst quad)) (snd (fst quad)) (fst (snd quad)) (snd (snd quad))
+'_getT = \x xor x (_modUint (mul x (pow 2 11)))
+'_randomPermut = \quad _quadEx quad (\x \y \z \w Pair (Pair y z) (Pair w ((\t xor (xor w (div w (pow 2 19))) (xor t (div t 256))) (_getT x))))
+'_randomGet = \quad _quadEx quad (\x \y \z \w mod w (pow 2 31))
+'randoms = \seed listTail (listMap (unfold (Pair (Pair seed 842502087) (Pair 3579807591 273326509)) _randomPermut) _randomGet)
+'randomsBound = \seed \min \max listMap (randoms seed) (\x add min (mod x (sub max min)))
+
+
+
+listCutAt = \l \f if(or (listIsEmpty l) (f (listHead l))) (Pair ListEmpty l) (changeFst (listCutAt (listTail l) f) (ListCons (listHead l)))
+
+strFromSS = \ss foldl ss strEmpty (\s \x strCons s (straddBack x 10))
+xlistSplitAt = \l \f unfold (listCutAt l (k True)) (\p changeSnd (listCutAt (snd p) f) (\li listSkip li one))
+listSplitAt = \l \f listBind (listCutAt (listSkip (xlistSplitAt l f) one) (\x listIsEmpty (snd x))) (\x listReturn (snd x))
+ 
+listContains = \list \elem \eq listAny list (\x eq elem x)
+strContains = \list \elem listContains list elem isEQ
+
+listRepeat = \n \list listBind (listTake (repeat list) n) i
+
+strBurst = \str listMap str (\c listReturn c)
+strTrim = \str reverse (listSkipWhile (reverse (listSkipWhile str isWhiteSpace)) isWhiteSpace)
+
+strCutAt = listCutAt
+
+
+
+strFromMaybe = \formatter \m m (\x strCons "Just " (formatter x)) "Nothing"
+
+
+' parser stuff: P t = (S => ParseResult)
+ParseResult = ParseResultFail | ParseResult remaining item
+
+parseReturn = \x (\input ParseResult input x)
+parseFail = \input ParseResultFail
+
+parseOperation = \conv \res res ParseResultFail (\remaining \item ParseResult remaining (conv item))
+
+parseBindOperation = \p \conv (\string parseOperation conv (p string))
+parsePipe = \p1 \cp2 (\input (p1 input) ParseResultFail (\remaining \item cp2 item remaining))
+parseBind = \compose \p1 \p2 (\input (p1 input) ParseResultFail (\remaining \item parseOperation (compose item) (p2 remaining)))
+parseBindDiscard = parseBind k
+parseBindOverride = parseBind (k i)
+parseBindPair = parseBind Pair
+
+parseCharIf = \cond (\string if (and (not (listIsEmpty string)) (cond (listHead string))) (parseReturn (listHead string) (listTail string)) (parseFail string))
+parseCharX = \set parseCharIf (\c listContains set c isEQ)
+parseChar = \c parseCharIf (isEQ c)
+parseSingle = parseCharIf (k True)
+parseString = \str foldl (listMap str parseChar) (parseReturn strEmpty) (parseBind straddBack)
+parseUntil = \cond \str (\p parseReturn (fst p) (snd p)) (listCutAt str cond)
+parseWhile = \cond parseUntil (b not cond)
+parseWhileMinOne = \cond \str (\res if(listIsEmpty (ParseResult_Dispatch (\remaining \item item) "" res)) (parseFail str) res) (parseWhile cond str)
+
+parseOption = \p1 \p2 (\string (p1 string) (p2 string) ParseResult)
+parseOptions = \ps (\string ps ParseResultFail (\head \tail (head string) (parseOptions tail string) ParseResult))
+
+parseWhitespace = parseWhile isWhiteSpace
+parseWithWhitespace = \p parseBindDiscard (parseBindOverride parseWhitespace p) parseWhitespace
+parseToken = parseBind (\c \s straddFront s c) (parseCharIf isAlpha) (parseWhile isAlphaNum) 
+parsenumber = parseBindOperation (parseWhileMinOne isNum) strToN
+
+parseAccept = \restFilter \res res Nothing (\remaining \item if(restFilter remaining) (Just item) Nothing)
+parseAcceptAll = parseAccept (k True)
+parseAcceptFullyConsumed = parseAccept listIsEmpty
+
+parseWhilesuccessful = 
+    \parser \s 
+        (parser s)
+            (ParseResult s ListEmpty)
+            (\remaining \item 
+                (parseWhilesuccessful parser remaining)
+                ParseResultFail ' unreachable :)
+                (\rremaining \ritems ParseResult rremaining (ListCons item ritems))
+            ) 
+
+' map
+mapCreate = \eq Pair eq ListEmpty
+mapGetAll = \map \key listWhere (snd map) (\x fst map key (fst x))
+mapHasKey = \map \key listAny (mapGetAll map key) (k True)
+mapCount = b listCount snd
+mapadd = \map \key \value changeSnd map (ListCons (Pair key value))
+mapRemove = \map \key changeSnd map (\list listWhere list (\elem not (fst map key (fst elem))))
+mapSet = \map \key \value mapadd (mapRemove map key) key value
+mapGet = \map \key snd (listHead (mapGetAll map key))
+
+' ID-fier
+idfCreate = mapCreate
+idfHandle = \idf \x if(mapHasKey idf x) (Pair idf (mapGet idf x)) ((\id Pair (mapadd idf x id) id) (mapCount idf))
+idfHandleX = \idf \xs foldl xs (Pair idf ListEmpty) (\pair \x (\res Pair (fst res) (listAddBack (snd pair) (snd res))) (idfHandle (fst pair) x))
+idfCount = mapCount
+
+' list ex
+listDistinct = \l \eq snd (foldl l (Pair (idfCreate eq) ListEmpty) (\pair \x (\res Pair (fst res) (if(isEQ (snd res) (idfCount (fst pair))) (listAddBack (snd pair) x) (snd pair))) (idfHandle (fst pair) x)))
+
+' temp art addin
+newLine = strReturn 10
+
+empty = strReturn 32
+
+gDrawL = \w \y \f listBind (listTake nats0 w) (\x (f x y))
+gDraw = \w \h \f listBind (listTake nats0 h) (\y listConcat (gDrawL w y f) newLine)
+
+gCanvas = k (k empty)
+gOverlay = \sel \col \canvas \x \y if (sel x y) (listReturn col) (canvas x y)
+gPixel = \x \y \col gOverlay (\xx \yy and (isEQ xx x) (isEQ yy y)) col
+gCircle = \x \y \s \col gOverlay (\xx \yy isGT (pow s 2) (add (pow (diff xx x) 2) (pow (diff yy y) 2))) col    
+
+
+' bean (S => M ?)
+'bean
+beanEmpty = k Nothing
+'bean => S => ? => bean
+beanSet = \mapping \s \x (\query if(strEquals s query) (Just x) (mapping query))
+'bean => S => M ?
+beanTryGet = \mapping \query mapping query
+'bean => S => ?
+beanGet = \mapping \query maybeGetValue (mapping query)
+'bean => S => bool
+beanHas = \mapping \query maybeHasValue (mapping query)
+
+
+' seq
+seqEmpty = Pair 0 i
+seqLength = fst
+seqGet = snd
+seqSet = \seq \i \x changeSnd seq (\f \ii if(isEQ i ii) x (f ii))
+seqaddFront = \seq \x Pair (Succ (seqLength seq)) (\i if(isZero i) x (seqGet seq (pred i)))
+seqaddBack =  \seq \x Pair (Succ (seqLength seq)) (\i if(isEQ i (seqLength seq)) x (seqGet seq i))
+seqConcat = \s1 \s2 Pair (add (seqLength s1) (seqLength s2)) (\i if(isLT i (seqLength s1)) (seqGet s1 i) (seqGet s2 (sub i (seqLength s1))))
+seqRangeUnsafe = \seq \offset \count Pair count (\i seqGet seq (sub i offset))
+seqRange = \seq \offset \count seqRangeUnsafe seq offset (min count (sub (seqLength seq) offset))
+
+seqToList = \seq listMap (listTake nats0 (seqLength seq)) (\i seqGet seq i)
+listToSeq = \list foldr list seqEmpty (\seq \x seqaddFront seq x)
+
+listHeadOrDefault = \list \alt if(listIsEmpty list) alt (listHead list)
+
+_switchCond = \listpairxres \alt \cond foldr listpairxres alt (\inner \pair if(cond (fst pair)) (snd pair) inner)
+switchCond = \cond \listpairxres \alt _switchCond listpairxres alt cond
+switch = \obj \listpairxres \cond \alt switchCond (cond obj) listpairxres alt
+switchN = \obj \listpairnumres \alt switch obj listpairnumres isEQ alt
+
+'' vararg consumer
+getFirstConsumeMoreDeferred = \mf \v v 
+                 (\a 
+                    y(\self \n if(isZero n) a (k (self (pred n)))) (mf a)
+                 )
+getFirstConsumeMore = \m getFirstConsumeMoreDeferred (k m)
+

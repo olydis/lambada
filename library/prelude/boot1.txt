@@ -1,0 +1,17 @@
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' LambAda prelude (the extra "A" is for extra awesomeness) '
+' Author: Johannes Bader                                   '
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+' define SKI in terms of U to enable abstraction killing 
+' for systems implementing ONLY U (how romantic!)
+
+i = u u
+k = u (u i)     ' <- where U and I first met
+s = u k
+
+b = s (k s) k
+c = s (s (k s) (s (k k) s)) (k k)
+m = s i i
+
+y = b m (c b (s i i))

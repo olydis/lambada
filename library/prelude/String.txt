@@ -1,0 +1,17 @@
+strIsEmpty = i listIsEmpty
+strIsNotEmpty = i b not strIsEmpty
+strHead = i listHead
+strTail = i listTail
+strEmpty = i ListEmpty
+straddFront = i listAddFront
+straddBack = i listAddBack
+strCons = i listConcat
+strSkip = i listSkip
+strTake = i listTake
+strReturn = i listReturn
+strWhere = i listWhere
+strLength = i listCount
+strStartsWith = i listStartsWith isEQ
+
+strJoin = \strs \sepa if(listIsEmpty strs) strEmpty (foldl (listTail strs) (listHead strs) (\cur \new strCons (strCons cur sepa) new))
+strConss = \strs strJoin strs "" 

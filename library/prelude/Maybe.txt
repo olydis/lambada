@@ -1,0 +1,14 @@
+' maybe
+Maybe = Just x | Nothing
+
+maybeReturn = Just
+maybeNothing = Nothing
+maybeHasValue = Just_Dispatch (k True) False
+maybeGetValue = Just_Dispatch i i
+
+
+
+maybeBind = \m \f m f Nothing
+maybeMap = \m \f m (b Just f) Nothing
+maybeAlternative = \m \a m (k m) a
+maybeTryGetValue = \m \a m i a
