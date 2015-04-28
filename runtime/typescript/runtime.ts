@@ -2,8 +2,8 @@ module LambadaRuntime
 {
     class StringReader
     {
-        private len: number;
         private index: number;
+        private len: number;
 
         public constructor(private str: string)
         {
@@ -43,6 +43,11 @@ module LambadaRuntime
         public get charsLeft(): number
         {
             return this.len - this.index;
+        }
+
+        public toString()
+        {
+            return this.index + " / " + this.len;
         }
     }
 
@@ -499,7 +504,7 @@ module LambadaRuntime
                     var defRef = reader.readToken();
                     var def = this.defs[defRef];
                     if (def == undefined)
-                        throw "undefined reference: " + defRef;
+                        throw "undefined reference: " + defRef + " (" + reader.toString() + ")";
                     expressionStack.push(def);
                 }
 

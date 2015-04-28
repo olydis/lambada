@@ -40,6 +40,9 @@ var LambadaRuntime;
             enumerable: true,
             configurable: true
         });
+        StringReader.prototype.toString = function () {
+            return this.index + " / " + this.len;
+        };
         return StringReader;
     })();
     var ExpressionBase = (function () {
@@ -405,7 +408,7 @@ var LambadaRuntime;
                     var defRef = reader.readToken();
                     var def = this.defs[defRef];
                     if (def == undefined)
-                        throw "undefined reference: " + defRef;
+                        throw "undefined reference: " + defRef + " (" + reader.toString() + ")";
                     expressionStack.push(def);
                 }
                 if (this.defs[name] == undefined) {

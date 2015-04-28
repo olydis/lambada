@@ -40,11 +40,12 @@ class IntelliHTML
         this.preNative = document.createElement("pre");
         this.pre = $(this.preNative);
         this.pre.css("cursor", "text");
+        this.pre.css("margin", "0px");
 
         this.codeNative = document.createElement("code");
         this.code = $(this.codeNative);
         var wrapCode = $("<div>");
-        wrapCode.css("height", "0px");
+        //wrapCode.css("height", "0px");
         wrapCode.append(this.code);
         wrapCode.appendTo(this.pre);
 
@@ -52,6 +53,7 @@ class IntelliHTML
         this.code.attr("contentEditable", "true");
         this.code.keydown(eo =>
         {
+            // TAB
             if (eo.which == 9)
             {
                 eo.preventDefault();
@@ -71,11 +73,13 @@ class IntelliHTML
                     this.triggerOnTextChanged();
                 }
             }
+            // AC up down
             if ((eo.which == 40 || eo.which == 38) && this.acSpan.is(":visible"))
             {
                 eo.preventDefault();
-                this.updateAC(eo.which == 40 ? 1 : -1);
+                this.showAC(eo.which == 40 ? 1 : -1);
             }
+            // AC enter
             if (eo.which == 13 && this.acSpan.is(":visible"))
             {
                 eo.preventDefault();
@@ -101,22 +105,23 @@ class IntelliHTML
                 setCaret(range);
                 this.triggerOnTextChanged();
             }
+            // Ctrl+Space
             if (eo.which == 32 && eo.ctrlKey)
             {
                 eo.preventDefault();
-                this.updateAC();
+                this.showAC();
             }
-            console.log(eo.which);
+            // console.log(eo.which);
         });
         this.code.keyup(eo =>
         {
             if ((eo.which == 37 || eo.which == 39) && this.acSpan.is(":visible"))
-                this.updateAC();
+                this.showAC();
         });
         this.code.on("input",() =>
         {
             this.triggerOnTextChanged();
-            this.updateAC();
+            this.showAC();
         });
         this.pre.click(eo => this.code.focus());
 
@@ -190,7 +195,7 @@ class IntelliHTML
         return range.toString().length;
     }
 
-    private updateAC(moveSelection: number = 0)
+    private showAC(moveSelection: number = 0)
     {
         // normalize HTML
         var html = this.code.html();
@@ -227,9 +232,9 @@ class IntelliHTML
             return;
         var v = vv == null ? "" : vv[0];
 
-        // - check for "\" in front
+        // - check for non-identifier fronts
         var indexBefore = caretIndex - v.length - 1;
-        if (indexBefore >= 0 && text.charAt(indexBefore) == "\\")
+        if (indexBefore >= 0 && (text.charAt(indexBefore) == "\\" || text.charAt(indexBefore) == "\""))
             return;
 
         range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));

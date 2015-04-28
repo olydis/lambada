@@ -28,6 +28,20 @@ pre
     background: #202020;
     border-radius: 4px;
     padding: 10px;
+    margin: 0px;
+    overflow: hidden;
+}
+pre.coll
+{
+    height: 30px;
+}
+pre.dirty
+{
+    background: #303020;
+}
+pre.error
+{
+    background: #302020;
 }
 p
 {
@@ -77,19 +91,22 @@ a.sel
     height: 0px;
     color: rgb(50,200,0);
 }
-[contenteditable]:focus { outline: 0px solid transparent; }
+[contenteditable]:focus 
+{
+    outline: 0px solid transparent; 
+}
 
     </style>
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
     <script src="runtime/typescript/runtime.js"></script>
     <script src="runtime/typescript/runtimeMinimal.js"></script>
+    <script src="runtime/typescript/asyncRuntimeClient.js"></script>
     <script src="runtime/typescript/runtimeTools.js"></script>
     <script src="runtime/typescript/IntelliHTML.js"></script>
     <script>
     </script>
   </head>
   <body id='body'>
-    <pre id='target' style='word-wrap: break-word;'></pre>
-    <a href="javascript:run()">compile prelude</a>
+    <pre id='target' style='word-wrap: break-word; margin: 20px;'></pre>
   </body>
 </html>
