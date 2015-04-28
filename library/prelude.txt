@@ -60,6 +60,8 @@ pred = \n n Zero i
 sub = \a \b if(isZero b)
         a
         (sub (pred a) (pred b))
+        
+_qadd = \a \n add a (mul (Succ three) n)
 
 ''' Type: Pair
 Pair = Pair a b
@@ -990,10 +992,13 @@ nativeY = NativeLiteral ":bound:y"
 nativeListEmpty = NativeLiteral "ListEmpty"
 nativeListCons = NativeLiteral "ListCons"
 nativeStrToN = NativeLiteral "strToN"
-nativeZero = NativeLiteral "Zero"
+native0 = NativeLiteral "Zero"
+native1 = NativeLiteral "one"
+native2 = NativeLiteral "two"
+native3 = NativeLiteral "three"
 nativeSucc = NativeLiteral "Succ"
 nativeMul = NativeLiteral "mul"
-nativeTwo = NativeLiteral "two"
+nativeQadd = NativeLiteral "_qadd"
 
 isNativeLiteral = \lit \nat NativeLiteral_Dispatch 
         (\literal strEquals lit literal)
@@ -1038,7 +1043,17 @@ finalizeNativeExpr =
     )
 finalizeNativeDefs = \n n (\literal \o NativeAssignment literal (finalizeNativeExpr o))
 
-_nToNative = \n if (isZero n) nativeZero (if (isZero (mod n 2)) (NativeApplication (NativeApplication nativeMul nativeTwo) (_nToNative (div n 2))) (NativeApplication nativeSucc (_nToNative (pred n))))
+_03ToNative = \n n native0 (\n n native1 (\n n native2 (\n n native3 (k native0))))
+_nToNative = \n (\d \m
+    if (isZero d) 
+        m 
+        (NativeApplication 
+            (NativeApplication 
+                nativeQadd 
+                m
+            ) 
+            (_nToNative d)
+        )) (div n 4) (_03ToNative (mod n 4))
 _sToNative = \value foldr value nativeListEmpty (\value \item NativeApplication (NativeApplication nativeListCons (_nToNative item)) value)
 
 ' SYNTAX => NATIVE
