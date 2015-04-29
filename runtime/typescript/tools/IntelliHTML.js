@@ -12,7 +12,10 @@ var IntelliHTML = (function () {
         var _this = this;
         if (pre === void 0) { pre = $("<pre>"); }
         this.lastACitem = "";
-        this.onTextChanged = onTextChanged;
+        this.onTextChanged = function (text) {
+            onTextChanged(text);
+            _this.updateHighlight(text);
+        };
         this.getACitems = getACitems;
         this.pre = pre;
         this.pre.css("cursor", "text");
@@ -88,16 +91,6 @@ var IntelliHTML = (function () {
             _this.showAC();
         });
         this.pre.click(function (eo) { return _this.code.focus(); });
-        this.codeStyledNative = document.createElement("p");
-        this.codeStyled = $(this.codeStyledNative);
-        this.codeStyled.css("padding", "0px");
-        this.codeStyled.appendTo(this.pre);
-        var wrapCodeStyled = $("<div>");
-        wrapCodeStyled.css("height", "0px");
-        wrapCodeStyled.append(this.codeStyled);
-        wrapCodeStyled.appendTo(this.pre);
-        this.codeStyled.click(function (eo) { return _this.code.focus(); });
-        wrapCodeStyled.css("pointer-events", "none");
         this.acSpanNative = document.createElement("span");
         this.acSpan = $(this.acSpanNative);
         this.acSpan.prependTo(this.pre);
@@ -117,12 +110,69 @@ var IntelliHTML = (function () {
         this.acList.css("border-radius", "4px");
         this.acList.css("border", "1.5px solid #555");
         // INIT
-        this.codeStyled.hide();
         this.pre.mousedown(function () { return _this.acSpan.hide(); });
         //setInterval(() => update(), 1000);
     }
     IntelliHTML.prototype.triggerOnTextChanged = function () {
         this.onTextChanged(this.text);
+    };
+    IntelliHTML.prototype.traceIndex = function (index, node) {
+        var _this = this;
+        if (node.nodeType == 3)
+            return { index: Math.min(index, node.textContent.length), node: node };
+        var res = null;
+        $(node).contents().each(function (i, e) {
+            var elen = e.textContent.length;
+            if (res == null)
+                if (elen < index)
+                    index -= elen;
+                else
+                    res = _this.traceIndex(index, e);
+        });
+        return res;
+    };
+    IntelliHTML.prototype.createCodeRange = function (start, length) {
+        var begin = this.traceIndex(start, this.codeNative);
+        var end = this.traceIndex(start + length, this.codeNative);
+        var range = document.createRange();
+        range.setStart(begin.node, begin.index);
+        range.setEnd(end.node, end.index);
+        // insert element
+        var elem = $("<span>").text(range.toString());
+        range.deleteContents();
+        range.insertNode(elem[0]);
+        return elem;
+    };
+    IntelliHTML.prototype.updateHighlight = function (text) {
+        var _this = this;
+        var saveCaret = this.caretIndex(this.caretPosition);
+        // clear all formatting
+        this.code.text(text);
+        // format
+        var format = function (regex, formatter) {
+            var match;
+            while (match = regex.exec(text))
+                formatter(_this.createCodeRange(match.index, match.toString().length));
+        };
+        // operators
+        format(/[$]/g, function (jq) { return jq.css("color", "hsl(350, 40%, 50%)"); });
+        // punctuation
+        format(/[\[\]\(\),=]/g, function (jq) { return jq.css("opacity", ".7"); });
+        // number
+        format(/\b[0-9]+\b/g, function (jq) { return jq.css("color", "hsl(100, 80%, 90%)"); });
+        // ctors
+        format(/\b[A-Z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(350, 60%, 80%)"); });
+        // refs
+        format(/\b[a-z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "inherit"); });
+        // string
+        format(/"[^"]*"/g, function (jq) { return jq.css("color", "hsl(20, 70%, 70%)"); });
+        // comment
+        format(/\'.*/g, function (jq) { return jq.css("color", "hsl(100, 50%, 55%)"); });
+        // restore caret
+        var loc = this.traceIndex(saveCaret, this.codeNative);
+        var range = document.createRange();
+        range.setStart(loc.node, loc.index);
+        setCaret(range);
     };
     Object.defineProperty(IntelliHTML.prototype, "caretPosition", {
         get: function () {
@@ -138,7 +188,7 @@ var IntelliHTML = (function () {
                     return null; // caret not in code!
             }
             catch (e) {
-                console.error(e);
+                // console.error(e);
                 return null;
             }
             return range;
@@ -147,6 +197,8 @@ var IntelliHTML = (function () {
         configurable: true
     });
     IntelliHTML.prototype.caretIndex = function (caretPosition) {
+        if (caretPosition == null)
+            return 0;
         var range = caretPosition.cloneRange();
         range.selectNodeContents(this.codeNative);
         range.setEnd(caretPosition.startContainer, caretPosition.startOffset);
@@ -167,8 +219,6 @@ var IntelliHTML = (function () {
             return;
         }
         var codeText = this.text;
-        // mirror
-        this.codeStyled.text(codeText);
         // hide ac
         this.acSpan.hide();
         // get caret information

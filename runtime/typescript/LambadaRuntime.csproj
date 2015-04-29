@@ -20,9 +20,11 @@
   <ItemGroup>
     <TypeScriptCompile Include="asyncRuntimeClient.ts" />
     <TypeScriptCompile Include="asyncRuntimeServer.ts" />
-    <TypeScriptCompile Include="IntelliHTML.ts" />
-    <TypeScriptCompile Include="jquery.d.ts" />
-    <TypeScriptCompile Include="runtimeTools.ts" />
+    <TypeScriptCompile Include="tools\demoCommon.ts" />
+    <TypeScriptCompile Include="tools\IntelliHTML.ts" />
+    <TypeScriptCompile Include="tools\jquery.d.ts" />
+    <TypeScriptCompile Include="tools\demoTry.ts" />
+    <TypeScriptCompile Include="tools\demoCompile.ts" />
     <TypeScriptCompile Include="runtime.ts" />
     <TypeScriptCompile Include="runtimeMinimal.ts" />
   </ItemGroup>

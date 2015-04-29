@@ -31,7 +31,7 @@ onReady.push(function () {
                 // CLICK ON
                 statusUpdate("testing binary", "dirty");
                 try {
-                    var testRuntime = LambadaRuntime.Runtime.create(result);
+                    //var testRuntime = LambadaRuntime.Runtime.create(result);
                     //var d = (<any>rt).defs;
                     //var tc = d["testCount"].asNumber();
                     //var dddiff = measure(() =>

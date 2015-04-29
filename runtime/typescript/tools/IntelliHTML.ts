@@ -15,9 +15,6 @@ class IntelliHTML
 {
     private pre: JQuery;
 
-    private codeStyled: JQuery;
-    private codeStyledNative: HTMLElement;
-
     private code: JQuery;
     private codeNative: HTMLElement;
 
@@ -36,7 +33,7 @@ class IntelliHTML
 
     public constructor(onTextChanged: (text: string) => void, getACitems: () => string[], pre: JQuery = $("<pre>"))
     {
-        this.onTextChanged = onTextChanged;
+        this.onTextChanged = text => { onTextChanged(text); this.updateHighlight(text); }
         this.getACitems = getACitems;
 
         this.pre = pre;
@@ -126,17 +123,6 @@ class IntelliHTML
         });
         this.pre.click(eo => this.code.focus());
 
-        this.codeStyledNative = document.createElement("p");
-        this.codeStyled = $(this.codeStyledNative);
-        this.codeStyled.css("padding", "0px");
-        this.codeStyled.appendTo(this.pre);
-        var wrapCodeStyled = $("<div>");
-        wrapCodeStyled.css("height", "0px");
-        wrapCodeStyled.append(this.codeStyled);
-        wrapCodeStyled.appendTo(this.pre);
-        this.codeStyled.click(eo => this.code.focus());
-        wrapCodeStyled.css("pointer-events", "none");
-
         this.acSpanNative = document.createElement("span");
         this.acSpan = $(this.acSpanNative);
         this.acSpan.prependTo(this.pre);
@@ -158,11 +144,85 @@ class IntelliHTML
         this.acList.css("border", "1.5px solid #555");
         
         // INIT
-
-        this.codeStyled.hide();
-
+        
         this.pre.mousedown(() => this.acSpan.hide());
         //setInterval(() => update(), 1000);
+    }
+
+    private traceIndex(index: number, node: Element): { index: number; node: Element }
+    {
+        if (node.nodeType == 3)
+            return { index: Math.min(index, node.textContent.length), node: node };
+        var res: { index: number; node: Element } = null;
+        $(node).contents().each((i, e) =>
+        {
+            var elen = e.textContent.length;
+            if (res == null)
+                if (elen < index)
+                    index -= elen;
+                else
+                    res = this.traceIndex(index, e);
+        });
+        return res;
+    }
+    private createCodeRange(start: number, length: number): JQuery
+    {
+        var begin = this.traceIndex(start, this.codeNative);
+        var end = this.traceIndex(start + length, this.codeNative);
+        
+        var range = document.createRange();
+        range.setStart(begin.node, begin.index);
+        range.setEnd(end.node, end.index);
+
+        // insert element
+        var elem = $("<span>").text(range.toString());
+        range.deleteContents();
+        range.insertNode(elem[0]);
+        return elem;
+    }
+    private updateHighlight(text: string)
+    {
+        var saveCaret = this.caretIndex(this.caretPosition);
+
+        // clear all formatting
+        this.code.text(text);
+        
+        // format
+        var format = (regex: RegExp, formatter: (jq: JQuery) => void) =>
+        {
+            var match: RegExpExecArray;
+            while (match = regex.exec(text))
+                formatter(this.createCodeRange(match.index, match.toString().length));
+        };
+
+        // operators
+        format(/[$]/g,
+            jq => jq.css("color", "hsl(350, 40%, 50%)"));
+        // punctuation
+        format(/[\[\]\(\),=]/g,
+            jq => jq.css("opacity", ".7"));
+        // number
+        format(/\b[0-9]+\b/g,
+            jq => jq.css("color", "hsl(100, 80%, 90%)"));
+        // ctors
+        format(/\b[A-Z][_a-zA-Z0-9']*\b/g,
+            jq => jq.css("color", "hsl(350, 60%, 80%)"));
+        // refs
+        format(/\b[a-z][_a-zA-Z0-9']*\b/g,
+            jq => jq.css("color", "inherit"));
+        // string
+        format(/"[^"]*"/g,
+            jq => jq.css("color", "hsl(20, 70%, 70%)"));
+        // comment
+        format(/\'.*/g,
+            jq => jq.css("color", "hsl(100, 50%, 55%)"));
+
+
+        // restore caret
+        var loc = this.traceIndex(saveCaret, this.codeNative);
+        var range = document.createRange();
+        range.setStart(loc.node, loc.index);
+        setCaret(range);
     }
 
     private get caretPosition(): Range
@@ -183,7 +243,7 @@ class IntelliHTML
         }
         catch (e)
         {
-            console.error(e);
+            // console.error(e);
             return null;
         }
 
@@ -191,6 +251,7 @@ class IntelliHTML
     }
     private caretIndex(caretPosition: Range): number
     {
+        if (caretPosition == null) return 0;
         var range = caretPosition.cloneRange();
         range.selectNodeContents(this.codeNative);
         range.setEnd(caretPosition.startContainer, caretPosition.startOffset);
@@ -213,10 +274,7 @@ class IntelliHTML
         }
 
         var codeText = this.text;
-
-        // mirror
-        this.codeStyled.text(codeText);
-
+        
         // hide ac
         this.acSpan.hide();
 
