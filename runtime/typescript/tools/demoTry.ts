@@ -47,11 +47,14 @@ onReady.push(() =>
     $.get(libraryPath + "samples.txt",(data: string) =>
     {
         var sSpan = $("#samples");
-        data.split("---").forEach(str =>
+        data.split("---").forEach((str, i) =>
         {
             var parts = str.split("--");
-            sSpan.append("&nbsp;&nbsp;&nbsp;");
-            sSpan.append($("<a>").text(parts[0].trim()).click(() => evalPad.text = parts[1].trim()));
+            if (i > 0) sSpan.append("&nbsp;&nbsp;&nbsp;");
+            sSpan.append($("<a>")
+                .text(parts[0].trim())
+                .css("cursor", "pointer")
+                .click(() => evalPad.text = parts[1].trim()));
         });
     }, "text");
 });

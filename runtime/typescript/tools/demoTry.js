@@ -32,10 +32,11 @@ onReady.push(function () {
     evalPad.focus();
     $.get(libraryPath + "samples.txt", function (data) {
         var sSpan = $("#samples");
-        data.split("---").forEach(function (str) {
+        data.split("---").forEach(function (str, i) {
             var parts = str.split("--");
-            sSpan.append("&nbsp;&nbsp;&nbsp;");
-            sSpan.append($("<a>").text(parts[0].trim()).click(function () { return evalPad.text = parts[1].trim(); }));
+            if (i > 0)
+                sSpan.append("&nbsp;&nbsp;&nbsp;");
+            sSpan.append($("<a>").text(parts[0].trim()).css("cursor", "pointer").click(function () { return evalPad.text = parts[1].trim(); }));
         });
     }, "text");
 });
