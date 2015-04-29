@@ -1,0 +1,27 @@
+' NATIVE => S
+nativeExprToExe = \n n
+            (\literal literal)
+            (\value strFromN value)
+            (\value (straddBack (straddFront value 34) 34))
+            (\o1 \o2 (strConss [nativeExprToExe o1, " ", nativeExprToExe o2, "."]))
+nativeDefToExe = \n strCons (n (\literal \o (strConss [literal, " ", nativeExprToExe o]))) "."
+
+' ENV => NATIVE => (???, ENV)
+nativeToObj = y $ \this \env \n n
+        (\literal Pair (maybeGetValue (env literal)) env) 'handle errors
+        (\value   Pair value env)
+        (\value   Pair value env)
+        (\o1 \o2  Pair ((fst (this env o1)) (fst (this env o2))) env)
+
+
+' S => S
+native_Run = \s strFromMaybe i $ maybeMap 
+                                    (maybeMap (maybeBind (token_Process s) syntax_Process) (\l listBind l syntaxToNative))
+                                    (\ns strJoin (listMap ns nativeDefToExe) "; ")
+                                    ' native_String_list
+
+' [NATIVE] => S
+output_Process = \natives strConss $ listMap natives nativeDefToExe
+
+' [NATIVE] => S
+output_ProcessType = \natives strConss $ listMap natives $ b nativeDefToExe nativeDefToTypeNative

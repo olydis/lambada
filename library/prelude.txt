@@ -12,6 +12,11 @@ prelude/List.txt
 prelude/String.txt
 prelude/Maybe.txt
 prelude/remain.txt
-prelude/compiler/compiler.txt
+'prelude/compiler/c00types.txt
+prelude/compiler/c10lexer.txt
+prelude/compiler/c20parser.txt
+prelude/compiler/c30intermediate.txt
+prelude/compiler/c40codegen.txt
+prelude/compiler/c50mgmt.txt
 'prelude/tests.txt
 'prelude/scratch.txt

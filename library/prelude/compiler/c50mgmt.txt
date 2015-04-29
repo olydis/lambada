@@ -1,0 +1,44 @@
+' S => S
+pipeType = \s
+    maybeTryGetValue (
+    maybeMap (
+    maybeBind (
+    maybeBind 
+        (token_Process s)
+        syntax_Process)
+        native_Process)
+        output_ProcessType)
+    ""
+
+
+' S => S
+pipe = \s
+    maybeTryGetValue (
+    maybeMap (
+    maybeBind (
+    maybeBind 
+        (token_Process s)
+        syntax_Process)
+        native_Process)
+        output_Process)
+    ""
+
+' S => S
+fullDebug = \s strConss
+    [
+        "LEXER:   ", token_Run s,
+        newLine, newLine,
+        "PARSER:  ", syntax_Run s,
+        newLine, newLine,
+        "CODEGEN: ", native_Run s
+    ]
+
+
+' ENV => S => M X
+run2 = \menv \str maybeMap 
+                    (maybeBind (token_Process str) syntax_Process) 
+                    (\synt fst 
+                            (nativeToObj
+                                menv
+                                (_syntaxToNative $ listHead synt)
+                    ))

@@ -1,0 +1,251 @@
+NativeDefinition = NativeAssignment literal o   ' S Native
+NativeExpression = NativeLiteral literal        ' S
+                 | NativeConstN value           ' N
+                 | NativeConstS value           ' S
+                 | NativeApplication o1 o2      ' Native Native
+        
+getCollisionFreeLiteral = \literal strCons ":arg:" literal
+
+
+nativeExpr_String = y(\this \x
+    x
+        (\literal strConss ["literal(", literal, ")"])
+        (\value strConss ["constn(", strFromN value, ")"])
+        (\value strConss ["consts(", value, ")"])
+        (\o1 \o2 strConss ["apply(", this o1, ", ", this o2, ")"])
+    )
+nativeDef_String = y $ \this \x x $ \literal \o strConss ["assign(", literal, ", ", nativeExpr_String o, ")"]
+    
+nativeDef_String_list = \xs strJoin (listMap xs nativeExpr_String) "; "
+nativeExpr_String_list = \xs strJoin (listMap xs nativeDef_String) "; "
+
+nativeI = NativeLiteral ":bound:i"
+nativeK = NativeLiteral ":bound:k"
+nativeB = NativeLiteral ":bound:b"
+nativeC = NativeLiteral ":bound:c"
+nativeS = NativeLiteral ":bound:s"
+nativeY = NativeLiteral ":bound:y"
+nativeListEmpty = NativeLiteral "ListEmpty"
+nativeListCons = NativeLiteral "ListCons"
+nativeStrToN = NativeLiteral "strToN"
+native0 = NativeLiteral "Zero"
+native1 = NativeLiteral "one"
+native2 = NativeLiteral "two"
+native3 = NativeLiteral "three"
+nativeSucc = NativeLiteral "Succ"
+nativeMul = NativeLiteral "mul"
+nativeQadd = NativeLiteral "_qadd"
+
+isNativeLiteral = \lit \nat NativeLiteral_Dispatch 
+        (\literal strEquals lit literal)
+        False
+        nat
+
+' NativeExpression => S => B
+nativeContainsLit = y(\this \n \lit
+    n
+        (\literal strEquals lit literal)
+        (\value False)
+        (\value False)
+        (\o1 \o2 or (this o1 lit) (this o2 lit))
+    )
+
+' S => S
+finalizeLiteral = \s
+    if(strStartsWith s ":bound:")
+        (strSkip s 7)
+        s
+
+' NATIVE => NATIVE
+finalizeNativeExpr =
+    y(\this \n
+        n
+            (\literal NativeLiteral (finalizeLiteral literal))
+            (\value n)
+            (\value n)
+            (\o1 \o2 (\a1 \a2
+                (\defres 
+                    if(isNativeLiteral "y" a1)
+                    (
+                        NativeApplication_Dispatch
+                        (\i1 \i2 if(isNativeLiteral "k" i1) i2 defres)
+                        defres
+                        a2
+                    )
+                    defres
+                )
+                (NativeApplication a1 a2)
+            ) (this o1) (this o2))
+    )
+finalizeNativeDefs = \n n (\literal \o NativeAssignment literal (finalizeNativeExpr o))
+
+_03ToNative = \n n native0 (\n n native1 (\n n native2 (\n n native3 (k native0))))
+_nToNative = \n (\d \m
+    if (isZero d) 
+        m 
+        (NativeApplication 
+            (NativeApplication 
+                nativeQadd 
+                m
+            ) 
+            (_nToNative d)
+        )) (div n 4) (_03ToNative $ mod n 4)
+_sToNative = \value foldr value nativeListEmpty (\value \item NativeApplication (NativeApplication nativeListCons (_nToNative item)) value)
+
+' SYNTAX => NATIVE
+_syntaxToNative = y $ \this \syntax
+    syntax
+        (\literal NativeLiteral literal)
+        _nToNative
+        _sToNative
+        (\list foldr list nativeListEmpty (\list \item NativeApplication (NativeApplication nativeListCons (this item)) list))
+        (\literal \body 
+            (y(\strip \lit \nbody
+                NativeApplication_Dispatch
+                (\a \b
+                    if (nativeContainsLit a lit)
+                    (
+                        if (nativeContainsLit b lit)
+                        (NativeApplication (NativeApplication nativeS (strip lit a)) (strip lit b))
+                        (NativeApplication (NativeApplication nativeC (strip lit a)) b)
+                    )
+                    (
+                        if (nativeContainsLit b lit)
+                        ( ' check for: \b a b
+                            if(NativeLiteral_Dispatch (k True) False b)
+                            a
+                            (NativeApplication (NativeApplication nativeB a) (strip lit b))
+                        )
+                        (NativeApplication nativeK nbody)
+                    )
+                )
+                (
+                    if (nativeContainsLit nbody lit)
+                    nativeI
+                    (NativeApplication nativeK nbody)
+                )
+                nbody
+            )) 
+            literal 
+            (this body)
+        )
+        (\o1 \o2 NativeApplication (this o1) (this o2))
+        (\literal \o NativeAssignment "fail" (NativeConstS "fail"))
+        (\typeLiteral NativeAssignment "fail" (NativeConstS "fail")) 
+    
+_createUniqueNameFromN = \n strCons ":bound:" (strFromN n)
+_createUniqueNameFromS = \s strCons ":bound:" s
+
+_syntaxEmitTypeInstance = \items \ctrArgList \index \args \name
+    [
+        NativeAssignment 
+            name
+            (
+                _syntaxToNative
+                (syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (listMap (listAddFront args (_createUniqueNameFromN index)) SyntaxName)))
+            ),
+        NativeAssignment
+            (strCons name "_Dispatch")
+            (
+                _syntaxToNative
+                (
+                    (\argDisp \argAlt \argItem syntaxCreateAbstraction [argDisp, argAlt, argItem] 
+                        (syntaxCreateApplication 
+                            (ListCons 
+                                (SyntaxName argItem)
+                                (listMap items (\item 
+                                    if(isEQ index (snd item)) 
+                                        (SyntaxName argDisp)
+                                        (syntaxCreateAbstraction (snd (fst item)) (SyntaxName argAlt))
+                                ))
+                            )
+                        )
+                    )
+                    (_createUniqueNameFromS "disp")
+                    (_createUniqueNameFromS "alt")
+                    (_createUniqueNameFromS "item")
+                )
+            )
+    ]
+_syntaxEmitTypeStuff = \typeName \items \ctrArgList ' listConcat
+    (
+        listBind items
+        (\item 
+            (\pair \index _syntaxEmitTypeInstance items ctrArgList index (snd pair) (fst pair))
+            (fst item)
+            (snd item)
+        )
+    )
+'    [
+'        NativeAssignment
+'            (strCons typeName "_ID")
+'            (
+'                _syntaxToNative
+'                (
+'                    (\argItem SyntaxAbstraction argItem
+'                        (syntaxCreateApplication 
+'                            (ListCons 
+'                                (SyntaxName argItem)
+'                                (listMap items (\item 
+'                                    syntaxCreateAbstraction (snd (fst item)) (SyntaxConstN (snd item))
+'                                ))
+'                            )
+'                        )
+'                    )
+'                    (_createUniqueNameFromS "item")
+'                )
+'            )
+'    ]
+
+_make__ValueDef = \syntaxExpression SyntaxAssignment "__value" syntaxExpression
+
+' SYNTAX => [NATIVE defs]
+_syntaxToNativeDefs = \syntax
+    syntax
+        (\literal       _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\value         _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\value         _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\list          _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\literal \body _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\o1 \o2        _syntaxToNativeDefs $ _make__ValueDef syntax)
+        '(\literal \o listReturn (NativeAssignment literal (_syntaxToNative o)))   
+        (\literal \o listReturn (NativeAssignment literal 
+            (NativeApplication nativeY 
+                (_syntaxToNative (SyntaxAbstraction literal o))
+            )))   
+        (\typeLiteral \pairs 
+            (\optionCount \items
+                (\ctrArgList _syntaxEmitTypeStuff typeLiteral items ctrArgList)
+                (listMap (listTake nats0 optionCount) _createUniqueNameFromN)
+            )
+            (listCount pairs)
+            (listZip pairs nats0 Pair)
+        )
+syntaxToNative = \s listMap (_syntaxToNativeDefs s) finalizeNativeDefs
+
+' NATIVE => NATIVE
+_nlB = NativeLiteral "b"
+_nlMB = NativeLiteral "maybeBind"
+_nlTA = NativeLiteral "typeApply"
+nativeToTypeNative = \native native
+            (\literal NativeLiteral (strCons literal "_Type"))
+            (\value NativeLiteral "Zero_Type")
+            (\value NativeLiteral "ListEmpty_Type")
+            (\o1 \o2 
+                NativeApplication
+                    (NativeApplication _nlMB (nativeToTypeNative o1))
+                    (NativeApplication 
+                        (NativeApplication 
+                            _nlB
+                            (NativeApplication _nlMB (nativeToTypeNative o2))) 
+                        _nlTA)
+            )
+nativeDefToTypeNative = \native native
+            (\literal \o NativeAssignment
+                (strCons literal "_Type")
+                (nativeToTypeNative o)
+            )
+        
+
+' [SYNTAX] => M [NATIVE]
+native_Process = \synts maybeReturn $ listBind synts syntaxToNative

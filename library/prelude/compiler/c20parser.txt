@@ -1,0 +1,157 @@
+SyntaxExpression = SyntaxName literal                             ' S
+                 | SyntaxConstN value                             ' N
+                 | SyntaxConstS value                             ' S
+                 | SyntaxList list                                ' [SYNTAX]
+                 | SyntaxAbstraction literal body                 ' S SYNTAX
+                 | SyntaxApplication o1 o2                        ' SYNTAX SYNTAX
+                 | SyntaxAssignment literal o                     ' S SYNTAX
+                 | SyntaxType literalType listPairInstanceArgs    ' S [(S, [S])]
+
+syntaxCreateApplication = \syntaxes foldl (listTail syntaxes) (listHead syntaxes) SyntaxApplication
+syntaxCreateAbstraction = \literals \body foldr literals body (\x \lit SyntaxAbstraction lit x)
+
+syntax_String = y $ \this \x
+    x
+        (\literal strConss ["literal(", literal, ")"])
+        (\value strConss ["constn(", strFromN value, ")"])
+        (\value strConss ["consts(", value, ")"])
+        (\list strConss ["list(", strJoin (listMap list this) ", ", ")"])
+        (\literal \body strConss ["abstract(", literal, ", ", this body, ")"])
+        (\o1 \o2 strConss ["apply(", this o1, ", ", this o2, ")"])
+        (\literal \o strConss ["assign(", literal, ", ", this o, ")"])
+        (\literalType \listPairInstanceArgs strConss ["type(", literalType, "; ", (strJoin (listMap listPairInstanceArgs (\pair strCons (fst pair) (strConss (listMap (snd pair) (strCons " "))))) ", "), ")"])
+syntax_String_list = \xs strJoin (listMap xs syntax_String) "; "
+
+' B :=  lit=E | \lit E | lit | constS | constN | (E) | comment | [E*]   'return [Syntax]
+' E :=  app  :=  B* | B* $ E                                            'return Syntax
+
+
+cstrParseAbstractionTail = \e 
+    parsePipe
+        parseSingle
+        (TokenLiteralLower_Dispatch 
+            (\literal parseBindOperation 
+                e
+                (\rese listReturn $ SyntaxAbstraction literal rese)
+            ) 
+            parseFail)
+
+cstrParseSChar = \specialChar 
+    parsePipe
+        parseSingle
+        (TokenSpecialChar_Dispatch  
+            (\schar if(scharEQ specialChar schar)
+                (parseReturn i)
+                parseFail
+            )
+            parseFail)
+
+cstrParseLiteralL = parsePipe
+        parseSingle
+        (TokenLiteralLower_Dispatch parseReturn parseFail)
+cstrParseLiteralU = parsePipe
+        parseSingle
+        (TokenLiteralUpper_Dispatch parseReturn parseFail)
+        
+cstrParseCloseParen = cstrParseSChar ScharParenClose
+cstrParseCloseSqBr = cstrParseSChar ScharSqBracketClose
+cstrParseComma = cstrParseSChar ScharComma
+cstrParseAssign = cstrParseSChar ScharAssign
+cstrParseSingleOr = cstrParseSChar ScharSingleOr
+cstrParseDollar = cstrParseSChar ScharDollar
+
+        
+cstrParseListTail = \e parseBindDiscard 
+                    (parseBindOperation 
+                        (
+                            parseOption
+                            (
+                                parseBind
+                                    ListCons
+                                    e
+                                    (parseWhilesuccessful $ parseBindOverride cstrParseComma e)
+                            )
+                            (parseReturn ListEmpty)
+                        )
+                        (\list listReturn $ SyntaxList list)
+                    )
+                    cstrParseCloseSqBr
+
+cstrParseAssignTail = \literal \e parseBindOperation 
+                        (parseBindOverride cstrParseAssign e)
+                        (\body listReturn $ SyntaxAssignment literal body)
+
+cstrParseDataDefOption = parseBind
+                            (\name \args Pair name args)
+                            cstrParseLiteralU
+                            (parseWhilesuccessful cstrParseLiteralL)
+cstrParseDataDefTail2 = parseBind
+                            ListCons
+                            cstrParseDataDefOption
+                            (parseWhilesuccessful (parseBindOverride cstrParseSingleOr cstrParseDataDefOption))
+cstrParseDataDefTail = \literal \e parseBindOperation 
+                        (parseBindOverride cstrParseAssign cstrParseDataDefTail2) 
+                        (\list listReturn $ SyntaxType literal list)
+
+' B:
+' Parser [Syntax]
+cstrSyntaxSingle = \e
+    parsePipe
+        parseSingle
+        (\token token
+            (\schar schar
+                (parseBindDiscard (parseBindOperation e listReturn) cstrParseCloseParen)
+                parseFail
+                (cstrParseAbstractionTail e)
+                parseFail
+                (cstrParseListTail e)
+                parseFail
+                parseFail
+                parseFail
+                parseFail
+            )
+            (\literal 
+                parseOption
+                    (cstrParseAssignTail literal e)
+                    (parseReturn (listReturn (SyntaxName literal)))
+            )
+            (\literal 
+                parseOption
+                    (cstrParseDataDefTail literal e)
+                    (parseReturn (listReturn (SyntaxName literal)))
+            )
+            (\value parseReturn $ listReturn $ SyntaxConstS value)
+            (\value parseReturn $ listReturn $ SyntaxConstN value)
+            (k parseReturn ListEmpty)
+        )
+
+' E:
+cstrSyntaxApplication = \e 
+                        parsePipe
+                            (parseWhilesuccessful $ cstrSyntaxSingle e)
+                            (\list 
+                                (\ops 
+                                    if(listIsEmpty ops) 
+                                    parseFail
+                                    (parseBindOperation
+                                        (parseOption
+                                            (parseBindOperation (parseBindOverride cstrParseDollar e) listReturn)
+                                            (parseReturn ListEmpty)
+                                        )
+                                        (\tail
+                                            (\ops foldl
+                                                (listTail ops) 
+                                                (listHead ops) 
+                                                (\x \y SyntaxApplication x y))
+                                            (listConcat ops tail))
+                                    )
+                                ) (listBind list i)
+                            )
+
+cstrSyntaxEverything = parseWhilesuccessful $ y cstrSyntaxApplication
+
+' [TOKEN] => M [SyNTAX]
+syntax_Process = b parseAcceptFullyConsumed cstrSyntaxEverything
+
+' S => S
+syntax_Run = \s strFromMaybe i $ maybeMap (maybeBind (token_Process s) syntax_Process) syntax_String_list

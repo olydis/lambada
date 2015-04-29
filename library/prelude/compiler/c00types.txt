@@ -1,0 +1,225 @@
+'------------------'
+' COMPILER SECTION '
+'------------------'
+
+'''''' TYPING
+
+' TYPES
+Type = TypeVariable uid     ' N
+     | TypeAbstraction a b  ' Type Type
+     | TypeIntersection a b ' Type Type
+
+'(((d -> (c -> b)) -> ((g -> c) -> (d^g -> b))) -> ((e -> (f -> e)) -> a)) -> a
+typeUa = TypeVariable 0
+typeUb = TypeVariable 1
+typeUc = TypeVariable 2
+typeUd = TypeVariable 3
+typeUe = TypeVariable 4
+typeUf = TypeVariable 5
+typeUg = TypeVariable 6
+typeU = TypeAbstraction 
+            (TypeAbstraction
+                (TypeAbstraction
+                    (TypeAbstraction typeUd (TypeAbstraction typeUc typeUb))
+                    (TypeAbstraction (TypeAbstraction typeUg typeUc) (TypeAbstraction (TypeIntersection typeUd typeUg) typeUb))
+                )
+                (TypeAbstraction
+                    (TypeAbstraction typeUe (TypeAbstraction typeUf typeUe))
+                    typeUa
+                )
+            )
+            typeUa
+
+u_Type = Just typeU
+
+typeKx = TypeAbstraction typeUe (TypeAbstraction typeUf typeUe)
+typeIx = TypeAbstraction typeUe typeUe
+typeSx = (TypeAbstraction
+            (TypeAbstraction typeUd (TypeAbstraction typeUc typeUb))
+            (TypeAbstraction (TypeAbstraction typeUg typeUc) (TypeAbstraction (TypeIntersection typeUd typeUg) typeUb))
+        )
+
+printType = \type type
+                (\uid strFromN uid)
+                (\a \b strConss ["(", printType a, " -> ", printType b, ")"])
+                (\a \b strConss ["(", printType a, " ^ ", printType b, ")"])
+printRestrictionList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [printType a, " = ", printType b]))) ", "
+printUnificationList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [strFromN a, " => ", printType b]))) ", "
+printUnificationResult = \mtypePairList strFromMaybe printUnificationList mtypePairList
+
+_typeEnumVariables = \type type
+                        (\uid listReturn uid)
+                        (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
+                        (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
+typeEnumVariables = \type listDistinct (_typeEnumVariables type) isEQ
+
+typeCountUsage = \type \uid type
+                        (\uidx if(isEQ uid uidx) 1 0)
+                        (\a \b add (typeCountUsage a uid) (typeCountUsage b uid))
+                        (\a \b add (typeCountUsage a uid) (typeCountUsage b uid))
+
+' strips singletons
+_removeSingletons = \type \removeUidPred type
+                        (\uid type)
+                        (\a \b TypeAbstraction (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
+                        (\a \b if (listAll (typeEnumVariables a) removeUidPred) b
+                              (if (listAll (typeEnumVariables b) removeUidPred) a 
+                              (TypeIntersection (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
+                              )
+                        )
+' renumbers vars
+_typeNormalize = \type \vars type
+                        (\uid TypeVariable (maybeTryGetValue (listIndexOf vars isEQ uid) 1337))
+                        (\a \b TypeAbstraction (_typeNormalize a vars) (_typeNormalize b vars))
+                        (\a \b TypeIntersection (_typeNormalize a vars) (_typeNormalize b vars))
+typeNormalize = \type (\type _typeNormalize type (typeEnumVariables type))
+                      (
+                        (\singletons _removeSingletons 
+                            type 
+                            (\uidx listAny 
+                                singletons
+                                (isEQ uidx)
+                            )
+                        ) (listWhere (typeEnumVariables type) (\uid isEQ 1 (typeCountUsage type uid)))
+                      )
+
+
+
+' offsets all variable uids by a constant (e.g. to prevent collisions) 
+_typeShift = \type \offset type
+                        (\uid TypeVariable (add offset uid))
+                        (\a \b TypeAbstraction (_typeShift a offset) (_typeShift b offset))
+                        (\a \b TypeIntersection (_typeShift a offset) (_typeShift b offset))
+
+typeNextSafeVariable = \type foldl (typeEnumVariables (_typeShift type 1)) 0 max
+typeContainsVariableUid = \uid \type listAny (typeEnumVariables type) (isEQ uid)
+
+typeReplaceUidWithType = \uid \type \containerType containerType
+                        (\uidx if(isEQ uid uidx) type containerType)
+                        (\a \b TypeAbstraction (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
+                        (\a \b TypeIntersection (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
+
+typeListReplaceUidWithType = \uid \type \tlist listMap tlist (\pair pair (\a \b Pair (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b)))
+
+
+
+_getSelfAppCenterHelper = \var \abs 
+        TypeVariable_Dispatch
+            (\uid TypeAbstraction_Dispatch
+                (\a \b TypeVariable_Dispatch (\uidx if (isEQ uid uidx) (Just b) Nothing) Nothing a)
+                Nothing
+                abs
+            )
+            Nothing
+            var
+
+' Type -> Maybe Type
+' (t -> <center>) ^ t
+_getSelfAppCenter = \t 
+        TypeIntersection_Dispatch
+            (\ax \bx TypeVariable_Dispatch (k (_getSelfAppCenterHelper ax bx)) (_getSelfAppCenterHelper bx ax) ax)
+            Nothing
+            t
+
+' Type -> Type -> Maybe [Pair Type Type]
+' (t -> a) ^ t = (u -> b) ^ u -> c
+_isFixPointComboHelper = \t1 \t2
+        TypeAbstraction_Dispatch
+            (\a \b
+                (\m1 \m2 \a3
+                    maybeBind m1
+                    (\a1 
+                        maybeMap m2
+                        (\a2 [Pair a1 a2, Pair a1 a3])
+                    )
+                )
+                (_getSelfAppCenter t1)
+                (_getSelfAppCenter a)
+                b
+            )
+            Nothing
+            t2
+
+fpTest1 = TypeIntersection (TypeVariable 0) (TypeAbstraction (TypeVariable 0) (TypeVariable 1))
+fpTest2 = TypeAbstraction (_typeShift fpTest1 2) (TypeVariable 4)
+fpTest3 = [Pair fpTest1 fpTest2]
+
+' unify -> N -> iaType -> ibType -> otherType -> [Pair Type Type] -> Maybe Type
+_intersectionSplit = \unify \nextSafeUid \ia \ib \other \c2
+    maybeTryGetValue
+    ( ' fix point       
+        maybeMap
+            (_isFixPointComboHelper (TypeIntersection ia ib) other)
+            (\list unify nextSafeUid (listConcat c2 list))
+    )
+    ( ' el classico
+        (\otherA \otherB
+            maybeMap 
+                (unify (mul 3 nextSafeUid) (listConcat c2 [Pair ia otherA, Pair ib otherB])) 
+                i'(listConcat (listMap (typeEnumVariables other) (\uid Pair uid (TypeIntersection (TypeVariable (add uid nextSafeUid)) (TypeVariable (add uid (mul 2 nextSafeUid)))))))
+        ) (_typeShift other nextSafeUid) (_typeShift other (mul 2 nextSafeUid))
+    )
+
+' N -> Type -> N -> [Pair Type Type] -> Maybe Type
+_typeUnify = \breakN \interesting \nextSafeUid \c breakN 
+            Nothing
+            (\pred c
+                (Just interesting)
+                (\head \c2 head
+                    (\l \r l
+                        (\uid 
+                            (\rContainsL \innerResult 
+                                if(rContainsL) 
+                                (TypeVariable_Dispatch (\uidx _typeUnify pred interesting nextSafeUid c2) Nothing r)
+                                innerResult
+                            ) (typeContainsVariableUid uid r) (_typeUnify pred (typeReplaceUidWithType uid r interesting) nextSafeUid (typeListReplaceUidWithType uid r c2))
+                        )
+                        (\a \b r
+                            (\uidx if(typeContainsVariableUid uidx l) Nothing (_typeUnify pred (typeReplaceUidWithType uidx l interesting) nextSafeUid (typeListReplaceUidWithType uidx l c2)))
+                            (\ax \bx _typeUnify pred interesting nextSafeUid (listConcat c2 [Pair a ax, Pair b bx]))
+                            (\ax \bx _intersectionSplit (_typeUnify pred interesting) nextSafeUid ax bx l c2)
+                        )
+                        (\a \b r
+                            (\uidx if(typeContainsVariableUid uidx l) Nothing (_typeUnify pred (typeReplaceUidWithType uidx l interesting) nextSafeUid (typeListReplaceUidWithType uidx l c2)))
+                            (\ax \bx _intersectionSplit (_typeUnify pred interesting) nextSafeUid a b r c2)
+                            (\ax \bx _typeUnify pred interesting nextSafeUid (listConcat c2 [Pair a ax, Pair b bx]))
+                        )
+                    )
+                )
+            )
+
+' Type -> [Pair Type Type] -> Maybe Type
+typeUnify = \interesting \c _typeUnify 40 interesting (foldl (listMap c (\pair pair (\a \b max (typeNextSafeVariable a) (typeNextSafeVariable b)))) 0 max) c
+
+' Type -> Type -> Maybe Type
+typeApply = \a \b maybeMap ((\oa \ob typeUnify (TypeVariable (add oa ob)) [Pair a (TypeAbstraction (_typeShift b oa) (TypeVariable (add oa ob)))]) (typeNextSafeVariable a) (typeNextSafeVariable b)) typeNormalize
+
+
+typeErr = TypeVariable 42
+typeI = maybeTryGetValue (typeApply typeU typeU) typeErr 
+typeUI = maybeTryGetValue (typeApply typeU typeI) typeErr 
+typeK = maybeTryGetValue (typeApply typeU typeUI) typeErr 
+typeKI = maybeTryGetValue (typeApply typeK typeI) typeErr 
+typeS = maybeTryGetValue (typeApply typeU typeK) typeErr 
+typeSI = maybeTryGetValue (typeApply typeS typeI) typeErr 
+typeM = maybeTryGetValue (typeApply typeSI typeI) typeErr
+typeKS = maybeTryGetValue (typeApply typeK typeS) typeErr
+typeSKS = maybeTryGetValue (typeApply typeS typeKS) typeErr
+typeB = maybeTryGetValue (typeApply typeSKS typeK) typeErr
+typeSB = maybeTryGetValue (typeApply typeS typeB) typeErr
+typeT = maybeTryGetValue (typeApply typeSB typeI) typeErr
+typeTM = maybeTryGetValue (typeApply typeT typeM) typeErr
+
+typeI1 = maybeTryGetValue (typeApply typeM typeI) typeErr
+typeI2 = maybeTryGetValue (typeApply typeTM typeI) typeErr
+typeI3 = maybeTryGetValue (typeApply typeB typeI) typeErr
+typeI4 = maybeTryGetValue (typeApply typeM typeU) typeErr
+typeI5 = maybeTryGetValue (typeApply typeM typeKI) typeErr
+
+typeCB = TypeAbstraction (TypeAbstraction typeUa typeUb)
+                         (TypeAbstraction (TypeAbstraction typeUb typeUc) (TypeAbstraction typeUa typeUc))
+typeCBM = maybeTryGetValue (typeApply typeCB typeM) typeErr
+typeBM = maybeTryGetValue (typeApply typeB typeM) typeErr
+typeY = maybeTryGetValue (typeApply typeBM typeCBM) typeErr
+
+typeMM = maybeTryGetValue (typeApply typeM typeM) typeErr
