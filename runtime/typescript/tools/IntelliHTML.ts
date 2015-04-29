@@ -44,6 +44,7 @@ class IntelliHTML
 
         this.codeNative = document.createElement("p");
         this.code = $(this.codeNative);
+        this.code.css("padding", "0px");
         var wrapCode = $("<div>");
         //wrapCode.css("height", "0px");
         wrapCode.append(this.code);
@@ -127,6 +128,7 @@ class IntelliHTML
 
         this.codeStyledNative = document.createElement("p");
         this.codeStyled = $(this.codeStyledNative);
+        this.codeStyled.css("padding", "0px");
         this.codeStyled.appendTo(this.pre);
         var wrapCodeStyled = $("<div>");
         wrapCodeStyled.css("height", "0px");
@@ -157,7 +159,7 @@ class IntelliHTML
         
         // INIT
 
-        this.codeStyled.css("color", "transparent");// TODO: make right
+        this.codeStyled.hide();
 
         this.pre.mousedown(() => this.acSpan.hide());
         //setInterval(() => update(), 1000);
@@ -301,7 +303,7 @@ class IntelliHTML
         this.acList.empty();
         result.forEach(x =>
         {
-            var p = $("<p>");
+            var p = $("<p>").css("padding", "0px");
             p.append($("<span>").text(x.x.slice(0, x.i)));
             p.append($("<span>").text(x.x.slice(x.i, x.i + vLen)).css("color", "salmon"));
             p.append($("<span>").text(x.x.slice(x.i + vLen)));

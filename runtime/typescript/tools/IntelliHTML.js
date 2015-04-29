@@ -18,6 +18,7 @@ var IntelliHTML = (function () {
         this.pre.css("cursor", "text");
         this.codeNative = document.createElement("p");
         this.code = $(this.codeNative);
+        this.code.css("padding", "0px");
         var wrapCode = $("<div>");
         //wrapCode.css("height", "0px");
         wrapCode.append(this.code);
@@ -89,6 +90,7 @@ var IntelliHTML = (function () {
         this.pre.click(function (eo) { return _this.code.focus(); });
         this.codeStyledNative = document.createElement("p");
         this.codeStyled = $(this.codeStyledNative);
+        this.codeStyled.css("padding", "0px");
         this.codeStyled.appendTo(this.pre);
         var wrapCodeStyled = $("<div>");
         wrapCodeStyled.css("height", "0px");
@@ -115,7 +117,7 @@ var IntelliHTML = (function () {
         this.acList.css("border-radius", "4px");
         this.acList.css("border", "1.5px solid #555");
         // INIT
-        this.codeStyled.css("color", "transparent"); // TODO: make right
+        this.codeStyled.hide();
         this.pre.mousedown(function () { return _this.acSpan.hide(); });
         //setInterval(() => update(), 1000);
     }
@@ -235,7 +237,7 @@ var IntelliHTML = (function () {
         this.acList.css("box-shadow", boxShadow);
         this.acList.empty();
         result.forEach(function (x) {
-            var p = $("<p>");
+            var p = $("<p>").css("padding", "0px");
             p.append($("<span>").text(x.x.slice(0, x.i)));
             p.append($("<span>").text(x.x.slice(x.i, x.i + vLen)).css("color", "salmon"));
             p.append($("<span>").text(x.x.slice(x.i + vLen)));
