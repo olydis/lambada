@@ -181,7 +181,7 @@ class IntelliHTML
         }
         catch (e)
         {
-            console.log(e);
+            console.error(e);
             return null;
         }
 
@@ -204,7 +204,6 @@ class IntelliHTML
         {
             var range = this.caretPosition;
             var pos = this.caretIndex(range);
-            console.log(pos);
             this.code.html(html2);
             range.setStart(this.codeNative.firstChild, pos + 1);
             setCaret(range);
@@ -240,8 +239,8 @@ class IntelliHTML
         range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
 
         var x: number, y: number;
-        x = range.getClientRects()[0].left | 0;
-        y = range.getClientRects()[0].top | 0;
+        x = (range.getClientRects()[0].left | 0) + $(window).scrollLeft();
+        y = (range.getClientRects()[0].top | 0) + $(window).scrollTop();
 
         // move AC span
         this.acSpan.css("left", x + "px");

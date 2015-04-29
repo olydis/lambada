@@ -3,18 +3,28 @@ var AsyncRuntime = (function () {
         var _this = this;
         this.masterUri = masterUri;
         this.binary = binary;
+        this.nextReq = 0;
+        this.nextRes = 0;
+        this.uid = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
         this.master = new Worker(masterUri);
-        this.jobCallback = [];
+        this.jobs = [];
         this.master.onmessage = function (e) {
-            if (_this.jobCallback[e.data.id])
-                _this.jobCallback[e.data.id](e.data.evaluated);
-            delete _this.jobCallback[e.data.id];
+            if (_this.nextRes != e.data.id)
+                throw "unexpected response id";
+            _this.nextRes++;
+            if (e.data.success)
+                _this.jobs[e.data.id].callback(e.data.evaluated);
+            else
+                _this.jobs[e.data.id].error(e.data.evaluated);
+            delete _this.jobs[e.data.id];
         };
         this.master.onerror = function (e) {
-            throw "AsyncRuntime-Error: " + e;
+            _this.close();
+            throw "AsyncRuntime-PANIC: " + e;
         };
         // setup
         this.post([
+            "uid = " + JSON.stringify(this.uid),
             "lrt = LambadaRuntime",
             "rt = lrt.Runtime.create(" + JSON.stringify(binary) + ")",
             "d = rt.defs",
@@ -23,38 +33,80 @@ var AsyncRuntime = (function () {
             "n = lrt.ShortcutExpression.createNumber",
             "null"
         ]);
+        console.log("opened client " + this.toString());
     }
+    Object.defineProperty(AsyncRuntime.prototype, "isIdle", {
+        get: function () {
+            return this.nextReq == this.nextRes;
+        },
+        enumerable: true,
+        configurable: true
+    });
     AsyncRuntime.prototype.clone = function () {
         return new AsyncRuntime(this.masterUri, this.binary);
     };
-    AsyncRuntime.prototype.post = function (code, callback) {
+    AsyncRuntime.prototype.throwException = function (exception) {
+        throw "AsyncRuntime-Error: " + exception;
+    };
+    AsyncRuntime.prototype.post = function (code, callback, error) {
         if (callback === void 0) { callback = function (_) {
         }; }
+        if (error === void 0) { error = this.throwException; }
+        if (this.nextReq != this.jobs.length)
+            throw "unexpected request id";
         var codex = code.join(";");
-        this.jobCallback.push(callback);
+        this.jobs.push({ callback: callback, error: error });
         this.master.postMessage({
-            "id": this.jobCallback.length - 1,
+            "id": this.nextReq,
             "code": codex
         });
+        this.nextReq++;
     };
+    // fires as soon as anything enqueued before finished
     AsyncRuntime.prototype.onDone = function (callback) {
         this.post([], function (_) { return callback(); });
     };
-    AsyncRuntime.prototype.compile = function (source, callback) {
+    // fires as soon as there is no job waiting for its response left
+    AsyncRuntime.prototype.onIdle = function (callback) {
+        var _this = this;
+        if (this.isIdle)
+            callback();
+        else
+            this.onDone(function () { return _this.onIdle(callback); });
+    };
+    AsyncRuntime.prototype.compile = function (source, callback, error) {
+        if (error === void 0) { error = this.throwException; }
         this.post(["app(d.pipe, s(" + JSON.stringify(source) + ")).asString()"], function (binary) {
             binary = binary.replace(/\.\s/g, ".").trim();
-            callback(binary == "" ? null : binary);
-        });
+            if (binary == "")
+                error("compiler error");
+            else
+                callback(binary == "" ? null : binary);
+        }, function (ex) { return error(ex); });
     };
-    AsyncRuntime.prototype.eval = function (binary, callback) {
+    AsyncRuntime.prototype.eval = function (binary, callback, error) {
+        if (error === void 0) { error = this.throwException; }
         this.post([
             "rt.define(" + JSON.stringify("__value ListEmpty.") + ")",
             "rt.define(" + JSON.stringify(binary || "") + ")",
             "d.__value.asString()"
-        ], function (result) { return callback(result); });
+        ], function (result) { return callback(result); }, function (ex) { return error(ex); });
     };
     AsyncRuntime.prototype.getNames = function (callback) {
         this.post(["rt.getNames()"], function (names) { return callback(names); });
+    };
+    AsyncRuntime.prototype.autoClose = function () {
+        var _this = this;
+        this.onIdle(function () { return _this.close(); });
+    };
+    AsyncRuntime.prototype.close = function () {
+        this.master.terminate();
+        this.master = undefined;
+        this.post = undefined;
+        console.log("closed client " + this.toString());
+    };
+    AsyncRuntime.prototype.toString = function () {
+        return this.uid + " (#req: " + this.nextReq + ", #res: " + this.nextRes + ")";
     };
     return AsyncRuntime;
 })();

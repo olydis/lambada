@@ -7,17 +7,23 @@ onmessage = function (e) {
     nextId++;
     var result;
     var elapsedMS;
+    var success = true;
+    var exception;
     try {
+        eval("LambadaRuntime._perfReset()");
         elapsedMS = measure(function () { return result = eval(e.data.code); });
     }
     catch (ex) {
-        console.log("ERROR IN: " + e.data.code);
-        throw ex;
+        success = false;
+        exception = ex;
+        console.warn("ERROR IN: " + e.data.code);
+        console.warn(ex);
     }
     postMessage({
         "id": e.data.id,
-        "evaluated": result,
-        "elapsedMS": elapsedMS
+        "evaluated": success ? result : exception,
+        "elapsedMS": elapsedMS,
+        "success": success
     });
 };
 function measure(f) {

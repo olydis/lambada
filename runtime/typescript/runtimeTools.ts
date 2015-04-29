@@ -2,16 +2,15 @@
 /// <reference path="asyncRuntimeClient.ts" />
 /// <reference path="IntelliHTML.ts" />
 
-var rt: AsyncRuntime;
-var rt2: AsyncRuntime;
+var rtClean: AsyncRuntime;
 var names: string[];
 
 function init(binary: string) 
 {
-    rt = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
-    rt.getNames(res => names = res);
-    rt.onDone(() => console.log("Loaded binary (" + binary.length + " bytes)."));
-    rt2 = rt.clone();
+    rtClean = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
+    rtClean.getNames(res => names = res);
+    rtClean.onDone(() => console.log("Loaded binary (" + binary.length + " bytes)."));
+    rtClean.autoClose();
 }
 
 function splitSources(sources: string): string[]
@@ -65,7 +64,7 @@ function statusUpdate(message: string, status: string = null, binary: string = n
         js.addClass(status);
 
     if (binary != null)
-        js.append($("<a>").text("download binary").css("cursor", "pointer").click(() => window.open("data:;base64," + btoa(binary))));
+        js.append($("<a>").text("download binary").click(() => window.open("data:;base64," + btoa(binary))));
 }
 
 $(function () 
@@ -95,7 +94,7 @@ $(function ()
             {
                 if (binaryBuffer.some(x => x == null))
                 {
-                    statusUpdate("no binary available (yet)");
+                    statusUpdate("compiling " + binaryBuffer.map(x => x == null ? "-" : "#").join(""));
                     return;
                 }
 
@@ -128,6 +127,8 @@ $(function ()
                 }
             };
 
+            var rtCompilePrelude = rtClean.clone();
+
             var table = $("#table");
             sources.forEach((src, i) => 
             {
@@ -146,8 +147,8 @@ $(function ()
                     var parts = splitSources(text);
                     var partBuffers: string[] = [];
 
-                    parts.forEach((part, i) => rt.compile(part, bin => partBuffers[i] = bin));
-                    rt.onDone(() =>
+                    parts.forEach((part, i) => rtCompilePrelude.compile(part, bin => partBuffers[i] = bin));
+                    rtCompilePrelude.onDone(() =>
                     {
                         var bin = partBuffers.some(x => x == null) ? null : partBuffers.join("");
                         binaryBuffer[i] = bin;
@@ -163,21 +164,56 @@ $(function ()
                 intelliElem.text = src;
                 td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(eo => intelliElem.element.removeClass("coll")));
             });
+            rtCompilePrelude.autoClose();
 
             // EVAL PAD
 
             var safeString = (s: string) => "[" + s.split("").map(x => x.charCodeAt(0).toString()).join(",") + "]";
 
+            var debounceHandle: number = undefined;
             var evalPad = new IntelliHTML(text => 
             {
-                localStorage.setItem("fun", text);
-                rt2.compile(text,
-                    binary => rt2.eval(binary, res => $("#evalRes").text(res)));
-                rt2.compile("fullDebug " + safeString(text),
-                    binary => rt2.eval(binary, res => $("#evalDebug").text(res)));
+                $("#evalRes").text("").append($("<i>").text("pending..."));
+                $("#evalDebug").text("").append($("<i>").text("pending..."));
+
+                clearTimeout(debounceHandle);
+                debounceHandle = setTimeout(() =>
+                {
+                    var rtTrash = rtClean.clone();
+                    localStorage.setItem("fun", text);
+                    var srcs = splitSources(text);
+
+                    var onEx = (ex: any) =>
+                    {
+                        srcs.length = 0;
+                        $("#evalRes").text("").append($("<i>").text(ex));
+                    };
+
+                    srcs.forEach((text, i) =>
+                    {
+                        rtTrash.compile(text,
+                            binary => rtTrash.eval(binary, i < srcs.length - 1 ? _ => { } : res => $("#evalRes").text(res), onEx),
+                            onEx);
+                        rtTrash.compile("fullDebug " + safeString(text),
+                            binary => rtTrash.eval(binary, i < srcs.length - 1 ? _ => { } : res => $("#evalDebug").text(res), onEx),
+                            onEx);
+                    });
+                    rtTrash.autoClose();
+                }, 500);
             },() => names, $("#evalSrc").css("min-height", "15px"));
             evalPad.text = localStorage.getItem("fun") || "reverse $ listDistinct \"Hallo Welt\" isEQ";
             evalPad.focus();
+
+            $.get("library/samples.txt",(data: string) =>
+            {
+                var sSpan = $("#samples");
+                data.split("---").forEach(str =>
+                {
+                    var parts = str.split("--");
+                    sSpan.append("&nbsp;&nbsp;&nbsp;");
+                    sSpan.append($("<a>").text(parts[0].trim()).click(() => evalPad.text = parts[1].trim()));
+                });
+            }, "text");
         });
     });
 })

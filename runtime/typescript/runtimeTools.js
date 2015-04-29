@@ -1,14 +1,13 @@
 /// <reference path="jquery.d.ts" />
 /// <reference path="asyncRuntimeClient.ts" />
 /// <reference path="IntelliHTML.ts" />
-var rt;
-var rt2;
+var rtClean;
 var names;
 function init(binary) {
-    rt = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
-    rt.getNames(function (res) { return names = res; });
-    rt.onDone(function () { return console.log("Loaded binary (" + binary.length + " bytes)."); });
-    rt2 = rt.clone();
+    rtClean = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
+    rtClean.getNames(function (res) { return names = res; });
+    rtClean.onDone(function () { return console.log("Loaded binary (" + binary.length + " bytes)."); });
+    rtClean.autoClose();
 }
 function splitSources(sources) {
     var result = [];
@@ -50,7 +49,7 @@ function statusUpdate(message, status, binary) {
     if (status != null)
         js.addClass(status);
     if (binary != null)
-        js.append($("<a>").text("download binary").css("cursor", "pointer").click(function () { return window.open("data:;base64," + btoa(binary)); }));
+        js.append($("<a>").text("download binary").click(function () { return window.open("data:;base64," + btoa(binary)); }));
 }
 $(function () {
     var gPN = $.get("library/prelude.native.txt", undefined, "text");
@@ -65,7 +64,7 @@ $(function () {
             var binaryBuffer = Array(sources.length).map(function (x) { return null; });
             var binaryUpdate = function () {
                 if (binaryBuffer.some(function (x) { return x == null; })) {
-                    statusUpdate("no binary available (yet)");
+                    statusUpdate("compiling " + binaryBuffer.map(function (x) { return x == null ? "-" : "#"; }).join(""));
                     return;
                 }
                 var result = binaryBuffer.join("");
@@ -92,6 +91,7 @@ $(function () {
                     statusUpdate(e, "error");
                 }
             };
+            var rtCompilePrelude = rtClean.clone();
             var table = $("#table");
             sources.forEach(function (src, i) {
                 var tr = $("<tr>").appendTo(table);
@@ -105,8 +105,8 @@ $(function () {
                     binaryUpdate();
                     var parts = splitSources(text);
                     var partBuffers = [];
-                    parts.forEach(function (part, i) { return rt.compile(part, function (bin) { return partBuffers[i] = bin; }); });
-                    rt.onDone(function () {
+                    parts.forEach(function (part, i) { return rtCompilePrelude.compile(part, function (bin) { return partBuffers[i] = bin; }); });
+                    rtCompilePrelude.onDone(function () {
                         var bin = partBuffers.some(function (x) { return x == null; }) ? null : partBuffers.join("");
                         binaryBuffer[i] = bin;
                         target.text(bin);
@@ -119,15 +119,41 @@ $(function () {
                 intelliElem.text = src;
                 td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(function (eo) { return intelliElem.element.removeClass("coll"); }));
             });
+            rtCompilePrelude.autoClose();
             // EVAL PAD
             var safeString = function (s) { return "[" + s.split("").map(function (x) { return x.charCodeAt(0).toString(); }).join(",") + "]"; };
+            var debounceHandle = undefined;
             var evalPad = new IntelliHTML(function (text) {
-                localStorage.setItem("fun", text);
-                rt2.compile(text, function (binary) { return rt2.eval(binary, function (res) { return $("#evalRes").text(res); }); });
-                rt2.compile("fullDebug " + safeString(text), function (binary) { return rt2.eval(binary, function (res) { return $("#evalDebug").text(res); }); });
+                $("#evalRes").text("").append($("<i>").text("pending..."));
+                $("#evalDebug").text("").append($("<i>").text("pending..."));
+                clearTimeout(debounceHandle);
+                debounceHandle = setTimeout(function () {
+                    var rtTrash = rtClean.clone();
+                    localStorage.setItem("fun", text);
+                    var srcs = splitSources(text);
+                    var onEx = function (ex) {
+                        srcs.length = 0;
+                        $("#evalRes").text("").append($("<i>").text(ex));
+                    };
+                    srcs.forEach(function (text, i) {
+                        rtTrash.compile(text, function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 ? function (_) {
+                        } : function (res) { return $("#evalRes").text(res); }, onEx); }, onEx);
+                        rtTrash.compile("fullDebug " + safeString(text), function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 ? function (_) {
+                        } : function (res) { return $("#evalDebug").text(res); }, onEx); }, onEx);
+                    });
+                    rtTrash.autoClose();
+                }, 500);
             }, function () { return names; }, $("#evalSrc").css("min-height", "15px"));
             evalPad.text = localStorage.getItem("fun") || "reverse $ listDistinct \"Hallo Welt\" isEQ";
             evalPad.focus();
+            $.get("library/samples.txt", function (data) {
+                var sSpan = $("#samples");
+                data.split("---").forEach(function (str) {
+                    var parts = str.split("--");
+                    sSpan.append("&nbsp;&nbsp;&nbsp;");
+                    sSpan.append($("<a>").text(parts[0].trim()).click(function () { return evalPad.text = parts[1].trim(); }));
+                });
+            }, "text");
         });
     });
 });

@@ -19,7 +19,7 @@
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="asyncRuntimeClient.ts" />
-    <TypeScriptCompile Include="asyncRuntimeMaster.ts" />
+    <TypeScriptCompile Include="asyncRuntimeServer.ts" />
     <TypeScriptCompile Include="IntelliHTML.ts" />
     <TypeScriptCompile Include="jquery.d.ts" />
     <TypeScriptCompile Include="runtimeTools.ts" />
