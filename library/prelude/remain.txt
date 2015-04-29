@@ -65,7 +65,7 @@ fak = \n foldl (listTake nats n) one mul
 _nextCandids = \prime \candids (listWhere candids (\n (not (isZero (mod n prime)))))
 _primes = \candids (\newPrime ListCons newPrime (_primes (_nextCandids newPrime candids))) (listHead candids)
 primes = _primes (listSkip nats one)
-fibs = listAddFront (listAddFront (listZip fibs (listTail fibs) add) 1) 1
+fibs = ListCons 1 $ ListCons 1 $ listZip fibs (listTail fibs) add
 
 '_modUint = \x mod x (pow 2 32)
 '_quadEx = \quad \f f (fst (fst quad)) (snd (fst quad)) (fst (snd quad)) (snd (snd quad))

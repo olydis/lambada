@@ -810,13 +810,11 @@ pipe = \s
 ' S => S
 fullDebug = \s strConss
     [
+        "LEXER:   ", token_Run s,
         newLine, newLine,
-        token_Run s,
+        "PARSER:  ", syntax_Run s,
         newLine, newLine,
-        syntax_Run s,
-        newLine, newLine,
-        native_Run s,
-        newLine, newLine
+        "CODEGEN: ", native_Run s
     ]
 
 
