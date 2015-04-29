@@ -16,11 +16,11 @@ pow = \n \m m one (\dm mul n (pow n dm))
 _qadd = \a \n add a (mul (Succ three) n)
 
 
-isEQ = \a \b and (isZero (sub a b)) (isZero (sub b a))
-isLTE = \a \b isZero (sub a b)
+isEQ = \a \b and (isZero $ sub a b) (isZero $ sub b a)
+isLTE = \a \b isZero $ sub a b
 isGTE = \a \b isLTE b a
-isLT = \a \b not (isGTE a b)
-isGT = \a \b not (isLTE a b)
+isLT = \a \b not $ isGTE a b
+isGT = \a \b not $ isLTE a b
 
 min = \a \b if(isLT a b) a b
 max = \a \b if(isGT a b) a b

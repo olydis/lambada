@@ -104,8 +104,8 @@ listMerge = \lt \l1 \l2
                 l1
                 (\h2 \t2
                     if (l1 h1 h2)
-                        (ListCons h1 (listMerge lt t1 l2))
-                        (ListCons h2 (listMerge lt l1 h2))
+                        (ListCons h1 $ listMerge lt t1 l2)
+                        (ListCons h2 $ listMerge lt l1 h2)
                 )
         )
 
@@ -113,7 +113,7 @@ listSort = y(\sort \lt \l if(isGT (listCount l) one) ((\mid listMerge lt (sort l
 
 intSort = listSort isLT
 
-listElementAt = \l \n listHead (listSkip l n)
+listElementAt = \l \n listHead $ listSkip l n
 
 listStartsWith = \eq \l1 \l2 listEquals eq (listTake l1 (listCount l2)) l2
 

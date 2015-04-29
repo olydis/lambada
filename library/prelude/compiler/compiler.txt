@@ -289,15 +289,15 @@ token_String = \x x
 token_String_list = \xs strJoin (listMap xs token_String) " "
 
 ' :: Parser Token
-eatParenOpen        = parseBindOperation (parseChar _eCharBrOpen)    (k (TokenSpecialChar ScharParenOpen))
-eatParenClose       = parseBindOperation (parseChar _eCharBrClose)   (k (TokenSpecialChar ScharParenClose))
-eatSqBracketOpen    = parseBindOperation (parseChar _eCharSqBrOpen)  (k (TokenSpecialChar ScharSqBracketOpen))
-eatSqBracketClose   = parseBindOperation (parseChar _eCharSqBrClose) (k (TokenSpecialChar ScharSqBracketClose))
-eatComma            = parseBindOperation (parseChar _eCharComma)     (k (TokenSpecialChar ScharComma))
-eatAbstraction      = parseBindOperation (parseChar _eCharAbstr)     (k (TokenSpecialChar ScharAbstraction))
-eatAssign           = parseBindOperation (parseChar _eCharAssign)    (k (TokenSpecialChar ScharAssign))
-eatSingleOr         = parseBindOperation (parseChar _eCharOr)        (k (TokenSpecialChar ScharSingleOr))
-eatDollar           = parseBindOperation (parseChar _eCharDollar)    (k (TokenSpecialChar ScharDollar))
+eatParenOpen        = parseBindOperation (parseChar _eCharBrOpen)    $ k $ TokenSpecialChar ScharParenOpen
+eatParenClose       = parseBindOperation (parseChar _eCharBrClose)   $ k $ TokenSpecialChar ScharParenClose
+eatSqBracketOpen    = parseBindOperation (parseChar _eCharSqBrOpen)  $ k $ TokenSpecialChar ScharSqBracketOpen
+eatSqBracketClose   = parseBindOperation (parseChar _eCharSqBrClose) $ k $ TokenSpecialChar ScharSqBracketClose
+eatComma            = parseBindOperation (parseChar _eCharComma)     $ k $ TokenSpecialChar ScharComma
+eatAbstraction      = parseBindOperation (parseChar _eCharAbstr)     $ k $ TokenSpecialChar ScharAbstraction
+eatAssign           = parseBindOperation (parseChar _eCharAssign)    $ k $ TokenSpecialChar ScharAssign
+eatSingleOr         = parseBindOperation (parseChar _eCharOr)        $ k $ TokenSpecialChar ScharSingleOr
+eatDollar           = parseBindOperation (parseChar _eCharDollar)    $ k $ TokenSpecialChar ScharDollar
 
 eatLiteral = parseBindOperation parseToken (\x tokenLiteral x)
 eatConstS  = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\x TokenConstS x)
@@ -316,19 +316,18 @@ eatSpecialChar = parseOptions
                 eatSingleOr,
                 eatDollar
             ]
-eatSomething = parseWithWhitespace
-        (parseOptions 
+eatSomething = parseWithWhitespace $ parseOptions 
         [ 
             eatSpecialChar,
             eatLiteral, 
             eatConstS, 
             eatConstN,
             eatComment
-        ])
+        ]
             
 
 ' S => M [Token]
-token_Process = b parseAcceptFullyConsumed (parseWhilesuccessful eatSomething)
+token_Process = b parseAcceptFullyConsumed $ parseWhilesuccessful eatSomething
 
 ' S => S
 token_Run = \s (strFromMaybe i (maybeMap (token_Process s) token_String_list))
@@ -352,7 +351,7 @@ SyntaxExpression = SyntaxName literal                             ' S
 syntaxCreateApplication = \syntaxes foldl (listTail syntaxes) (listHead syntaxes) SyntaxApplication
 syntaxCreateAbstraction = \literals \body foldr literals body (\x \lit SyntaxAbstraction lit x)
 
-syntax_String = y(\this \x
+syntax_String = y $ \this \x
     x
         (\literal strConss ["literal(", literal, ")"])
         (\value strConss ["constn(", strFromN value, ")"])
@@ -362,7 +361,6 @@ syntax_String = y(\this \x
         (\o1 \o2 strConss ["apply(", this o1, ", ", this o2, ")"])
         (\literal \o strConss ["assign(", literal, ", ", this o, ")"])
         (\literalType \listPairInstanceArgs strConss ["type(", literalType, "; ", (strJoin (listMap listPairInstanceArgs (\pair strCons (fst pair) (strConss (listMap (snd pair) (strCons " "))))) ", "), ")"])
-    )
 syntax_String_list = \xs strJoin (listMap xs syntax_String) "; "
 
 ' B :=  lit=E | \lit E | lit | constS | constN | (E) | comment | [E*]   'return [Syntax]
@@ -375,7 +373,7 @@ cstrParseAbstractionTail = \e
         (TokenLiteralLower_Dispatch 
             (\literal parseBindOperation 
                 e
-                (\rese listReturn (SyntaxAbstraction literal rese))
+                (\rese listReturn $ SyntaxAbstraction literal rese)
             ) 
             parseFail)
 
@@ -412,17 +410,17 @@ cstrParseListTail = \e parseBindDiscard
                                 parseBind
                                     ListCons
                                     e
-                                    (parseWhilesuccessful (parseBindOverride cstrParseComma e))
+                                    (parseWhilesuccessful $ parseBindOverride cstrParseComma e)
                             )
                             (parseReturn ListEmpty)
                         )
-                        (\list listReturn (SyntaxList list))
+                        (\list listReturn $ SyntaxList list)
                     )
                     cstrParseCloseSqBr
 
 cstrParseAssignTail = \literal \e parseBindOperation 
-                        (parseBindOverride cstrParseAssign e) 
-                        (\body (listReturn (SyntaxAssignment literal body)))
+                        (parseBindOverride cstrParseAssign e)
+                        (\body listReturn $ SyntaxAssignment literal body)
 
 cstrParseDataDefOption = parseBind
                             (\name \args Pair name args)
@@ -434,7 +432,7 @@ cstrParseDataDefTail2 = parseBind
                             (parseWhilesuccessful (parseBindOverride cstrParseSingleOr cstrParseDataDefOption))
 cstrParseDataDefTail = \literal \e parseBindOperation 
                         (parseBindOverride cstrParseAssign cstrParseDataDefTail2) 
-                        (\list (listReturn (SyntaxType literal list)))
+                        (\list listReturn $ SyntaxType literal list)
 
 ' B:
 ' Parser [Syntax]
@@ -463,15 +461,15 @@ cstrSyntaxSingle = \e
                     (cstrParseDataDefTail literal e)
                     (parseReturn (listReturn (SyntaxName literal)))
             )
-            (\value parseReturn (listReturn (SyntaxConstS value)))
-            (\value parseReturn (listReturn (SyntaxConstN value)))
+            (\value parseReturn $ listReturn $ SyntaxConstS value)
+            (\value parseReturn $ listReturn $ SyntaxConstN value)
             (k parseReturn ListEmpty)
         )
 
 ' E:
 cstrSyntaxApplication = \e 
                         parsePipe
-                            (parseWhilesuccessful (cstrSyntaxSingle e))
+                            (parseWhilesuccessful $ cstrSyntaxSingle e)
                             (\list 
                                 (\ops 
                                     if(listIsEmpty ops) 
@@ -491,13 +489,13 @@ cstrSyntaxApplication = \e
                                 ) (listBind list i)
                             )
 
-cstrSyntaxEverything = parseWhilesuccessful (y cstrSyntaxApplication)
+cstrSyntaxEverything = parseWhilesuccessful $ y cstrSyntaxApplication
 
 ' [TOKEN] => M [SyNTAX]
 syntax_Process = b parseAcceptFullyConsumed cstrSyntaxEverything
 
 ' S => S
-syntax_Run = \s (strFromMaybe i (maybeMap (maybeBind (token_Process s) syntax_Process) syntax_String_list))
+syntax_Run = \s strFromMaybe i $ maybeMap (maybeBind (token_Process s) syntax_Process) syntax_String_list
 
 
 NativeDefinition = NativeAssignment literal o   ' S Native
@@ -516,10 +514,8 @@ nativeExpr_String = y(\this \x
         (\value strConss ["consts(", value, ")"])
         (\o1 \o2 strConss ["apply(", this o1, ", ", this o2, ")"])
     )
-nativeDef_String = y(\this \x
-    x
-        (\literal \o strConss ["assign(", literal, ", ", nativeExpr_String o, ")"])
-    )
+nativeDef_String = y $ \this \x x $ \literal \o strConss ["assign(", literal, ", ", nativeExpr_String o, ")"]
+    
 nativeDef_String_list = \xs strJoin (listMap xs nativeExpr_String) "; "
 nativeExpr_String_list = \xs strJoin (listMap xs nativeDef_String) "; "
 
@@ -593,11 +589,11 @@ _nToNative = \n (\d \m
                 m
             ) 
             (_nToNative d)
-        )) (div n 4) (_03ToNative (mod n 4))
+        )) (div n 4) (_03ToNative $ mod n 4)
 _sToNative = \value foldr value nativeListEmpty (\value \item NativeApplication (NativeApplication nativeListCons (_nToNative item)) value)
 
 ' SYNTAX => NATIVE
-_syntaxToNative = y(\this \syntax
+_syntaxToNative = y $ \this \syntax
     syntax
         (\literal NativeLiteral literal)
         _nToNative
@@ -635,8 +631,7 @@ _syntaxToNative = y(\this \syntax
         )
         (\o1 \o2 NativeApplication (this o1) (this o2))
         (\literal \o NativeAssignment "fail" (NativeConstS "fail"))
-        (\typeLiteral NativeAssignment "fail" (NativeConstS "fail"))  
-    )
+        (\typeLiteral NativeAssignment "fail" (NativeConstS "fail")) 
     
 _createUniqueNameFromN = \n strCons ":bound:" (strFromN n)
 _createUniqueNameFromS = \s strCons ":bound:" s
@@ -705,12 +700,12 @@ _syntaxEmitTypeStuff = \typeName \items \ctrArgList ' listConcat
 ' SYNTAX => [NATIVE defs]
 _syntaxToNativeDefs = \syntax
     syntax
-        (\literal ListEmpty)
-        (\value ListEmpty)
-        (\value ListEmpty)
-        (\list ListEmpty)
-        (\literal \body ListEmpty)
-        (\o1 \o2 ListEmpty)
+        (\literal       [])
+        (\value         [])
+        (\value         [])
+        (\list          [])
+        (\literal \body [])
+        (\o1 \o2        [])
         '(\literal \o listReturn (NativeAssignment literal (_syntaxToNative o)))   
         (\literal \o listReturn (NativeAssignment literal 
             (NativeApplication nativeY 
@@ -764,30 +759,27 @@ nativeExprToExe = \n n
 nativeDefToExe = \n strCons (n (\literal \o (strConss [literal, " ", nativeExprToExe o]))) "."
 
 ' ENV => NATIVE => (???, ENV)
-nativeToObj = y(\this \env \n
-    n
-        (\literal (Pair (maybeGetValue (env literal)) env)) 'handle errors
-        (\value (Pair value env))
-        (\value (Pair value env))
-        (\o1 \o2 (Pair ((fst (this env o1)) (fst (this env o2))) env))
-    )
+nativeToObj = y $ \this \env \n n
+        (\literal Pair (maybeGetValue (env literal)) env) 'handle errors
+        (\value   Pair value env)
+        (\value   Pair value env)
+        (\o1 \o2  Pair ((fst (this env o1)) (fst (this env o2))) env)
 
 
 ' S => S
-native_Run = \s (strFromMaybe i (maybeMap 
+native_Run = \s strFromMaybe i $ maybeMap 
                                     (maybeMap (maybeBind (token_Process s) syntax_Process) (\l listBind l syntaxToNative))
                                     (\ns strJoin (listMap ns nativeDefToExe) "; ")
                                     ' native_String_list
-                ))
 
 ' [SYNTAX] => M [NATIVE]
-native_Process = \synts maybeReturn (listBind synts syntaxToNative)
+native_Process = \synts maybeReturn $ listBind synts syntaxToNative
 
 ' [NATIVE] => S
-output_Process = \natives strConss (listMap natives nativeDefToExe)
+output_Process = \natives strConss $ listMap natives nativeDefToExe
 
 ' [NATIVE] => S
-output_ProcessType = \natives strConss (listMap natives (b nativeDefToExe nativeDefToTypeNative))
+output_ProcessType = \natives strConss $ listMap natives $ b nativeDefToExe nativeDefToTypeNative
 ' S => S
 pipeType = \s
     maybeTryGetValue (
@@ -832,5 +824,5 @@ run2 = \menv \str maybeMap
                     (\synt fst 
                             (nativeToObj
                                 menv
-                                (_syntaxToNative (listHead synt))
+                                (_syntaxToNative $ listHead synt)
                     ))
