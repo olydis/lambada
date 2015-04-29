@@ -13,5 +13,5 @@ prelude/String.txt
 prelude/Maybe.txt
 prelude/remain.txt
 prelude/compiler/compiler.txt
-prelude/tests.txt
+'prelude/tests.txt
 'prelude/scratch.txt
