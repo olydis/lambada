@@ -697,15 +697,17 @@ _syntaxEmitTypeStuff = \typeName \items \ctrArgList ' listConcat
 '            )
 '    ]
 
+_make__ValueDef = \syntaxExpression SyntaxAssignment "__value" syntaxExpression
+
 ' SYNTAX => [NATIVE defs]
 _syntaxToNativeDefs = \syntax
     syntax
-        (\literal       [])
-        (\value         [])
-        (\value         [])
-        (\list          [])
-        (\literal \body [])
-        (\o1 \o2        [])
+        (\literal       _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\value         _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\value         _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\list          _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\literal \body _syntaxToNativeDefs $ _make__ValueDef syntax)
+        (\o1 \o2        _syntaxToNativeDefs $ _make__ValueDef syntax)
         '(\literal \o listReturn (NativeAssignment literal (_syntaxToNative o)))   
         (\literal \o listReturn (NativeAssignment literal 
             (NativeApplication nativeY 
