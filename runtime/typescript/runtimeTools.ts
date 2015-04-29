@@ -3,21 +3,15 @@
 /// <reference path="IntelliHTML.ts" />
 
 var rt: AsyncRuntime;
+var rt2: AsyncRuntime;
 var names: string[];
-
-function measure(f: () => void)
-{
-    var d1 = new Date().getTime();
-    f();
-    var d2 = new Date().getTime();
-    return d2 - d1;
-}
 
 function init(binary: string) 
 {
     rt = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
     rt.getNames(res => names = res);
     rt.onDone(() => console.log("Loaded binary (" + binary.length + " bytes)."));
+    rt2 = rt.clone();
 }
 
 function splitSources(sources: string): string[]
@@ -162,7 +156,13 @@ $(function ()
 
             // EVAL PAD
 
-            var evalPad = new IntelliHTML(text => rt.eval(text, res => $("#evalRes").text(res)),() => names, $("#evalSrc").css("min-height", "15px"));
+            var evalPad = new IntelliHTML(text => 
+            {
+                rt2.compile(text,
+                    binary => rt2.eval(binary, res => $("#evalRes").text(res)));
+                rt2.compile("fullDebug " + JSON.stringify(text),
+                    binary => rt2.eval(binary, res => $("#evalDebug").text(res)));
+            }, () => names, $("#evalSrc").css("min-height", "15px"));
             evalPad.focus();
         });
     });

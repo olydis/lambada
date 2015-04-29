@@ -3,16 +3,16 @@
     private master: Worker;
     private jobCallback: ((result: any) => void)[];
 
-    public constructor(masterUri: string, binary: string)
+    public constructor(private masterUri: string, private binary: string)
     {
         this.master = new Worker(masterUri);
         this.jobCallback = [];
 
-        this.master.onmessage = oEvent =>
+        this.master.onmessage = e =>
         {
-            if (this.jobCallback[oEvent.data.id])
-                this.jobCallback[oEvent.data.id](oEvent.data.evaluated);
-            delete this.jobCallback[oEvent.data.id];
+            if (this.jobCallback[e.data.id])
+                this.jobCallback[e.data.id](e.data.evaluated);
+            delete this.jobCallback[e.data.id];
         };
         this.master.onerror = e => { throw "AsyncRuntime-Error: " + e; };
 
@@ -28,6 +28,11 @@
             ]);
     }
 
+    public clone(): AsyncRuntime
+    {
+        return new AsyncRuntime(this.masterUri, this.binary);
+    }
+
     private post(code: string[], callback: (result: any) => void = _ => { })
     {
         var codex = code.join(";");
@@ -38,9 +43,9 @@
         });
     }
 
-    public onDone(continuation: () => void)
+    public onDone(callback: () => void)
     {
-        this.post([], _ => continuation());
+        this.post([], _ => callback());
     }
 
     public compile(source: string, callback: (binary: string) => void)
@@ -52,12 +57,12 @@
         });
     }
 
-    public eval(source: string, callback: (result: string) => void)
+    public eval(binary: string, callback: (result: string) => void)
     {
         this.post([
-            "temp = app(d.pipe, s(" + JSON.stringify("__probe = " + source) + ")).asString()",
-            "rt.define(temp.trim() == \"\" ? \"__probe ListEmpty.\" : temp)",
-            "d.__probe.asString()"],
+            "rt.define(" + JSON.stringify("__value ListEmpty.") + ")",
+            "rt.define(" + JSON.stringify(binary || "") + ")",
+            "d.__value.asString()"],
             (result: string) => callback(result));
     }
 

@@ -1,12 +1,14 @@
 var AsyncRuntime = (function () {
     function AsyncRuntime(masterUri, binary) {
         var _this = this;
+        this.masterUri = masterUri;
+        this.binary = binary;
         this.master = new Worker(masterUri);
         this.jobCallback = [];
-        this.master.onmessage = function (oEvent) {
-            if (_this.jobCallback[oEvent.data.id])
-                _this.jobCallback[oEvent.data.id](oEvent.data.evaluated);
-            delete _this.jobCallback[oEvent.data.id];
+        this.master.onmessage = function (e) {
+            if (_this.jobCallback[e.data.id])
+                _this.jobCallback[e.data.id](e.data.evaluated);
+            delete _this.jobCallback[e.data.id];
         };
         this.master.onerror = function (e) {
             throw "AsyncRuntime-Error: " + e;
@@ -22,6 +24,9 @@ var AsyncRuntime = (function () {
             "null"
         ]);
     }
+    AsyncRuntime.prototype.clone = function () {
+        return new AsyncRuntime(this.masterUri, this.binary);
+    };
     AsyncRuntime.prototype.post = function (code, callback) {
         if (callback === void 0) { callback = function (_) {
         }; }
@@ -32,8 +37,8 @@ var AsyncRuntime = (function () {
             "code": codex
         });
     };
-    AsyncRuntime.prototype.onDone = function (continuation) {
-        this.post([], function (_) { return continuation(); });
+    AsyncRuntime.prototype.onDone = function (callback) {
+        this.post([], function (_) { return callback(); });
     };
     AsyncRuntime.prototype.compile = function (source, callback) {
         this.post(["app(d.pipe, s(" + JSON.stringify(source) + ")).asString()"], function (binary) {
@@ -41,11 +46,11 @@ var AsyncRuntime = (function () {
             callback(binary == "" ? null : binary);
         });
     };
-    AsyncRuntime.prototype.eval = function (source, callback) {
+    AsyncRuntime.prototype.eval = function (binary, callback) {
         this.post([
-            "temp = app(d.pipe, s(" + JSON.stringify("__probe = " + source) + ")).asString()",
-            "rt.define(temp.trim() == \"\" ? \"__probe ListEmpty.\" : temp)",
-            "d.__probe.asString()"
+            "rt.define(" + JSON.stringify("__value ListEmpty.") + ")",
+            "rt.define(" + JSON.stringify(binary || "") + ")",
+            "d.__value.asString()"
         ], function (result) { return callback(result); });
     };
     AsyncRuntime.prototype.getNames = function (callback) {

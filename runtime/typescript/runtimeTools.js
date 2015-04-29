@@ -2,17 +2,13 @@
 /// <reference path="asyncRuntimeClient.ts" />
 /// <reference path="IntelliHTML.ts" />
 var rt;
+var rt2;
 var names;
-function measure(f) {
-    var d1 = new Date().getTime();
-    f();
-    var d2 = new Date().getTime();
-    return d2 - d1;
-}
 function init(binary) {
     rt = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
     rt.getNames(function (res) { return names = res; });
     rt.onDone(function () { return console.log("Loaded binary (" + binary.length + " bytes)."); });
+    rt2 = rt.clone();
 }
 function splitSources(sources) {
     var result = [];
@@ -115,7 +111,10 @@ $(function () {
                 td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(function (eo) { return intelliElem.element.removeClass("coll"); }));
             });
             // EVAL PAD
-            var evalPad = new IntelliHTML(function (text) { return rt.eval(text, function (res) { return $("#evalRes").text(res); }); }, function () { return names; }, $("#evalSrc").css("min-height", "15px"));
+            var evalPad = new IntelliHTML(function (text) {
+                rt2.compile(text, function (binary) { return rt2.eval(binary, function (res) { return $("#evalRes").text(res); }); });
+                rt2.compile("fullDebug " + JSON.stringify(text), function (binary) { return rt2.eval(binary, function (res) { return $("#evalDebug").text(res); }); });
+            }, function () { return names; }, $("#evalSrc").css("min-height", "15px"));
             evalPad.focus();
         });
     });
