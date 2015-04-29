@@ -261,6 +261,7 @@ var IntelliHTML = (function () {
             return this.code.text();
         },
         set: function (text) {
+            this.acSpan.hide();
             this.code.text(text);
             this.onTextChanged(text);
         },

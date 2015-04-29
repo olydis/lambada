@@ -62,6 +62,7 @@ $(function () {
             gPSs.forEach(function (x) { return sources.push(x.responseText); });
             // layout
             var binaryBuffer = Array(sources.length).map(function (x) { return null; });
+            var d1 = new Date().getTime();
             var binaryUpdate = function () {
                 if (binaryBuffer.some(function (x) { return x == null; })) {
                     statusUpdate("compiling " + binaryBuffer.map(function (x) { return x == null ? "-" : "#"; }).join(""));
@@ -85,7 +86,9 @@ $(function () {
                     //            throw prop + " failed";
                     //    }
                     //});
-                    statusUpdate("binary ready and healthy (" + result.length + " bytes)", null, result);
+                    var d2 = new Date().getTime();
+                    var compMS = d2 - d1;
+                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)", null, result);
                 }
                 catch (e) {
                     statusUpdate(e, "error");
@@ -122,6 +125,7 @@ $(function () {
             rtCompilePrelude.autoClose();
             // EVAL PAD
             var safeString = function (s) { return "[" + s.split("").map(function (x) { return x.charCodeAt(0).toString(); }).join(",") + "]"; };
+            var currentRT = null;
             var debounceHandle = undefined;
             var evalPad = new IntelliHTML(function (text) {
                 $("#evalRes").text("").append($("<i>").text("pending..."));
@@ -129,16 +133,19 @@ $(function () {
                 clearTimeout(debounceHandle);
                 debounceHandle = setTimeout(function () {
                     var rtTrash = rtClean.clone();
+                    currentRT = rtTrash;
                     localStorage.setItem("fun", text);
                     var srcs = splitSources(text);
                     var onEx = function (ex) {
-                        srcs.length = 0;
-                        $("#evalRes").text("").append($("<i>").text(ex));
+                        if (currentRT == rtTrash) {
+                            srcs.length = 0;
+                            $("#evalRes").text("").append($("<i>").text(ex));
+                        }
                     };
                     srcs.forEach(function (text, i) {
-                        rtTrash.compile(text, function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 ? function (_) {
+                        rtTrash.compile(text, function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? function (_) {
                         } : function (res) { return $("#evalRes").text(res); }, onEx); }, onEx);
-                        rtTrash.compile("fullDebug " + safeString(text), function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 ? function (_) {
+                        rtTrash.compile("fullDebug " + safeString(text), function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? function (_) {
                         } : function (res) { return $("#evalDebug").text(res); }, onEx); }, onEx);
                     });
                     rtTrash.autoClose();

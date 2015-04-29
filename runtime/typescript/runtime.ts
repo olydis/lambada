@@ -36,9 +36,9 @@ module LambadaRuntime
 
     function _perfCheck()
     {
-        if (_perfAppCountX > 10)
+        if (_perfAppCountX >= 10)
             throw "ERR_APP_THRESH: possible infinite loop";
-        if (_perfAllocCountX > 5)
+        if (_perfAllocCountX >= 5)
             throw "ERR_ALLOC_THRESH: possible infinite loop";
     }
 

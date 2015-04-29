@@ -332,6 +332,7 @@ class IntelliHTML
 
     public set text(text: string)
     {
+        this.acSpan.hide();
         this.code.text(text);
         this.onTextChanged(text);
     }

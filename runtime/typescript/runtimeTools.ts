@@ -90,6 +90,7 @@ $(function ()
 
             var binaryBuffer: string[] = Array<string>(sources.length).map(x => null);
 
+            var d1 = new Date().getTime();
             var binaryUpdate = () =>
             {
                 if (binaryBuffer.some(x => x == null))
@@ -119,7 +120,9 @@ $(function ()
                     //            throw prop + " failed";
                     //    }
                     //});
-                    statusUpdate("binary ready and healthy (" + result.length + " bytes)", null, result);
+                    var d2 = new Date().getTime();
+                    var compMS = d2 - d1;
+                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)", null, result);
                 }
                 catch (e)
                 {
@@ -170,6 +173,7 @@ $(function ()
 
             var safeString = (s: string) => "[" + s.split("").map(x => x.charCodeAt(0).toString()).join(",") + "]";
 
+            var currentRT: AsyncRuntime = null;
             var debounceHandle: number = undefined;
             var evalPad = new IntelliHTML(text => 
             {
@@ -180,22 +184,26 @@ $(function ()
                 debounceHandle = setTimeout(() =>
                 {
                     var rtTrash = rtClean.clone();
+                    currentRT = rtTrash;
                     localStorage.setItem("fun", text);
                     var srcs = splitSources(text);
 
                     var onEx = (ex: any) =>
                     {
-                        srcs.length = 0;
-                        $("#evalRes").text("").append($("<i>").text(ex));
+                        if (currentRT == rtTrash)
+                        {
+                            srcs.length = 0;
+                            $("#evalRes").text("").append($("<i>").text(ex));
+                        }
                     };
 
                     srcs.forEach((text, i) =>
                     {
                         rtTrash.compile(text,
-                            binary => rtTrash.eval(binary, i < srcs.length - 1 ? _ => { } : res => $("#evalRes").text(res), onEx),
+                            binary => rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? _ => { } : res => $("#evalRes").text(res), onEx),
                             onEx);
                         rtTrash.compile("fullDebug " + safeString(text),
-                            binary => rtTrash.eval(binary, i < srcs.length - 1 ? _ => { } : res => $("#evalDebug").text(res), onEx),
+                            binary => rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? _ => { } : res => $("#evalDebug").text(res), onEx),
                             onEx);
                     });
                     rtTrash.autoClose();
