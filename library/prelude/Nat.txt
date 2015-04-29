@@ -1,19 +1,17 @@
-''' Type: Nat
 Nat = Zero | Succ n
+
 one = Succ Zero
 two = Succ one
 three = Succ two
 
+pred = \n n Zero i
+isZero = \n n True (k False)
+
 add = \n \m m n (\dm add (Succ n) dm)
+sub = \a \b b a (\db sub (pred a) db)
 mul = \n \m m Zero (\dm add n (mul n dm))
 pow = \n \m m one (\dm mul n (pow n dm))
 
-isZero = \n n True (k False)
-
-pred = \n n Zero i
-sub = \a \b if(isZero b)
-        a
-        (sub (pred a) (pred b))
         
 _qadd = \a \n add a (mul (Succ three) n)
 

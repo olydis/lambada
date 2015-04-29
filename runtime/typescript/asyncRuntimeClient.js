@@ -2,11 +2,11 @@ var AsyncRuntime = (function () {
     function AsyncRuntime(masterUri, binary) {
         var _this = this;
         this.master = new Worker(masterUri);
-        this.jobCont = [];
+        this.jobCallback = [];
         this.master.onmessage = function (oEvent) {
-            if (_this.jobCont[oEvent.data.id])
-                _this.jobCont[oEvent.data.id](oEvent.data.evaluated);
-            delete _this.jobCont[oEvent.data.id];
+            if (_this.jobCallback[oEvent.data.id])
+                _this.jobCallback[oEvent.data.id](oEvent.data.evaluated);
+            delete _this.jobCallback[oEvent.data.id];
         };
         this.master.onerror = function (e) {
             throw "AsyncRuntime-Error: " + e;
@@ -22,27 +22,34 @@ var AsyncRuntime = (function () {
             "null"
         ]);
     }
-    AsyncRuntime.prototype.post = function (code, continuation) {
-        if (continuation === void 0) { continuation = function (_) {
+    AsyncRuntime.prototype.post = function (code, callback) {
+        if (callback === void 0) { callback = function (_) {
         }; }
         var codex = code.join(";");
-        this.jobCont.push(continuation);
+        this.jobCallback.push(callback);
         this.master.postMessage({
-            "id": this.jobCont.length - 1,
+            "id": this.jobCallback.length - 1,
             "code": codex
         });
     };
     AsyncRuntime.prototype.onDone = function (continuation) {
         this.post([], function (_) { return continuation(); });
     };
-    AsyncRuntime.prototype.compile = function (source, done) {
+    AsyncRuntime.prototype.compile = function (source, callback) {
         this.post(["app(d.pipe, s(" + JSON.stringify(source) + ")).asString()"], function (binary) {
             binary = binary.replace(/\.\s/g, ".").trim();
-            done(binary == "" ? null : binary);
+            callback(binary == "" ? null : binary);
         });
     };
-    AsyncRuntime.prototype.getNames = function (done) {
-        this.post(["rt.getNames()"], function (names) { return done(names); });
+    AsyncRuntime.prototype.eval = function (source, callback) {
+        this.post([
+            "temp = app(d.pipe, s(" + JSON.stringify("__probe = " + source) + ")).asString()",
+            "rt.define(temp.trim() == \"\" ? \"__probe ListEmpty.\" : temp)",
+            "d.__probe.asString()"
+        ], function (result) { return callback(result); });
+    };
+    AsyncRuntime.prototype.getNames = function (callback) {
+        this.post(["rt.getNames()"], function (names) { return callback(names); });
     };
     return AsyncRuntime;
 })();

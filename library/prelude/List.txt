@@ -1,4 +1,3 @@
-''' Type: List
 List = ListEmpty | ListCons head tail
 
 listAddFront = \tail \head ListCons head tail

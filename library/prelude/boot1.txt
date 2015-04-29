@@ -1,9 +1,4 @@
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-' LambAda prelude (the extra "A" is for extra awesomeness) '
-' Author: Johannes Bader                                   '
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-' define SKI in terms of U to enable abstraction killing 
+' SKI in terms of U to enable abstraction killing 
 ' for systems implementing ONLY U (how romantic!)
 
 i = u u

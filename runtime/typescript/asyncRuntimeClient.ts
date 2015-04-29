@@ -1,25 +1,25 @@
 ﻿class AsyncRuntime
 {
     private master: Worker;
-    private jobCont: ((result: any) => void)[];
+    private jobCallback: ((result: any) => void)[];
 
     public constructor(masterUri: string, binary: string)
     {
         this.master = new Worker(masterUri);
-        this.jobCont = [];
+        this.jobCallback = [];
 
         this.master.onmessage = oEvent =>
         {
-            if (this.jobCont[oEvent.data.id])
-                this.jobCont[oEvent.data.id](oEvent.data.evaluated);
-            delete this.jobCont[oEvent.data.id];
+            if (this.jobCallback[oEvent.data.id])
+                this.jobCallback[oEvent.data.id](oEvent.data.evaluated);
+            delete this.jobCallback[oEvent.data.id];
         };
         this.master.onerror = e => { throw "AsyncRuntime-Error: " + e; };
 
         // setup
         this.post([
                 "lrt = LambadaRuntime",
-                "rt = lrt.Runtime.create(" + JSON.stringify(binary) + ")", // DANGER
+                "rt = lrt.Runtime.create(" + JSON.stringify(binary) + ")",
                 "d = rt.defs",
                 "app = lrt.Expression.createApplicationx",
                 "s = lrt.ShortcutExpression.createString",
@@ -28,12 +28,12 @@
             ]);
     }
 
-    private post(code: string[], continuation: (result: any) => void = _ => { })
+    private post(code: string[], callback: (result: any) => void = _ => { })
     {
         var codex = code.join(";");
-        this.jobCont.push(continuation);
+        this.jobCallback.push(callback);
         this.master.postMessage({
-            "id": this.jobCont.length - 1,
+            "id": this.jobCallback.length - 1,
             "code": codex
         });
     }
@@ -43,18 +43,27 @@
         this.post([], _ => continuation());
     }
 
-    public compile(source: string, done: (binary: string) => void)
+    public compile(source: string, callback: (binary: string) => void)
     {
         this.post(["app(d.pipe, s(" + JSON.stringify(source) + ")).asString()"],(binary: string) =>
         {
             binary = binary.replace(/\.\s/g, ".").trim();
-            done(binary == "" ? null : binary);
+            callback(binary == "" ? null : binary);
         });
     }
 
-    public getNames(done: (names: string[]) => void)
+    public eval(source: string, callback: (result: string) => void)
     {
-        this.post(["rt.getNames()"],(names: string[]) => done(names));
+        this.post([
+            "temp = app(d.pipe, s(" + JSON.stringify("__probe = " + source) + ")).asString()",
+            "rt.define(temp.trim() == \"\" ? \"__probe ListEmpty.\" : temp)",
+            "d.__probe.asString()"],
+            (result: string) => callback(result));
+    }
+
+    public getNames(callback: (names: string[]) => void)
+    {
+        this.post(["rt.getNames()"],(names: string[]) => callback(names));
     }
 }
 

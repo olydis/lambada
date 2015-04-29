@@ -28,7 +28,6 @@ pre
     background: #202020;
     border-radius: 4px;
     padding: 10px;
-    margin: 0px;
     overflow: hidden;
 }
 pre.coll
@@ -95,6 +94,16 @@ a.sel
 {
     outline: 0px solid transparent; 
 }
+h1
+{
+    font-size: 40px;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-weight: normal;
+    color: #CCC;
+    font-family: sans-serif;
+}
+}
 
     </style>
     <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
@@ -107,6 +116,11 @@ a.sel
     </script>
   </head>
   <body id='body'>
+    <h1>Fun Area</h1>
+    <pre id='evalSrc'></pre>
+    <pre id='evalRes'></pre>
+    <h1>Compilation Area</h1>
+    <table id='table'></table>
     <pre id='target' style='word-wrap: break-word; margin: 20px;'></pre>
   </body>
 </html>

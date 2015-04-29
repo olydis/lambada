@@ -1,3 +1,8 @@
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' LambAda prelude (the extra "A" is for extra awesomeness) '
+' Author: Johannes Bader                                   '
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 prelude/boot1.txt
 prelude/boot2.txt
 prelude/Bool.txt
@@ -7,6 +12,6 @@ prelude/List.txt
 prelude/String.txt
 prelude/Maybe.txt
 prelude/_remain.txt
-prelude/compiler.txt
+prelude/compiler/compiler.txt
 prelude/_tests.txt
 'prelude/_scratch.txt

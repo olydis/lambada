@@ -1,13 +1,12 @@
 ' SKI combinatours redefined via abstractions
 
+
 i = \x x
 k = \a \b a
 s = \a \b \c a c (b c)
 
-' few more combinators
 b = \a \b \c a (b c)
 c = \a \b \c a c b
 m = \x x x
 
-' fixed point
 y = \f m (\x f (x x))

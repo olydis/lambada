@@ -14,7 +14,6 @@ function setCaret(range: Range)
 class IntelliHTML
 {
     private pre: JQuery;
-    private preNative: HTMLPreElement;
 
     private codeStyled: JQuery;
     private codeStyledNative: HTMLPhraseElement;
@@ -35,15 +34,13 @@ class IntelliHTML
     
     private lastACitem: string = "";
 
-    public constructor(onTextChanged: (text: string) => void, getACitems: () => string[])
+    public constructor(onTextChanged: (text: string) => void, getACitems: () => string[], pre: JQuery = $("<pre>"))
     {
         this.onTextChanged = onTextChanged;
         this.getACitems = getACitems;
 
-        this.preNative = document.createElement("pre");
-        this.pre = $(this.preNative);
+        this.pre = pre;
         this.pre.css("cursor", "text");
-        this.pre.css("margin", "0px");
 
         this.codeNative = document.createElement("code");
         this.code = $(this.codeNative);

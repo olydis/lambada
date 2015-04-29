@@ -303,8 +303,9 @@ var LambadaRuntime;
                     stack.push(Runtime.maybeNothing);
             });
             this.defs = {};
+            this.rodefs = {};
             var def = function (name, expr) {
-                _this.defs[name] = new AliasExpression(name, expr);
+                _this.defs[name] = _this.rodefs[name] = new AliasExpression(name, expr);
             };
             def("u", new BuiltinExpression(1, function (stack) {
                 var x = stack.pop();
@@ -411,13 +412,12 @@ var LambadaRuntime;
                         throw "undefined reference: " + defRef + " (" + reader.toString() + ")";
                     expressionStack.push(def);
                 }
-                if (this.defs[name] == undefined) {
-                    var content = expressionStack.pop();
-                    //console.log(name + " = " + content.toString());
+                var content = expressionStack.pop();
+                //console.log(name + " = " + content.toString());
+                if (this.rodefs[name] == undefined)
                     this.defs[name] = (function (content) {
                         return new AliasExpression(name, content);
                     })(content);
-                }
                 // end parse definition
                 reader.readWhitespace();
             }

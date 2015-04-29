@@ -1,5 +1,5 @@
-''' Type: Bool
 Bool = True | False
+
 if = i
 not = \b b False True
 

@@ -8,15 +8,14 @@ function setCaret(range) {
     sel.addRange(range);
 }
 var IntelliHTML = (function () {
-    function IntelliHTML(onTextChanged, getACitems) {
+    function IntelliHTML(onTextChanged, getACitems, pre) {
         var _this = this;
+        if (pre === void 0) { pre = $("<pre>"); }
         this.lastACitem = "";
         this.onTextChanged = onTextChanged;
         this.getACitems = getACitems;
-        this.preNative = document.createElement("pre");
-        this.pre = $(this.preNative);
+        this.pre = pre;
         this.pre.css("cursor", "text");
-        this.pre.css("margin", "0px");
         this.codeNative = document.createElement("code");
         this.code = $(this.codeNative);
         var wrapCode = $("<div>");

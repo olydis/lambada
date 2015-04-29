@@ -353,6 +353,7 @@ module LambadaRuntime
             return rt;
         }
 
+        private rodefs: { [name: string]: ExpressionBase };
         private defs: { [name: string]: ExpressionBase };
 
         public constructor()
@@ -367,10 +368,11 @@ module LambadaRuntime
             });
 
             this.defs = {};
+            this.rodefs = {};
 
             var def = (name: string, expr: ExpressionBase) =>
             {
-                this.defs[name] = new AliasExpression(name, expr);
+                this.defs[name] = this.rodefs[name] = new AliasExpression(name, expr);
             };
 
             def("u", new BuiltinExpression(1, stack =>
@@ -508,15 +510,13 @@ module LambadaRuntime
                     expressionStack.push(def);
                 }
 
-                if (this.defs[name] == undefined)
-                {
-                    var content = expressionStack.pop();
-                    //console.log(name + " = " + content.toString());
+                var content = expressionStack.pop();
+                //console.log(name + " = " + content.toString());
+                if (this.rodefs[name] == undefined)
                     this.defs[name] = (function (content: ExpressionBase)
                     {
                         return new AliasExpression(name, content);
                     })(content);
-                }
                 // end parse definition
 
                 reader.readWhitespace();

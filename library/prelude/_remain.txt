@@ -161,7 +161,10 @@ idfHandleX = \idf \xs foldl xs (Pair idf ListEmpty) (\pair \x (\res Pair (fst re
 idfCount = mapCount
 
 ' list ex
-listDistinct = \l \eq snd (foldl l (Pair (idfCreate eq) ListEmpty) (\pair \x (\res Pair (fst res) (if(isEQ (snd res) (idfCount (fst pair))) (listAddBack (snd pair) x) (snd pair))) (idfHandle (fst pair) x)))
+listDistinct = \l \eq snd (foldl 
+    l 
+    (Pair (idfCreate eq) ListEmpty) 
+    (\pair \x pair (\pf \ps \res Pair (fst res) (if(isEQ (snd res) (idfCount pf)) (listAddBack ps x) ps)) (idfHandle (fst pair) x)))
 
 ' temp art addin
 newLine = strReturn 10

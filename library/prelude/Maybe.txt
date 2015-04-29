@@ -1,4 +1,3 @@
-' maybe
 Maybe = Just x | Nothing
 
 maybeReturn = Just
@@ -12,3 +11,8 @@ maybeBind = \m \f m f Nothing
 maybeMap = \m \f m (b Just f) Nothing
 maybeAlternative = \m \a m (k m) a
 maybeTryGetValue = \m \a m i a
+
+
+_listIndexOfPred = \l \f \offset l Nothing (\head \tail if(f head) (Just offset) (_listIndexOfPred tail f (Succ offset)))
+listIndexOfPred = \l \f _listIndexOfPred l f 0
+listIndexOf = \l \eq \x listIndexOfPred l (eq x)

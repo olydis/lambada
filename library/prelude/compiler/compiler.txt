@@ -2,13 +2,6 @@
 ' COMPILER SECTION '
 '------------------'
 
-
-
-_listIndexOfPred = \l \f \offset l Nothing (\head \tail if(f head) (Just offset) (_listIndexOfPred tail f (Succ offset)))
-listIndexOfPred = \l \f _listIndexOfPred l f 0
-listIndexOf = \l \eq \x listIndexOfPred l (eq x)
-
-
 '''''' TYPING
 
 ' TYPES
@@ -241,6 +234,7 @@ _eCharComma = strHead ","
 _eCharAbstr = strHead "\"
 _eCharOr = strHead "|"
 _eCharAnd = strHead "&"
+_eCharDollar = strHead "$"
 _eCharAssign = 61
 _eCharComment = 39
 _eStrColon = strReturn 58
@@ -259,8 +253,9 @@ Schar = ScharParenOpen
       | ScharSqBracketClose
       | ScharComma
       | ScharSingleOr
+      | ScharDollar
 
-scharID = \s s 0 1 2 3 4 5 6 7
+scharID = \s s 0 1 2 3 4 5 6 7 8
 scharEQ = \a \b isEQ (scharID a) (scharID b)
 
 schar_String = \x x
@@ -272,6 +267,7 @@ schar_String = \x x
         "<SQBR_CLOSE>"
         "<COMMA>"
         "<SINGLE_OR>"
+        "<DOLLAR>"
 
 ' tokens
 Token = TokenSpecialChar schar      ' schar
@@ -301,6 +297,7 @@ eatComma            = parseBindOperation (parseChar _eCharComma)     (k (TokenSp
 eatAbstraction      = parseBindOperation (parseChar _eCharAbstr)     (k (TokenSpecialChar ScharAbstraction))
 eatAssign           = parseBindOperation (parseChar _eCharAssign)    (k (TokenSpecialChar ScharAssign))
 eatSingleOr         = parseBindOperation (parseChar _eCharOr)        (k (TokenSpecialChar ScharSingleOr))
+eatDollar           = parseBindOperation (parseChar _eCharDollar)    (k (TokenSpecialChar ScharDollar))
 
 eatLiteral = parseBindOperation parseToken (\x tokenLiteral x)
 eatConstS  = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\x TokenConstS x)
@@ -316,7 +313,8 @@ eatSpecialChar = parseOptions
                 eatSqBracketOpen, 
                 eatSqBracketClose, 
                 eatComma,
-                eatSingleOr
+                eatSingleOr,
+                eatDollar
             ]
 eatSomething = parseWithWhitespace
         (parseOptions 
@@ -368,7 +366,7 @@ syntax_String = y(\this \x
 syntax_String_list = \xs strJoin (listMap xs syntax_String) "; "
 
 ' B :=  lit=E | \lit E | lit | constS | constN | (E) | comment | [E*]   'return [Syntax]
-' E :=  app  :=  B*                                                     'return Syntax
+' E :=  app  :=  B* | B* $ E                                            'return Syntax
 
 
 cstrParseAbstractionTail = \e 
@@ -403,6 +401,7 @@ cstrParseCloseSqBr = cstrParseSChar ScharSqBracketClose
 cstrParseComma = cstrParseSChar ScharComma
 cstrParseAssign = cstrParseSChar ScharAssign
 cstrParseSingleOr = cstrParseSChar ScharSingleOr
+cstrParseDollar = cstrParseSChar ScharDollar
 
         
 cstrParseListTail = \e parseBindDiscard 
@@ -452,6 +451,7 @@ cstrSyntaxSingle = \e
                 parseFail
                 parseFail
                 parseFail
+                parseFail
             )
             (\literal 
                 parseOption
@@ -476,11 +476,18 @@ cstrSyntaxApplication = \e
                                 (\ops 
                                     if(listIsEmpty ops) 
                                     parseFail
-                                    (parseReturn
-                                        (foldl 
-                                            (listTail ops) 
-                                            (listHead ops) 
-                                            (\x \y SyntaxApplication x y)))
+                                    (parseBindOperation
+                                        (parseOption
+                                            (parseBindOperation (parseBindOverride cstrParseDollar e) listReturn)
+                                            (parseReturn ListEmpty)
+                                        )
+                                        (\tail
+                                            (\ops foldl
+                                                (listTail ops) 
+                                                (listHead ops) 
+                                                (\x \y SyntaxApplication x y))
+                                            (listConcat ops tail))
+                                    )
                                 ) (listBind list i)
                             )
 

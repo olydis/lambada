@@ -87,7 +87,7 @@ $(function () {
                     $("#target").addClass("error");
                 }
             };
-            var table = $("<table>");
+            var table = $("#table");
             sources.forEach(function (src, i) {
                 var tr = $("<tr>").appendTo(table);
                 var td1 = $("<td>").appendTo(tr);
@@ -112,14 +112,11 @@ $(function () {
                     });
                 }, function () { return names; });
                 intelliElem.text = src;
-                td1.append(intelliElem.element.addClass("coll").dblclick(function (eo) { return intelliElem.element.removeClass("coll"); }));
+                td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(function (eo) { return intelliElem.element.removeClass("coll"); }));
             });
-            //var intelliElem = new IntelliHTML(text => $("#target").text(app(d["pipe"], s(text)).asString()));
-            //var elem = intelliElem.element;
-            //elem.height(512);
-            //$("body").prepend(elem);
-            //intelliElem.focus();
-            $("body").prepend(table);
+            // EVAL PAD
+            var evalPad = new IntelliHTML(function (text) { return rt.eval(text, function (res) { return $("#evalRes").text(res); }); }, function () { return names; }, $("#evalSrc").css("min-height", "15px"));
+            evalPad.focus();
         });
     });
 });
