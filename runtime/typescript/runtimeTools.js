@@ -1,10 +1,12 @@
 /// <reference path="jquery.d.ts" />
 /// <reference path="asyncRuntimeClient.ts" />
 /// <reference path="IntelliHTML.ts" />
+var libraryPath;
+var runtimePath;
 var rtClean;
 var names;
 function init(binary) {
-    rtClean = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
+    rtClean = new AsyncRuntime(runtimePath + "asyncRuntimeServer.js", binary);
     rtClean.getNames(function (res) { return names = res; });
     rtClean.onDone(function () { return console.log("Loaded binary (" + binary.length + " bytes)."); });
     rtClean.autoClose();
@@ -52,12 +54,12 @@ function statusUpdate(message, status, binary) {
         js.append($("<a>").text("download binary").click(function () { return window.open("data:;base64," + btoa(binary)); }));
 }
 $(function () {
-    var gPN = $.get("library/prelude.native.txt", undefined, "text");
-    var gP = $.get("library/prelude.txt", undefined, "text");
+    var gPN = $.get(libraryPath + "prelude.native.txt", undefined, "text");
+    var gP = $.get(libraryPath + "prelude.txt", undefined, "text");
     $.when(gPN, gP).done(function (binary, source) {
         init(binary[0]);
         var preludeParts = source[0].split("\n").map(function (l) { return l.trim(); }).filter(function (l) { return l != "" && l.charAt(0) != "'"; });
-        var gPSs = preludeParts.map(function (l) { return $.get("library/" + l, undefined, "text"); });
+        var gPSs = preludeParts.map(function (l) { return $.get(libraryPath + l, undefined, "text"); });
         $.when.apply($, gPSs).done(function () {
             var sources = [];
             gPSs.forEach(function (x) { return sources.push(x.responseText); });
@@ -162,7 +164,7 @@ $(function () {
             }, function () { return names; }, $("#evalSrc").css("min-height", "15px"));
             evalPad.text = localStorage.getItem("fun") || "reverse $ listDistinct \"Hallo Welt\" isEQ";
             evalPad.focus();
-            $.get("library/samples.txt", function (data) {
+            $.get(libraryPath + "samples.txt", function (data) {
                 var sSpan = $("#samples");
                 data.split("---").forEach(function (str) {
                     var parts = str.split("--");

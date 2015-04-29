@@ -2,12 +2,15 @@
 /// <reference path="asyncRuntimeClient.ts" />
 /// <reference path="IntelliHTML.ts" />
 
+var libraryPath: string;
+var runtimePath: string;
+
 var rtClean: AsyncRuntime;
 var names: string[];
 
 function init(binary: string) 
 {
-    rtClean = new AsyncRuntime("runtime/typescript/asyncRuntimeServer.js", binary);
+    rtClean = new AsyncRuntime(runtimePath + "asyncRuntimeServer.js", binary);
     rtClean.getNames(res => names = res);
     rtClean.onDone(() => console.log("Loaded binary (" + binary.length + " bytes)."));
     rtClean.autoClose();
@@ -69,8 +72,8 @@ function statusUpdate(message: string, status: string = null, binary: string = n
 
 $(function () 
 {
-    var gPN = $.get("library/prelude.native.txt", undefined, "text");
-    var gP = $.get("library/prelude.txt", undefined, "text");
+    var gPN = $.get(libraryPath + "prelude.native.txt", undefined, "text");
+    var gP = $.get(libraryPath + "prelude.txt", undefined, "text");
 
     $.when(gPN, gP).done((binary: [string, string, any], source: [string, string, any]) =>
     {
@@ -80,7 +83,7 @@ $(function ()
             .split("\n")
             .map(l => l.trim())
             .filter(l => l != "" && l.charAt(0) != "'");
-        var gPSs = preludeParts.map(l => $.get("library/" + l, undefined, "text"));
+        var gPSs = preludeParts.map(l => $.get(libraryPath + l, undefined, "text"));
         $.when.apply($, gPSs).done(() =>
         {
             var sources: string[] = [];
@@ -224,7 +227,7 @@ $(function ()
             evalPad.text = localStorage.getItem("fun") || "reverse $ listDistinct \"Hallo Welt\" isEQ";
             evalPad.focus();
 
-            $.get("library/samples.txt",(data: string) =>
+            $.get(libraryPath + "samples.txt",(data: string) =>
             {
                 var sSpan = $("#samples");
                 data.split("---").forEach(str =>
