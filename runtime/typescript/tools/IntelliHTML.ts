@@ -16,10 +16,10 @@ class IntelliHTML
     private pre: JQuery;
 
     private codeStyled: JQuery;
-    private codeStyledNative: HTMLPhraseElement;
+    private codeStyledNative: HTMLElement;
 
     private code: JQuery;
-    private codeNative: HTMLPhraseElement;
+    private codeNative: HTMLElement;
 
     private acSpan: JQuery;
     private acSpanNative: HTMLSpanElement;
@@ -42,7 +42,7 @@ class IntelliHTML
         this.pre = pre;
         this.pre.css("cursor", "text");
 
-        this.codeNative = document.createElement("code");
+        this.codeNative = document.createElement("p");
         this.code = $(this.codeNative);
         var wrapCode = $("<div>");
         //wrapCode.css("height", "0px");
@@ -125,7 +125,7 @@ class IntelliHTML
         });
         this.pre.click(eo => this.code.focus());
 
-        this.codeStyledNative = document.createElement("code");
+        this.codeStyledNative = document.createElement("p");
         this.codeStyled = $(this.codeStyledNative);
         this.codeStyled.appendTo(this.pre);
         var wrapCodeStyled = $("<div>");

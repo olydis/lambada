@@ -16,7 +16,7 @@ var IntelliHTML = (function () {
         this.getACitems = getACitems;
         this.pre = pre;
         this.pre.css("cursor", "text");
-        this.codeNative = document.createElement("code");
+        this.codeNative = document.createElement("p");
         this.code = $(this.codeNative);
         var wrapCode = $("<div>");
         //wrapCode.css("height", "0px");
@@ -87,7 +87,7 @@ var IntelliHTML = (function () {
             _this.showAC();
         });
         this.pre.click(function (eo) { return _this.code.focus(); });
-        this.codeStyledNative = document.createElement("code");
+        this.codeStyledNative = document.createElement("p");
         this.codeStyled = $(this.codeStyledNative);
         this.codeStyled.appendTo(this.pre);
         var wrapCodeStyled = $("<div>");
