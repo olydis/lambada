@@ -76,11 +76,11 @@ $(function ()
     {
         init(binary[0]);
 
-        var gPSs = source[0]
+        var preludeParts = source[0]
             .split("\n")
             .map(l => l.trim())
-            .filter(l => l != "" && l.charAt(0) != "'")
-            .map(l => $.get("library/" + l, undefined, "text"));
+            .filter(l => l != "" && l.charAt(0) != "'");
+        var gPSs = preludeParts.map(l => $.get("library/" + l, undefined, "text"));
         $.when.apply($, gPSs).done(() =>
         {
             var sources: string[] = [];
@@ -91,11 +91,13 @@ $(function ()
             var binaryBuffer: string[] = Array<string>(sources.length).map(x => null);
 
             var d1 = new Date().getTime();
+            var detailStats: string[] = [];
             var binaryUpdate = () =>
             {
                 if (binaryBuffer.some(x => x == null))
                 {
-                    statusUpdate("compiling " + binaryBuffer.map(x => x == null ? "-" : "#").join(""));
+                    statusUpdate("compiling " + binaryBuffer.map(x => x == null ? "-" : "#").join("")
+                        + "\n\n" + detailStats.join("\n"));
                     return;
                 }
 
@@ -122,7 +124,8 @@ $(function ()
                     //});
                     var d2 = new Date().getTime();
                     var compMS = d2 - d1;
-                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)", null, result);
+                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)"
+                        + "\n\n" + detailStats.join("\n"), null, result);
                 }
                 catch (e)
                 {
@@ -133,8 +136,10 @@ $(function ()
             var rtCompilePrelude = rtClean.clone();
 
             var table = $("#table");
+            var dc1 = new Date().getTime();
             sources.forEach((src, i) => 
             {
+                detailStats[i] = "    " + preludeParts[i] + ": ";
                 var tr = $("<tr>").appendTo(table);
                 var td1 = $("<td>").appendTo(tr);
                 var td2 = $("<td>");//.appendTo(tr);
@@ -156,6 +161,13 @@ $(function ()
                         var bin = partBuffers.some(x => x == null) ? null : partBuffers.join("");
                         binaryBuffer[i] = bin;
                         target.text(bin);
+
+                        if (bin != null)
+                        {
+                            var dc2 = new Date().getTime();
+                            detailStats[i] += (dc2 - dc1).toString() + "ms";
+                            dc1 = dc2;
+                        }
 
                         intelliElem.element.removeClass("dirty error");
                         if (bin == null)

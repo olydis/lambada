@@ -56,16 +56,18 @@ $(function () {
     var gP = $.get("library/prelude.txt", undefined, "text");
     $.when(gPN, gP).done(function (binary, source) {
         init(binary[0]);
-        var gPSs = source[0].split("\n").map(function (l) { return l.trim(); }).filter(function (l) { return l != "" && l.charAt(0) != "'"; }).map(function (l) { return $.get("library/" + l, undefined, "text"); });
+        var preludeParts = source[0].split("\n").map(function (l) { return l.trim(); }).filter(function (l) { return l != "" && l.charAt(0) != "'"; });
+        var gPSs = preludeParts.map(function (l) { return $.get("library/" + l, undefined, "text"); });
         $.when.apply($, gPSs).done(function () {
             var sources = [];
             gPSs.forEach(function (x) { return sources.push(x.responseText); });
             // layout
             var binaryBuffer = Array(sources.length).map(function (x) { return null; });
             var d1 = new Date().getTime();
+            var detailStats = [];
             var binaryUpdate = function () {
                 if (binaryBuffer.some(function (x) { return x == null; })) {
-                    statusUpdate("compiling " + binaryBuffer.map(function (x) { return x == null ? "-" : "#"; }).join(""));
+                    statusUpdate("compiling " + binaryBuffer.map(function (x) { return x == null ? "-" : "#"; }).join("") + "\n\n" + detailStats.join("\n"));
                     return;
                 }
                 var result = binaryBuffer.join("");
@@ -88,7 +90,7 @@ $(function () {
                     //});
                     var d2 = new Date().getTime();
                     var compMS = d2 - d1;
-                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)", null, result);
+                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)" + "\n\n" + detailStats.join("\n"), null, result);
                 }
                 catch (e) {
                     statusUpdate(e, "error");
@@ -96,7 +98,9 @@ $(function () {
             };
             var rtCompilePrelude = rtClean.clone();
             var table = $("#table");
+            var dc1 = new Date().getTime();
             sources.forEach(function (src, i) {
+                detailStats[i] = "    " + preludeParts[i] + ": ";
                 var tr = $("<tr>").appendTo(table);
                 var td1 = $("<td>").appendTo(tr);
                 var td2 = $("<td>"); //.appendTo(tr);
@@ -113,6 +117,11 @@ $(function () {
                         var bin = partBuffers.some(function (x) { return x == null; }) ? null : partBuffers.join("");
                         binaryBuffer[i] = bin;
                         target.text(bin);
+                        if (bin != null) {
+                            var dc2 = new Date().getTime();
+                            detailStats[i] += (dc2 - dc1).toString() + "ms";
+                            dc1 = dc2;
+                        }
                         intelliElem.element.removeClass("dirty error");
                         if (bin == null)
                             intelliElem.element.addClass("error");
