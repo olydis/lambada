@@ -203,7 +203,7 @@ class IntelliHTML
             jq => jq.css("opacity", ".7"));
         // number
         format(/\b[0-9]+\b/g,
-            jq => jq.css("color", "hsl(100, 80%, 90%)"));
+            jq => jq.css("color", "hsl(100, 80%, 80%)"));
         // ctors
         format(/\b[A-Z][_a-zA-Z0-9']*\b/g,
             jq => jq.css("color", "hsl(350, 60%, 80%)"));

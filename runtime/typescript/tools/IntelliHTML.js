@@ -159,7 +159,7 @@ var IntelliHTML = (function () {
         // punctuation
         format(/[\[\]\(\),=]/g, function (jq) { return jq.css("opacity", ".7"); });
         // number
-        format(/\b[0-9]+\b/g, function (jq) { return jq.css("color", "hsl(100, 80%, 90%)"); });
+        format(/\b[0-9]+\b/g, function (jq) { return jq.css("color", "hsl(100, 80%, 80%)"); });
         // ctors
         format(/\b[A-Z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(350, 60%, 80%)"); });
         // refs
