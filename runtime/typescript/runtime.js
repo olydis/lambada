@@ -6,6 +6,39 @@ var __extends = this.__extends || function (d, b) {
 };
 var LambadaRuntime;
 (function (LambadaRuntime) {
+    var _perfAppCountX = 0;
+    var _perfAppCount = 0;
+    var _perfAllocCountX = 0;
+    var _perfAllocCount = 0;
+    function _perfReset() {
+        _perfAppCountX = _perfAppCount = 0;
+        _perfAllocCountX = _perfAllocCount = 0;
+    }
+    LambadaRuntime._perfReset = _perfReset;
+    function _perfApp() {
+        _perfAppCount++;
+        if (_perfAppCount == 1000000 * 10) {
+            _perfAppCount = 0;
+            _perfAppCountX++;
+            _perfCheck();
+            console.warn("APP (" + _perfAppCountX + "): " + self.uid || "n/a");
+        }
+    }
+    function _perfAlloc() {
+        _perfAllocCount++;
+        if (_perfAllocCount == 1000000) {
+            _perfAllocCount = 0;
+            _perfAllocCountX++;
+            _perfCheck();
+            console.warn("ALLOC (" + _perfAllocCountX + "): " + self.uid || "n/a");
+        }
+    }
+    function _perfCheck() {
+        if (_perfAppCountX > 10)
+            throw "ERR_APP_THRESH: possible infinite loop";
+        if (_perfAllocCountX > 5)
+            throw "ERR_ALLOC_THRESH: possible infinite loop";
+    }
     var StringReader = (function () {
         function StringReader(str) {
             this.str = str;
@@ -118,6 +151,8 @@ var LambadaRuntime;
             this.applyTo = applyTo;
         }
         BuiltinExpression.prototype.apply = function (stack) {
+            // PERF
+            _perfApp();
             if (stack.length >= this.arity) {
                 this.applyTo(stack);
                 return true;
@@ -159,6 +194,8 @@ var LambadaRuntime;
             _super.call(this);
             this.hnf = false;
             this.stack = [];
+            // PERF
+            _perfAlloc();
         }
         Expression.createADTo = function (arity, index) {
             var args = [];
@@ -304,8 +341,11 @@ var LambadaRuntime;
             });
             this.defs = {};
             this.rodefs = {};
-            var def = function (name, expr) {
-                _this.defs[name] = _this.rodefs[name] = new AliasExpression(name, expr);
+            var def = function (name, expr, predefine) {
+                if (predefine === void 0) { predefine = false; }
+                _this.rodefs[name] = new AliasExpression(name, expr);
+                if (predefine)
+                    _this.defs[name] = _this.rodefs[name];
             };
             def("u", new BuiltinExpression(1, function (stack) {
                 var x = stack.pop();
@@ -323,7 +363,7 @@ var LambadaRuntime;
                     stack.push(a);
                 }));
                 stack.push(x);
-            }));
+            }), true);
             def("i", new BuiltinExpression(0));
             def("k", new BuiltinExpression(2, function (stack) {
                 var x = stack.pop();
@@ -418,6 +458,8 @@ var LambadaRuntime;
                     this.defs[name] = (function (content) {
                         return new AliasExpression(name, content);
                     })(content);
+                else
+                    this.defs[name] = this.rodefs[name];
                 // end parse definition
                 reader.readWhitespace();
             }

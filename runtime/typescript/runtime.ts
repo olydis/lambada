@@ -1,5 +1,47 @@
 module LambadaRuntime
 {
+    var _perfAppCountX: number = 0;
+    var _perfAppCount: number = 0;
+    var _perfAllocCountX: number = 0;
+    var _perfAllocCount: number = 0;
+
+    export function _perfReset()
+    {
+        _perfAppCountX = _perfAppCount = 0;
+        _perfAllocCountX = _perfAllocCount = 0;
+    }
+
+    function _perfApp()
+    {
+        _perfAppCount++;
+        if (_perfAppCount == 1000000 * 10)
+        {
+            _perfAppCount = 0;
+            _perfAppCountX++;
+            _perfCheck();
+            console.warn("APP (" + _perfAppCountX + "): " + (<any>self).uid || "n/a");
+        }
+    }
+    function _perfAlloc()
+    {
+        _perfAllocCount++;
+        if (_perfAllocCount == 1000000)
+        {
+            _perfAllocCount = 0;
+            _perfAllocCountX++;
+            _perfCheck();
+            console.warn("ALLOC (" + _perfAllocCountX + "): " + (<any>self).uid || "n/a");
+        }
+    }
+
+    function _perfCheck()
+    {
+        if (_perfAppCountX > 10)
+            throw "ERR_APP_THRESH: possible infinite loop";
+        if (_perfAllocCountX > 5)
+            throw "ERR_ALLOC_THRESH: possible infinite loop";
+    }
+
     class StringReader
     {
         private index: number;
@@ -141,6 +183,9 @@ module LambadaRuntime
 
         public apply(stack: ExpressionBase[]): boolean
         {
+            // PERF
+            _perfApp();
+
             if (stack.length >= this.arity)
             {
                 this.applyTo(stack);
@@ -213,6 +258,9 @@ module LambadaRuntime
         {
             super();
             this.stack = [];
+
+            // PERF
+            _perfAlloc();
         }
 
         public apply(stack: ExpressionBase[]): boolean
@@ -370,9 +418,11 @@ module LambadaRuntime
             this.defs = {};
             this.rodefs = {};
 
-            var def = (name: string, expr: ExpressionBase) =>
+            var def = (name: string, expr: ExpressionBase, predefine: boolean = false) =>
             {
-                this.defs[name] = this.rodefs[name] = new AliasExpression(name, expr);
+                this.rodefs[name] = new AliasExpression(name, expr);
+                if (predefine)
+                    this.defs[name] = this.rodefs[name];
             };
 
             def("u", new BuiltinExpression(1, stack =>
@@ -394,7 +444,7 @@ module LambadaRuntime
                     stack.push(a);
                 }));
                 stack.push(x);
-            }));
+            }), true);
 
             def("i", new BuiltinExpression(0));
             def("k", new BuiltinExpression(2, stack =>
@@ -517,6 +567,8 @@ module LambadaRuntime
                     {
                         return new AliasExpression(name, content);
                     })(content);
+                else
+                    this.defs[name] = this.rodefs[name];
                 // end parse definition
 
                 reader.readWhitespace();
