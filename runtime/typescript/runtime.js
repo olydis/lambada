@@ -409,7 +409,7 @@ var LambadaRuntime;
                     var defRef = reader.readToken();
                     var def = this.defs[defRef];
                     if (def == undefined)
-                        throw "undefined reference: " + defRef + " (" + reader.toString() + ")";
+                        throw "unresolved reference: " + defRef;
                     expressionStack.push(def);
                 }
                 var content = expressionStack.pop();

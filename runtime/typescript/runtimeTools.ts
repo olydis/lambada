@@ -55,6 +55,19 @@ function bsearch(x: string, xs: string[]): number
     return s + 1;
 }
 
+function statusUpdate(message: string, status: string = null, binary: string = null)
+{
+    var js = $("#status");
+    js.text("Status: " + message + "\n\n");
+    js.off("click");
+    js.removeClass("dirty error");
+    if (status != null)
+        js.addClass(status);
+
+    if (binary != null)
+        js.append($("<a>").text("download binary").css("cursor", "pointer").click(() => window.open("data:;base64," + btoa(binary))));
+}
+
 $(function () 
 {
     var gPN = $.get("library/prelude.native.txt", undefined, "text");
@@ -78,19 +91,18 @@ $(function ()
 
             var binaryBuffer: string[] = Array<string>(sources.length).map(x => null);
 
-            var printPrelude = () =>
+            var binaryUpdate = () =>
             {
-                $("#target").removeClass("dirty error");
                 if (binaryBuffer.some(x => x == null))
                 {
-                    $("#target").text("no binary ready");
+                    statusUpdate("no binary available (yet)");
                     return;
                 }
 
                 var result = binaryBuffer.join("");
-                $("#target").text(result);
-                $("#target").addClass("dirty");
-
+                // CLICK ON
+                statusUpdate("testing binary", "dirty");
+                
                 // TEST BINARY
                 try
                 {
@@ -108,13 +120,11 @@ $(function ()
                     //            throw prop + " failed";
                     //    }
                     //});
-                    $("#target").removeClass("dirty error");
+                    statusUpdate("binary ready and healthy (" + result.length + " bytes)", null, result);
                 }
                 catch (e)
                 {
-                    $("#target").text(e);
-                    $("#target").removeClass("dirty error");
-                    $("#target").addClass("error");
+                    statusUpdate(e, "error");
                 }
             };
 
@@ -131,7 +141,7 @@ $(function ()
                     intelliElem.element.removeClass("dirty error");
                     intelliElem.element.addClass("dirty");
                     binaryBuffer[i] = null;
-                    printPrelude();
+                    binaryUpdate();
                     
                     var parts = splitSources(text);
                     var partBuffers: string[] = [];
@@ -147,7 +157,7 @@ $(function ()
                         if (bin == null)
                             intelliElem.element.addClass("error");
 
-                        printPrelude();
+                        binaryUpdate();
                     });
                 },() => names);
                 intelliElem.text = src;
@@ -156,13 +166,17 @@ $(function ()
 
             // EVAL PAD
 
+            var safeString = (s: string) => "[" + s.split("").map(x => x.charCodeAt(0).toString()).join(",") + "]";
+
             var evalPad = new IntelliHTML(text => 
             {
+                localStorage.setItem("fun", text);
                 rt2.compile(text,
                     binary => rt2.eval(binary, res => $("#evalRes").text(res)));
-                rt2.compile("fullDebug " + JSON.stringify(text),
+                rt2.compile("fullDebug " + safeString(text),
                     binary => rt2.eval(binary, res => $("#evalDebug").text(res)));
-            }, () => names, $("#evalSrc").css("min-height", "15px"));
+            },() => names, $("#evalSrc").css("min-height", "15px"));
+            evalPad.text = localStorage.getItem("fun") || "reverse $ listDistinct \"Hallo Welt\" isEQ";
             evalPad.focus();
         });
     });
