@@ -11,7 +11,7 @@ prelude/Pair.txt
 prelude/List.txt
 prelude/String.txt
 prelude/Maybe.txt
-prelude/_remain.txt
+prelude/remain.txt
 prelude/compiler/compiler.txt
-prelude/_tests.txt
-'prelude/_scratch.txt
+prelude/tests.txt
+'prelude/scratch.txt
