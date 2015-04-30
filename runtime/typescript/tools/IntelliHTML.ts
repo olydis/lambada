@@ -182,10 +182,11 @@ class IntelliHTML
     }
     private updateHighlight(text: string)
     {
+        return;
         var saveCaret = this.caretIndex(this.caretPosition);
 
         // clear all formatting
-        this.code.text(text);
+        //this.code.text(text);
         
         // format
         var format = (regex: RegExp, formatter: (jq: JQuery) => void) =>
@@ -220,7 +221,7 @@ class IntelliHTML
             jq => jq.css("color", "hsl(20, 70%, 70%)"));
         // comment
         format(/\'.*/g,
-            jq => jq.css("color", "hsl(100, 50%, 55%)"));
+            jq => jq.css("color", "hsl(100, 50%, 55%)").css("font-style", "italic"));
 
 
         // restore caret
@@ -265,19 +266,6 @@ class IntelliHTML
 
     private showAC(moveSelection: number = 0)
     {
-        // normalize HTML
-        var html = this.code.html();
-        var html2 = html.replace(/\<br\>/gi, '\n');
-        if (html != html2)
-        {
-            var range = this.caretPosition;
-            var pos = this.caretIndex(range);
-            this.code.html(html2);
-            range.setStart(this.codeNative.firstChild, pos + 1);
-            setCaret(range);
-            return;
-        }
-
         var codeText = this.text;
         
         // hide ac

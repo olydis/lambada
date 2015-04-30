@@ -145,9 +145,10 @@ var IntelliHTML = (function () {
     };
     IntelliHTML.prototype.updateHighlight = function (text) {
         var _this = this;
+        return;
         var saveCaret = this.caretIndex(this.caretPosition);
         // clear all formatting
-        this.code.text(text);
+        //this.code.text(text);
         // format
         var format = function (regex, formatter) {
             var match;
@@ -170,7 +171,7 @@ var IntelliHTML = (function () {
         // string
         format(/"[^"]*"/g, function (jq) { return jq.css("color", "hsl(20, 70%, 70%)"); });
         // comment
-        format(/\'.*/g, function (jq) { return jq.css("color", "hsl(100, 50%, 55%)"); });
+        format(/\'.*/g, function (jq) { return jq.css("color", "hsl(100, 50%, 55%)").css("font-style", "italic"); });
         // restore caret
         var loc = this.traceIndex(saveCaret, this.codeNative);
         var range = document.createRange();
@@ -210,17 +211,6 @@ var IntelliHTML = (function () {
     IntelliHTML.prototype.showAC = function (moveSelection) {
         var _this = this;
         if (moveSelection === void 0) { moveSelection = 0; }
-        // normalize HTML
-        var html = this.code.html();
-        var html2 = html.replace(/\<br\>/gi, '\n');
-        if (html != html2) {
-            var range = this.caretPosition;
-            var pos = this.caretIndex(range);
-            this.code.html(html2);
-            range.setStart(this.codeNative.firstChild, pos + 1);
-            setCaret(range);
-            return;
-        }
         var codeText = this.text;
         // hide ac
         this.acSpan.hide();
