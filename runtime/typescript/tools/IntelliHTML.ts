@@ -39,8 +39,10 @@ class IntelliHTML
         this.pre = pre;
         this.pre.css("cursor", "text");
 
-        this.codeNative = document.createElement("p");
+        this.codeNative = document.createElement("code");
         this.code = $(this.codeNative);
+        this.code.css("background-color", "transparent");
+        this.code.css("box-shadow", "transparent");
         this.code.css("padding", "0px");
         var wrapCode = $("<div>");
         //wrapCode.css("height", "0px");
@@ -154,11 +156,12 @@ class IntelliHTML
         if (node.nodeType == 3)
             return { index: Math.min(index, node.textContent.length), node: node };
         var res: { index: number; node: Element } = null;
-        $(node).contents().each((i, e) =>
+        var contents = $(node).contents();
+        contents.each((i, e) =>
         {
             var elen = e.textContent.length;
             if (res == null)
-                if (elen < index)
+                if (elen <= index && i < contents.length - 1)
                     index -= elen;
                 else
                     res = this.traceIndex(index, e);
@@ -182,12 +185,11 @@ class IntelliHTML
     }
     private updateHighlight(text: string)
     {
-        return;
         var saveCaret = this.caretIndex(this.caretPosition);
 
         // clear all formatting
-        //this.code.text(text);
-        
+        this.code.text(text);
+
         // format
         var format = (regex: RegExp, formatter: (jq: JQuery) => void) =>
         {
@@ -227,6 +229,7 @@ class IntelliHTML
         // restore caret
         var loc = this.traceIndex(saveCaret, this.codeNative);
         var range = document.createRange();
+        console.log(loc.index);
         range.setStart(loc.node, loc.index);
         setCaret(range);
     }
