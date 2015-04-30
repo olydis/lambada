@@ -13,7 +13,11 @@ var IntelliHTML = (function () {
         if (pre === void 0) { pre = $("<pre>"); }
         this.highlight = highlight;
         this.lastText = null;
-        this.lastACitem = "";
+        this.acState = {
+            item: "",
+            phrase: "",
+            caretIndex: 0
+        };
         this.onTextChanged = function (text) {
             onTextChanged(text);
             _this.updateHighlight(text);
@@ -59,29 +63,15 @@ var IntelliHTML = (function () {
             // enter
             if (eo.which == 13) {
                 eo.preventDefault();
-                _this.acSpan.hide();
-                var range = _this.caretPosition;
-                if (range == null)
-                    return;
-                range = range.cloneRange();
-                var caretIndex = _this.caretIndex(range);
                 // AC enter
-                if (_this.acSpan.is(":visible")) {
-                    // extract current identifier
-                    var text = _this.text.slice(0, caretIndex);
-                    var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
-                    if (vv == null)
-                        return;
-                    var v = vv == null ? "" : vv[0];
-                    range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
-                    range.deleteContents();
-                    var acNode = document.createTextNode(_this.lastACitem);
-                    range.insertNode(acNode);
-                    range.setStartAfter(acNode);
-                    setCaret(range);
-                    _this.triggerOnTextChanged();
-                }
+                if (_this.acSpan.is(":visible"))
+                    _this.applyAC();
                 else {
+                    _this.acSpan.hide();
+                    var range = _this.caretPosition;
+                    if (range == null)
+                        return;
+                    range = range.cloneRange();
                     var breakNode = document.createTextNode("\n");
                     range.insertNode(breakNode);
                     range.setStartAfter(breakNode);
@@ -98,7 +88,8 @@ var IntelliHTML = (function () {
         });
         this.code.keyup(function (eo) {
             if ((eo.which == 37 || eo.which == 39) && _this.acSpan.is(":visible"))
-                _this.showAC();
+                _this.acSpan.hide();
+            //this.showAC();
         });
         this.code.on("input", function () {
             _this.triggerOnTextChanged();
@@ -123,9 +114,7 @@ var IntelliHTML = (function () {
         this.acList.css("background-color", "#2a2a2a");
         this.acList.css("border-radius", "4px");
         this.acList.css("border", "1.5px solid #555");
-        // INIT
-        this.pre.mousedown(function () { return _this.acSpan.hide(); });
-        //setInterval(() => update(), 1000);
+        this.code.mousedown(function () { return _this.acSpan.hide(); });
     }
     IntelliHTML.prototype.triggerOnTextChanged = function () {
         var newText = this.text;
@@ -133,6 +122,20 @@ var IntelliHTML = (function () {
             return;
         this.lastText = newText;
         this.onTextChanged(newText);
+    };
+    IntelliHTML.prototype.applyAC = function () {
+        this.acSpan.hide();
+        var range = document.createRange();
+        var idStart = this.traceIndex(this.acState.caretIndex - this.acState.phrase.length, this.codeNative);
+        range.setStart(idStart.node, idStart.index);
+        var idEnd = this.traceIndex(this.acState.caretIndex, this.codeNative);
+        range.setEnd(idEnd.node, idEnd.index);
+        range.deleteContents();
+        var acNode = document.createTextNode(this.acState.item);
+        range.insertNode(acNode);
+        range.setStartAfter(acNode);
+        setCaret(range);
+        this.triggerOnTextChanged();
     };
     IntelliHTML.prototype.traceIndex = function (index, node) {
         var _this = this;
@@ -240,17 +243,16 @@ var IntelliHTML = (function () {
             return;
         range = range.cloneRange();
         // extract current identifier
-        var caretIndex = this.caretIndex(range);
-        var text = codeText.slice(0, caretIndex);
+        this.acState.caretIndex = this.caretIndex(range);
+        var text = codeText.slice(0, this.acState.caretIndex);
         var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
-        if (vv == null)
-            return;
         var v = vv == null ? "" : vv[0];
+        this.acState.phrase = v;
         // - check for non-identifier fronts
-        var indexBefore = caretIndex - v.length - 1;
+        var indexBefore = this.acState.caretIndex - v.length - 1;
         if (indexBefore >= 0 && (text.charAt(indexBefore) == "\\" || text.charAt(indexBefore) == "\""))
             return;
-        var idStart = this.traceIndex(caretIndex - v.length, this.codeNative);
+        var idStart = this.traceIndex(this.acState.caretIndex - v.length, this.codeNative);
         range.setStart(idStart.node, idStart.index);
         var x, y;
         x = (range.getClientRects()[0].left | 0) + $(window).scrollLeft();
@@ -282,10 +284,10 @@ var IntelliHTML = (function () {
         // handle/update lastACitem
         var indexs = result.map(function (x, i) {
             return { x: x.x, i: i };
-        }).filter(function (t) { return t.x == _this.lastACitem; }).map(function (t) { return t.i; });
+        }).filter(function (t) { return t.x == _this.acState.item; }).map(function (t) { return t.i; });
         var index = indexs.length == 0 ? 0 : indexs[0];
         index = (index + moveSelection + result.length) % result.length;
-        this.lastACitem = result[index].x;
+        this.acState.item = result[index].x;
         // display results
         var acListOffset = Math.max(Math.min(1 + index - (acCount / 2) | 0, result.length - acCount), 0);
         var hiddenFront = acListOffset > 0;
@@ -305,8 +307,13 @@ var IntelliHTML = (function () {
             p.append($("<span>").text(x.x.slice(0, x.i)));
             p.append($("<span>").text(x.x.slice(x.i, x.i + vLen)).css("color", "salmon"));
             p.append($("<span>").text(x.x.slice(x.i + vLen)));
+            p.css("cursor", "pointer");
+            p.click(function () {
+                _this.acState.item = x.x;
+                _this.applyAC();
+            });
             // selection
-            if (x.x == _this.lastACitem)
+            if (x.x == _this.acState.item)
                 p.css("background-color", "#444444");
             _this.acList.append(p);
         });
