@@ -21,7 +21,7 @@ AsyncRuntime.onOpen = function (rt) {
 };
 AsyncRuntime.onClose = function (rt) {
     var jq = rtDebugMap[rt.uid].jq;
-    jq.fadeOut("slow", function () { return jq.remove(); });
+    jq.fadeOut(3000, function () { return jq.remove(); });
     delete rtDebugMap[rt.toString()];
 };
 AsyncRuntime.onPerf = function (rt, data) {

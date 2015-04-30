@@ -26,7 +26,7 @@ AsyncRuntime.onOpen = rt =>
 AsyncRuntime.onClose = rt =>
 {
     var jq = rtDebugMap[rt.uid].jq;
-    jq.fadeOut("slow", () => jq.remove());
+    jq.fadeOut(3000, () => jq.remove());
     delete rtDebugMap[rt.toString()];
 };
 AsyncRuntime.onPerf = (rt, data) =>
