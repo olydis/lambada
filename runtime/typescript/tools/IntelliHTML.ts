@@ -210,6 +210,11 @@ class IntelliHTML
         // refs
         format(/\b[a-z][_a-zA-Z0-9']*\b/g,
             jq => jq.css("color", "inherit"));
+        // abstr
+        format(/\\[a-z][_a-zA-Z0-9']*\b/g,
+            jq => jq.css("color", "hsl(200, 80%, 70%)"));
+        format(/\\/g,
+            jq => jq.css("color", "inherit").css("opacity", ".7"));
         // string
         format(/"[^"]*"/g,
             jq => jq.css("color", "hsl(20, 70%, 70%)"));

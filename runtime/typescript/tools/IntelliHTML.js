@@ -164,6 +164,9 @@ var IntelliHTML = (function () {
         format(/\b[A-Z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(350, 60%, 80%)"); });
         // refs
         format(/\b[a-z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "inherit"); });
+        // abstr
+        format(/\\[a-z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(200, 80%, 70%)"); });
+        format(/\\/g, function (jq) { return jq.css("color", "inherit").css("opacity", ".7"); });
         // string
         format(/"[^"]*"/g, function (jq) { return jq.css("color", "hsl(20, 70%, 70%)"); });
         // comment
