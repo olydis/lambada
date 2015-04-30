@@ -62,7 +62,7 @@ onReady.push(function () {
                 var td1 = $("<td>").appendTo(tr);
                 var td2 = $("<td>"); //.appendTo(tr);
                 var target = $("<pre>").css("word-wrap", "break-word").appendTo(td2);
-                var intelliElem = new IntelliHTML(function (text) {
+                var intelliElem = new IntelliHTML(false, function (text) {
                     intelliElem.element.removeClass("dirty error");
                     intelliElem.element.addClass("dirty");
                     binaryBuffer[i] = null;
