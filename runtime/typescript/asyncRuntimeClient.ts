@@ -42,7 +42,7 @@
             
             // handle responses
             if (this.nextRes != e.data.id)
-                throw "unexpected response id";
+                throw "unexpected response id (" + e.data.id + " instead of " + this.nextRes + ")";
             this.nextRes++;
 
             if (e.data.success)

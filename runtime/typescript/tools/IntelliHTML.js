@@ -12,8 +12,12 @@ var IntelliHTML = (function () {
         var _this = this;
         if (pre === void 0) { pre = $("<pre>"); }
         this.highlight = highlight;
+        this.lastText = null;
         this.lastACitem = "";
-        this.onTextChanged = function (text) { onTextChanged(text); _this.updateHighlight(text); };
+        this.onTextChanged = function (text) {
+            onTextChanged(text);
+            _this.updateHighlight(text);
+        };
         this.getACitems = getACitems;
         this.pre = pre;
         this.pre.css("cursor", "text");
@@ -123,7 +127,13 @@ var IntelliHTML = (function () {
         this.pre.mousedown(function () { return _this.acSpan.hide(); });
         //setInterval(() => update(), 1000);
     }
-    IntelliHTML.prototype.triggerOnTextChanged = function () { this.onTextChanged(this.text); };
+    IntelliHTML.prototype.triggerOnTextChanged = function () {
+        var newText = this.text;
+        if (this.lastText == newText)
+            return;
+        this.lastText = newText;
+        this.onTextChanged(newText);
+    };
     IntelliHTML.prototype.traceIndex = function (index, node) {
         var _this = this;
         if (node.nodeType == 3)
@@ -240,7 +250,8 @@ var IntelliHTML = (function () {
         var indexBefore = caretIndex - v.length - 1;
         if (indexBefore >= 0 && (text.charAt(indexBefore) == "\\" || text.charAt(indexBefore) == "\""))
             return;
-        range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+        var idStart = this.traceIndex(caretIndex - v.length, this.codeNative);
+        range.setStart(idStart.node, idStart.index);
         var x, y;
         x = (range.getClientRects()[0].left | 0) + $(window).scrollLeft();
         y = (range.getClientRects()[0].top | 0) + $(window).scrollTop();
@@ -269,10 +280,9 @@ var IntelliHTML = (function () {
         if (result.length == 0)
             return;
         // handle/update lastACitem
-        var indexs = result
-            .map(function (x, i) { return { x: x.x, i: i }; })
-            .filter(function (t) { return t.x == _this.lastACitem; })
-            .map(function (t) { return t.i; });
+        var indexs = result.map(function (x, i) {
+            return { x: x.x, i: i };
+        }).filter(function (t) { return t.x == _this.lastACitem; }).map(function (t) { return t.i; });
         var index = indexs.length == 0 ? 0 : indexs[0];
         index = (index + moveSelection + result.length) % result.length;
         this.lastACitem = result[index].x;
@@ -319,10 +329,11 @@ var IntelliHTML = (function () {
         set: function (text) {
             this.acSpan.hide();
             this.code.text(text);
-            this.onTextChanged(text);
+            this.triggerOnTextChanged();
         },
         enumerable: true,
         configurable: true
     });
     return IntelliHTML;
 })();
+//# sourceMappingURL=IntelliHTML.js.map

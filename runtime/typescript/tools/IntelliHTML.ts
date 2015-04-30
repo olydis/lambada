@@ -24,7 +24,15 @@ class IntelliHTML
     private acList: JQuery;
     private acListNative: HTMLDivElement;
 
-    private triggerOnTextChanged(): void { this.onTextChanged(this.text); }
+    private lastText: string = null;
+    private triggerOnTextChanged(): void
+    {
+        var newText = this.text;
+        if (this.lastText == newText)
+            return;
+        this.lastText = newText;
+        this.onTextChanged(newText);
+    }
     private onTextChanged: (text: string) => void;
 
     private getACitems: () => string[];
@@ -305,7 +313,8 @@ class IntelliHTML
         if (indexBefore >= 0 && (text.charAt(indexBefore) == "\\" || text.charAt(indexBefore) == "\""))
             return;
 
-        range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+        var idStart = this.traceIndex(caretIndex - v.length, this.codeNative);
+        range.setStart(idStart.node, idStart.index);
 
         var x: number, y: number;
         x = (range.getClientRects()[0].left | 0) + $(window).scrollLeft();
@@ -403,7 +412,7 @@ class IntelliHTML
     {
         this.acSpan.hide();
         this.code.text(text);
-        this.onTextChanged(text);
+        this.triggerOnTextChanged();
     }
 
 }

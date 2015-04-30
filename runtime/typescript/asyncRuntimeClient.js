@@ -20,7 +20,7 @@ var AsyncRuntime = (function () {
             }
             // handle responses
             if (_this.nextRes != e.data.id)
-                throw "unexpected response id";
+                throw "unexpected response id (" + e.data.id + " instead of " + _this.nextRes + ")";
             _this.nextRes++;
             if (e.data.success)
                 _this.jobs[e.data.id].callback(e.data.evaluated);
@@ -30,7 +30,6 @@ var AsyncRuntime = (function () {
         };
         this.master.onerror = function (e) {
             _this.close();
-            // panic, because should have been handled by server ==> unexpected behaviour
             throw "AsyncRuntime-PANIC: " + e;
         };
         // setup
@@ -67,7 +66,8 @@ var AsyncRuntime = (function () {
         throw "AsyncRuntime-Error: " + exception;
     };
     AsyncRuntime.prototype.post = function (code, callback, error) {
-        if (callback === void 0) { callback = function (_) { }; }
+        if (callback === void 0) { callback = function (_) {
+        }; }
         if (error === void 0) { error = this.throwException; }
         if (this.nextReq != this.jobs.length)
             throw "unexpected request id";
@@ -106,7 +106,8 @@ var AsyncRuntime = (function () {
         this.post([
             "rt.define(" + JSON.stringify("__value ListEmpty.") + ")",
             "rt.define(" + JSON.stringify(binary || "") + ")",
-            "d.__value.asString()"], function (result) { return callback(result); }, function (ex) { return error(ex); });
+            "d.__value.asString()"
+        ], function (result) { return callback(result); }, function (ex) { return error(ex); });
     };
     AsyncRuntime.prototype.getNames = function (callback) {
         this.post(["rt.getNames()"], function (names) { return callback(names); });
@@ -124,9 +125,14 @@ var AsyncRuntime = (function () {
     AsyncRuntime.prototype.toString = function () {
         return this.uid + " (#req: " + this.nextReq + ", #res: " + this.nextRes + ")";
     };
-    AsyncRuntime.onOpen = function (rt) { console.log("opened client " + rt.toString()); };
-    AsyncRuntime.onClose = function (rt) { console.log("closed client " + rt.toString()); };
-    AsyncRuntime.onPerf = function (_) { };
+    AsyncRuntime.onOpen = function (rt) {
+        console.log("opened client " + rt.toString());
+    };
+    AsyncRuntime.onClose = function (rt) {
+        console.log("closed client " + rt.toString());
+    };
+    AsyncRuntime.onPerf = function (_) {
+    };
     return AsyncRuntime;
 })();
 //var stats: (cnt: number) => string;
@@ -178,3 +184,4 @@ var AsyncRuntime = (function () {
 //    result.fullReduce();
 //    return result.toString();
 //} 
+//# sourceMappingURL=asyncRuntimeClient.js.map
