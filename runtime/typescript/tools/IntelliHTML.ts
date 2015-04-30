@@ -243,7 +243,6 @@ class IntelliHTML
         // restore caret
         var loc = this.traceIndex(saveCaret, this.codeNative);
         var range = document.createRange();
-        console.log(loc.index);
         range.setStart(loc.node, loc.index);
         setCaret(range);
     }

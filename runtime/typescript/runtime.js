@@ -6,38 +6,65 @@ var __extends = this.__extends || function (d, b) {
 };
 var LambadaRuntime;
 (function (LambadaRuntime) {
-    var _perfAppCountX = 0;
+    var _perfAppHeartbeat = 1000000;
+    var _perfAllocHeartbeat = 1000000;
+    var _perfAppThresh = 100;
+    var _perfAllocThresh = 5;
+    var _perfBusyThresh = 60 * 1000;
+    // TEMPS
+    // 0.._perf???Heartbeat
+    var _perfAppCounter = 0;
+    var _perfAllocCounter = 0;
+    // 0.._perf???Thresh
     var _perfAppCount = 0;
-    var _perfAllocCountX = 0;
     var _perfAllocCount = 0;
+    var _perfLastJob;
+    // TOTALS
+    var _perfAppCountTotal = 0;
+    var _perfAllocCountTotal = 0;
+    function _perfReport() {
+        var timeBusy = new Date().getTime() - _perfLastJob;
+        postMessage({
+            "id": -1,
+            "nApp": _perfAppCountTotal,
+            "nAlloc": _perfAllocCountTotal,
+            "timeBusy": timeBusy
+        });
+        if (_perfAppCount >= _perfAppThresh)
+            throw "ERR_APP_THRESH: possible infinite loop";
+        if (_perfAllocCount > _perfAllocThresh)
+            throw "ERR_ALLOC_THRESH: possible infinite loop";
+        if (timeBusy > _perfBusyThresh)
+            throw "ERR_BUSY_THRESH: possible infinite loop";
+    }
     function _perfReset() {
-        _perfAppCountX = _perfAppCount = 0;
-        _perfAllocCountX = _perfAllocCount = 0;
+        _perfAppCountTotal += _perfAppCounter;
+        _perfAllocCountTotal += _perfAllocCounter;
+        _perfLastJob = new Date().getTime();
+        _perfAppCount = _perfAppCounter = 0;
+        _perfAllocCount = _perfAllocCounter = 0;
+        _perfReport();
     }
     LambadaRuntime._perfReset = _perfReset;
     function _perfApp() {
-        _perfAppCount++;
-        if (_perfAppCount == 1000000 * 10) {
-            _perfAppCount = 0;
-            _perfAppCountX++;
-            _perfCheck();
-            console.warn("APP (" + _perfAppCountX + "): " + self.uid || "n/a");
+        _perfAppCounter++;
+        if (_perfAppCounter == _perfAppHeartbeat) {
+            _perfAppCountTotal += _perfAppCounter;
+            _perfAppCount++;
+            _perfAppCounter = 0;
+            _perfReport();
+            console.warn("APP (" + _perfAppCount + "): " + self.uid || "n/a");
         }
     }
     function _perfAlloc() {
-        _perfAllocCount++;
-        if (_perfAllocCount == 1000000) {
-            _perfAllocCount = 0;
-            _perfAllocCountX++;
-            _perfCheck();
-            console.warn("ALLOC (" + _perfAllocCountX + "): " + self.uid || "n/a");
+        _perfAllocCounter++;
+        if (_perfAllocCounter == _perfAllocHeartbeat) {
+            _perfAllocCountTotal += _perfAllocCounter;
+            _perfAllocCount++;
+            _perfAllocCounter = 0;
+            _perfReport();
+            console.warn("ALLOC (" + _perfAllocCount + "): " + self.uid || "n/a");
         }
-    }
-    function _perfCheck() {
-        if (_perfAppCountX >= 10)
-            throw "ERR_APP_THRESH: possible infinite loop";
-        if (_perfAllocCountX >= 5)
-            throw "ERR_ALLOC_THRESH: possible infinite loop";
     }
     var StringReader = (function () {
         function StringReader(str) {

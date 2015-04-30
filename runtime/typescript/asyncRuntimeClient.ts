@@ -1,6 +1,14 @@
 ﻿class AsyncRuntime
 {
-    private uid: string;
+    public static onOpen: (rt: AsyncRuntime) => void = rt => { console.log("opened client " + rt.toString()); };
+    public static onClose: (rt: AsyncRuntime) => void = rt => { console.log("closed client " + rt.toString()); };
+    public static onPerf: (rt: AsyncRuntime, perfData: { nApp: number; nAlloc: number; timeBusy: number }) => void = _ => { };
+    
+    private _uid: string;
+    public get uid(): string
+    {
+        return this._uid;
+    }
 
     private master: Worker;
     private jobs: { callback: ((result: any) => void); error: ((exception: any) => void) }[];
@@ -15,12 +23,24 @@
 
     public constructor(private masterUri: string, private binary: string)
     {
-        this.uid = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        this._uid = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
         this.master = new Worker(masterUri);
         this.jobs = [];
 
         this.master.onmessage = e =>
         {
+            // handle special ids
+            if (e.data.id == -1)
+            {
+                AsyncRuntime.onPerf(this, {
+                    nApp: e.data.nApp,
+                    nAlloc: e.data.nAlloc,
+                    timeBusy: e.data.timeBusy,
+                });
+                return;
+            }        
+            
+            // handle responses
             if (this.nextRes != e.data.id)
                 throw "unexpected response id";
             this.nextRes++;
@@ -51,7 +71,7 @@
             "null"
         ]);
 
-        console.log("opened client " + this.toString());
+        AsyncRuntime.onOpen(this);
     }
 
     public clone(): AsyncRuntime
@@ -134,7 +154,7 @@
         this.master = undefined;
         this.post = undefined;
 
-        console.log("closed client " + this.toString());
+        AsyncRuntime.onClose(this);
     }
 
     public toString()

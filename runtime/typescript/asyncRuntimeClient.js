@@ -5,10 +5,20 @@ var AsyncRuntime = (function () {
         this.binary = binary;
         this.nextReq = 0;
         this.nextRes = 0;
-        this.uid = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        this._uid = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
         this.master = new Worker(masterUri);
         this.jobs = [];
         this.master.onmessage = function (e) {
+            // handle special ids
+            if (e.data.id == -1) {
+                AsyncRuntime.onPerf(_this, {
+                    nApp: e.data.nApp,
+                    nAlloc: e.data.nAlloc,
+                    timeBusy: e.data.timeBusy,
+                });
+                return;
+            }
+            // handle responses
             if (_this.nextRes != e.data.id)
                 throw "unexpected response id";
             _this.nextRes++;
@@ -34,8 +44,15 @@ var AsyncRuntime = (function () {
             "n = lrt.ShortcutExpression.createNumber",
             "null"
         ]);
-        console.log("opened client " + this.toString());
+        AsyncRuntime.onOpen(this);
     }
+    Object.defineProperty(AsyncRuntime.prototype, "uid", {
+        get: function () {
+            return this._uid;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(AsyncRuntime.prototype, "isIdle", {
         get: function () {
             return this.nextReq == this.nextRes;
@@ -102,11 +119,14 @@ var AsyncRuntime = (function () {
         this.master.terminate();
         this.master = undefined;
         this.post = undefined;
-        console.log("closed client " + this.toString());
+        AsyncRuntime.onClose(this);
     };
     AsyncRuntime.prototype.toString = function () {
         return this.uid + " (#req: " + this.nextReq + ", #res: " + this.nextRes + ")";
     };
+    AsyncRuntime.onOpen = function (rt) { console.log("opened client " + rt.toString()); };
+    AsyncRuntime.onClose = function (rt) { console.log("closed client " + rt.toString()); };
+    AsyncRuntime.onPerf = function (_) { };
     return AsyncRuntime;
 })();
 //var stats: (cnt: number) => string;

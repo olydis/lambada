@@ -20,10 +20,8 @@ onReady.push(function () {
                 }
             };
             srcs.forEach(function (text, i) {
-                rtTrash.compile(text, function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? function (_) {
-                } : function (res) { return $("#evalRes").text(res); }, onEx); }, onEx);
-                rtTrash.compile("fullDebug " + safeString(text), function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? function (_) {
-                } : function (res) { return $("#evalDebug").text(res); }, onEx); }, onEx);
+                rtTrash.compile(text, function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? function (_) { } : function (res) { return $("#evalRes").text(res); }, onEx); }, onEx);
+                rtTrash.compile("fullDebug " + safeString(text), function (binary) { return rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? function (_) { } : function (res) { return $("#evalDebug").text(res); }, onEx); }, onEx);
             });
             rtTrash.autoClose();
         }, 500);
@@ -36,8 +34,10 @@ onReady.push(function () {
             var parts = str.split("--");
             if (i > 0)
                 sSpan.append("&nbsp;&nbsp;&nbsp;");
-            sSpan.append($("<a>").text(parts[0].trim()).css("cursor", "pointer").click(function () { return evalPad.text = parts[1].trim(); }));
+            sSpan.append($("<a>")
+                .text(parts[0].trim())
+                .css("cursor", "pointer")
+                .click(function () { return evalPad.text = parts[1].trim(); }));
         });
     }, "text");
 });
-//# sourceMappingURL=demoTry.js.map
