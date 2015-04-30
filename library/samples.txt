@@ -28,8 +28,8 @@ gDraw 30 22 $ gCircle 10 12 9 (listHead "#")
 ---
 divergent
 --
-strConss [ if (i False)    "True" "False"
-         , if (i True)     "True" "False"
-         , if (halt False) "True" "False"
-         , if (halt True)  "True" "False"  ' comment me out
-         ]
+strJoin [ if (i False)    "True" "False"
+        , if (i True)     "True" "False"
+        , if (halt False) "True" "False"
+        , if (halt True)  "True" "False"  ' comment me out
+        ] ", "

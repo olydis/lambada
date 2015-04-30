@@ -137,7 +137,7 @@ class IntelliHTML
             if (eo.which == 32 && eo.ctrlKey)
             {
                 eo.preventDefault();
-                this.showAC();
+                this.showAC(0, true);
             }
             // console.log(eo.which);
         });
@@ -297,7 +297,7 @@ class IntelliHTML
         return range.toString().length;
     }
 
-    private showAC(moveSelection: number = 0)
+    private showAC(moveSelection: number = 0, explicit: boolean = false)
     {
         var codeText = this.text;
         
@@ -314,6 +314,8 @@ class IntelliHTML
         var text = codeText.slice(0, this.acState.caretIndex);
         var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
         var v = vv == null ? "" : vv[0];
+        if (v == "" && !explicit)
+            return;
         this.acState.phrase = v;
 
         // - check for non-identifier fronts

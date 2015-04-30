@@ -82,7 +82,7 @@ var IntelliHTML = (function () {
             // Ctrl+Space
             if (eo.which == 32 && eo.ctrlKey) {
                 eo.preventDefault();
-                _this.showAC();
+                _this.showAC(0, true);
             }
             // console.log(eo.which);
         });
@@ -231,9 +231,10 @@ var IntelliHTML = (function () {
         range.setEnd(caretPosition.startContainer, caretPosition.startOffset);
         return range.toString().length;
     };
-    IntelliHTML.prototype.showAC = function (moveSelection) {
+    IntelliHTML.prototype.showAC = function (moveSelection, explicit) {
         var _this = this;
         if (moveSelection === void 0) { moveSelection = 0; }
+        if (explicit === void 0) { explicit = false; }
         var codeText = this.text;
         // hide ac
         this.acSpan.hide();
@@ -247,6 +248,8 @@ var IntelliHTML = (function () {
         var text = codeText.slice(0, this.acState.caretIndex);
         var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
         var v = vv == null ? "" : vv[0];
+        if (v == "" && !explicit)
+            return;
         this.acState.phrase = v;
         // - check for non-identifier fronts
         var indexBefore = this.acState.caretIndex - v.length - 1;
