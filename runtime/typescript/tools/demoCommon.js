@@ -48,4 +48,3 @@ $(function () {
         onReady.forEach(function (f) { return f(); });
     }, "text");
 });
-//# sourceMappingURL=demoCommon.js.map

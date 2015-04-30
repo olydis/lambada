@@ -13,8 +13,11 @@ function statusUpdate(message, status, binary) {
 }
 onReady.push(function () {
     $.get(libraryPath + "prelude.txt", function (source) {
-        var preludeParts = source.split("\n").map(function (l) { return l.trim(); }).filter(function (l) { return l != "" && l.charAt(0) != "'"; });
-        var gPSs = preludeParts.map(function (l) { return $.get(libraryPath + l, undefined, "text"); });
+        var preludeParts = source
+            .split("\n")
+            .map(function (l) { return l.trim(); })
+            .filter(function (l) { return l != "" && l.charAt(0) != "'"; });
+        var gPSs = preludeParts.map(function (l) { return $.get(libraryPath + l, function () { }, "text"); });
         $.when.apply($, gPSs).done(function () {
             var sources = [];
             gPSs.forEach(function (x) { return sources.push(x.responseText); });
@@ -24,12 +27,14 @@ onReady.push(function () {
             var detailStats = [];
             var binaryUpdate = function () {
                 if (binaryBuffer.some(function (x) { return x == null; })) {
-                    statusUpdate("compiling " + binaryBuffer.map(function (x) { return x == null ? "-" : "#"; }).join("") + "\n\n" + detailStats.join("\n"));
+                    statusUpdate("compiling " + binaryBuffer.map(function (x) { return x == null ? "-" : "#"; }).join("")
+                        + "\n\n" + detailStats.join("\n"));
                     return;
                 }
                 var result = binaryBuffer.join("");
                 // CLICK ON
                 statusUpdate("testing binary", "dirty");
+                // TEST BINARY
                 try {
                     //var testRuntime = LambadaRuntime.Runtime.create(result);
                     //var d = (<any>rt).defs;
@@ -47,7 +52,8 @@ onReady.push(function () {
                     //});
                     var d2 = new Date().getTime();
                     var compMS = d2 - d1;
-                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)" + "\n\n" + detailStats.join("\n"), null, result);
+                    statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)"
+                        + "\n\n" + detailStats.join("\n"), null, result);
                 }
                 catch (e) {
                     statusUpdate(e, "error");
@@ -92,4 +98,3 @@ onReady.push(function () {
         });
     }, "text");
 });
-//# sourceMappingURL=demoCompile.js.map

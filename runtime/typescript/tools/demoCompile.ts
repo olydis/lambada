@@ -22,7 +22,7 @@ onReady.push(() =>
             .split("\n")
             .map(l => l.trim())
             .filter(l => l != "" && l.charAt(0) != "'");
-        var gPSs = preludeParts.map(l => $.get(libraryPath + l, undefined, "text"));
+        var gPSs = preludeParts.map(l => $.get(libraryPath + l, () => {}, "text"));
         $.when.apply($, gPSs).done(() =>
         {
             var sources: string[] = [];

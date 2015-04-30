@@ -86,12 +86,8 @@ var LambadaRuntime;
         ExpressionBase.init = function () {
             ExpressionBase.probeSTOP = new BuiltinExpression(undefined);
         };
-        ExpressionBase.prototype.apply = function (stack) {
-            return false;
-        };
-        ExpressionBase.prototype.reduce = function () {
-            return false;
-        };
+        ExpressionBase.prototype.apply = function (stack) { return false; };
+        ExpressionBase.prototype.reduce = function () { return false; };
         ExpressionBase.prototype.fullReduce = function () {
         };
         ExpressionBase.prototype.asNumber = function () {
@@ -144,8 +140,7 @@ var LambadaRuntime;
     var BuiltinExpression = (function (_super) {
         __extends(BuiltinExpression, _super);
         function BuiltinExpression(arity, applyTo) {
-            if (applyTo === void 0) { applyTo = function (x) {
-            }; }
+            if (applyTo === void 0) { applyTo = function (x) { }; }
             _super.call(this);
             this.arity = arity;
             this.applyTo = applyTo;
@@ -169,16 +164,9 @@ var LambadaRuntime;
             this.slave = slave;
             this.called = 0;
         }
-        AliasExpression.prototype.apply = function (stack) {
-            this.called++;
-            return this.slave.apply(stack);
-        };
-        AliasExpression.prototype.reduce = function () {
-            return this.slave.reduce();
-        };
-        AliasExpression.prototype.fullReduce = function () {
-            this.slave.fullReduce();
-        };
+        AliasExpression.prototype.apply = function (stack) { this.called++; return this.slave.apply(stack); };
+        AliasExpression.prototype.reduce = function () { return this.slave.reduce(); };
+        AliasExpression.prototype.fullReduce = function () { this.slave.fullReduce(); };
         AliasExpression.prototype.toString = function () {
             // DEBUG
             //if (arguments.callee.caller == null 
@@ -305,13 +293,17 @@ var LambadaRuntime;
         function ShortcutExpression() {
         }
         ShortcutExpression.createNumber = function (n) {
-            var se = n == 0 ? ShortcutExpression.ADTo_2_0 : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
+            var se = n == 0
+                ? ShortcutExpression.ADTo_2_0
+                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
             se._asNumber = se.asNumber = function () { return n; };
             se.toString = function () { return n.toString(); };
             return se;
         };
         ShortcutExpression.createString2 = function (s, offset) {
-            var se = s.length == offset ? ShortcutExpression.ADTo_2_0 : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
+            var se = s.length == offset
+                ? ShortcutExpression.ADTo_2_0
+                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
             se._asString = se.asString = function () { return s.slice(offset); };
             se.toString = function () { return "\"" + s.slice(offset) + "\""; };
             return se;
@@ -469,4 +461,3 @@ var LambadaRuntime;
     })(BuiltinExpression);
     LambadaRuntime.Runtime = Runtime;
 })(LambadaRuntime || (LambadaRuntime = {}));
-//# sourceMappingURL=runtime.js.map

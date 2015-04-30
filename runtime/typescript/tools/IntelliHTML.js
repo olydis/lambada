@@ -13,10 +13,7 @@ var IntelliHTML = (function () {
         if (pre === void 0) { pre = $("<pre>"); }
         this.highlight = highlight;
         this.lastACitem = "";
-        this.onTextChanged = function (text) {
-            onTextChanged(text);
-            _this.updateHighlight(text);
-        };
+        this.onTextChanged = function (text) { onTextChanged(text); _this.updateHighlight(text); };
         this.getACitems = getACitems;
         this.pre = pre;
         this.pre.css("cursor", "text");
@@ -126,9 +123,7 @@ var IntelliHTML = (function () {
         this.pre.mousedown(function () { return _this.acSpan.hide(); });
         //setInterval(() => update(), 1000);
     }
-    IntelliHTML.prototype.triggerOnTextChanged = function () {
-        this.onTextChanged(this.text);
-    };
+    IntelliHTML.prototype.triggerOnTextChanged = function () { this.onTextChanged(this.text); };
     IntelliHTML.prototype.traceIndex = function (index, node) {
         var _this = this;
         if (node.nodeType == 3)
@@ -275,9 +270,10 @@ var IntelliHTML = (function () {
         if (result.length == 0)
             return;
         // handle/update lastACitem
-        var indexs = result.map(function (x, i) {
-            return { x: x.x, i: i };
-        }).filter(function (t) { return t.x == _this.lastACitem; }).map(function (t) { return t.i; });
+        var indexs = result
+            .map(function (x, i) { return { x: x.x, i: i }; })
+            .filter(function (t) { return t.x == _this.lastACitem; })
+            .map(function (t) { return t.i; });
         var index = indexs.length == 0 ? 0 : indexs[0];
         index = (index + moveSelection + result.length) % result.length;
         this.lastACitem = result[index].x;
@@ -331,4 +327,3 @@ var IntelliHTML = (function () {
     });
     return IntelliHTML;
 })();
-//# sourceMappingURL=IntelliHTML.js.map
