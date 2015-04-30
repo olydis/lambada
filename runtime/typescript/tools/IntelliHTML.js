@@ -22,7 +22,7 @@ var IntelliHTML = (function () {
         this.codeNative = document.createElement("code");
         this.code = $(this.codeNative);
         this.code.css("background-color", "transparent");
-        this.code.css("box-shadow", "transparent");
+        this.code.css("box-shadow", "none");
         this.code.css("padding", "0px");
         var wrapCode = $("<div>");
         //wrapCode.css("height", "0px");
