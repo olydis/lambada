@@ -87,7 +87,7 @@ onReady.push(() =>
                 var td2 = $("<td>");//.appendTo(tr);
 
                 var target = $("<pre>").css("word-wrap", "break-word").appendTo(td2);
-                var intelliElem = new IntelliHTML(text =>
+                var intelliElem = new IntelliHTML(false, text =>
                 {
                     intelliElem.element.removeClass("dirty error");
                     intelliElem.element.addClass("dirty");
@@ -118,7 +118,7 @@ onReady.push(() =>
                         binaryUpdate();
                     });
                 },() => names);
-                //intelliElem.text = src;
+                intelliElem.text = src;
                 td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(eo => intelliElem.element.removeClass("coll")));
             });
             rtCompilePrelude.autoClose();

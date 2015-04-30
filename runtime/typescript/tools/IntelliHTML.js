@@ -8,9 +8,10 @@ function setCaret(range) {
     sel.addRange(range);
 }
 var IntelliHTML = (function () {
-    function IntelliHTML(onTextChanged, getACitems, pre) {
+    function IntelliHTML(highlight, onTextChanged, getACitems, pre) {
         var _this = this;
         if (pre === void 0) { pre = $("<pre>"); }
+        this.highlight = highlight;
         this.lastACitem = "";
         this.onTextChanged = function (text) {
             onTextChanged(text);
@@ -161,29 +162,31 @@ var IntelliHTML = (function () {
         var saveCaret = this.caretIndex(this.caretPosition);
         // clear all formatting
         this.code.text(text);
-        // format
-        var format = function (regex, formatter) {
-            var match;
-            while (match = regex.exec(text))
-                formatter(_this.createCodeRange(match.index, match.toString().length));
-        };
-        // operators
-        format(/[$]/g, function (jq) { return jq.css("color", "hsl(350, 40%, 50%)"); });
-        // punctuation
-        format(/[\[\]\(\),=]/g, function (jq) { return jq.css("opacity", ".7"); });
-        // number
-        format(/\b[0-9]+\b/g, function (jq) { return jq.css("color", "hsl(100, 80%, 80%)"); });
-        // ctors
-        format(/\b[A-Z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(350, 60%, 80%)"); });
-        // refs
-        format(/\b[a-z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "inherit"); });
-        // abstr
-        format(/\\[a-z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(200, 80%, 70%)"); });
-        format(/\\/g, function (jq) { return jq.css("color", "inherit").css("opacity", ".7"); });
-        // string
-        format(/"[^"]*"/g, function (jq) { return jq.css("color", "hsl(20, 70%, 70%)"); });
-        // comment
-        format(/\'.*/g, function (jq) { return jq.css("color", "hsl(100, 50%, 55%)").css("font-style", "italic"); });
+        if (this.highlight) {
+            // format
+            var format = function (regex, formatter) {
+                var match;
+                while (match = regex.exec(text))
+                    formatter(_this.createCodeRange(match.index, match.toString().length));
+            };
+            // operators
+            format(/[$]/g, function (jq) { return jq.css("color", "hsl(350, 40%, 50%)"); });
+            // punctuation
+            format(/[\[\]\(\),=]/g, function (jq) { return jq.css("opacity", ".7"); });
+            // number
+            format(/\b[0-9]+\b/g, function (jq) { return jq.css("color", "hsl(100, 80%, 80%)"); });
+            // ctors
+            format(/\b[A-Z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(350, 60%, 80%)"); });
+            // refs
+            format(/\b[a-z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "inherit"); });
+            // abstr
+            format(/\\[a-z][_a-zA-Z0-9']*\b/g, function (jq) { return jq.css("color", "hsl(200, 80%, 70%)"); });
+            format(/\\/g, function (jq) { return jq.css("color", "inherit").css("opacity", ".7"); });
+            // string
+            format(/"[^"]*"/g, function (jq) { return jq.css("color", "hsl(20, 70%, 70%)"); });
+            // comment
+            format(/\'.*/g, function (jq) { return jq.css("color", "hsl(100, 50%, 55%)").css("font-style", "italic"); });
+        }
         // restore caret
         var loc = this.traceIndex(saveCaret, this.codeNative);
         var range = document.createRange();

@@ -7,7 +7,7 @@ onReady.push(() =>
 
     var currentRT: AsyncRuntime = null;
     var debounceHandle: number = undefined;
-    var evalPad = new IntelliHTML(text => 
+    var evalPad = new IntelliHTML(true, text => 
     {
         $("#evalRes").text("").append($("<i>").text("pending..."));
         $("#evalDebug").text("").append($("<i>").text("pending..."));

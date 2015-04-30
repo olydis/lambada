@@ -31,7 +31,7 @@ class IntelliHTML
     
     private lastACitem: string = "";
 
-    public constructor(onTextChanged: (text: string) => void, getACitems: () => string[], pre: JQuery = $("<pre>"))
+    public constructor(private highlight: boolean, onTextChanged: (text: string) => void, getACitems: () => string[], pre: JQuery = $("<pre>"))
     {
         this.onTextChanged = text => { onTextChanged(text); this.updateHighlight(text); }
         this.getACitems = getACitems;
@@ -202,41 +202,43 @@ class IntelliHTML
         // clear all formatting
         this.code.text(text);
 
-        // format
-        var format = (regex: RegExp, formatter: (jq: JQuery) => void) =>
+        if (this.highlight)
         {
-            var match: RegExpExecArray;
-            while (match = regex.exec(text))
-                formatter(this.createCodeRange(match.index, match.toString().length));
-        };
+            // format
+            var format = (regex: RegExp, formatter: (jq: JQuery) => void) =>
+            {
+                var match: RegExpExecArray;
+                while (match = regex.exec(text))
+                    formatter(this.createCodeRange(match.index, match.toString().length));
+            };
 
-        // operators
-        format(/[$]/g,
-            jq => jq.css("color", "hsl(350, 40%, 50%)"));
-        // punctuation
-        format(/[\[\]\(\),=]/g,
-            jq => jq.css("opacity", ".7"));
-        // number
-        format(/\b[0-9]+\b/g,
-            jq => jq.css("color", "hsl(100, 80%, 80%)"));
-        // ctors
-        format(/\b[A-Z][_a-zA-Z0-9']*\b/g,
-            jq => jq.css("color", "hsl(350, 60%, 80%)"));
-        // refs
-        format(/\b[a-z][_a-zA-Z0-9']*\b/g,
-            jq => jq.css("color", "inherit"));
-        // abstr
-        format(/\\[a-z][_a-zA-Z0-9']*\b/g,
-            jq => jq.css("color", "hsl(200, 80%, 70%)"));
-        format(/\\/g,
-            jq => jq.css("color", "inherit").css("opacity", ".7"));
-        // string
-        format(/"[^"]*"/g,
-            jq => jq.css("color", "hsl(20, 70%, 70%)"));
-        // comment
-        format(/\'.*/g,
-            jq => jq.css("color", "hsl(100, 50%, 55%)").css("font-style", "italic"));
-
+            // operators
+            format(/[$]/g,
+                jq => jq.css("color", "hsl(350, 40%, 50%)"));
+            // punctuation
+            format(/[\[\]\(\),=]/g,
+                jq => jq.css("opacity", ".7"));
+            // number
+            format(/\b[0-9]+\b/g,
+                jq => jq.css("color", "hsl(100, 80%, 80%)"));
+            // ctors
+            format(/\b[A-Z][_a-zA-Z0-9']*\b/g,
+                jq => jq.css("color", "hsl(350, 60%, 80%)"));
+            // refs
+            format(/\b[a-z][_a-zA-Z0-9']*\b/g,
+                jq => jq.css("color", "inherit"));
+            // abstr
+            format(/\\[a-z][_a-zA-Z0-9']*\b/g,
+                jq => jq.css("color", "hsl(200, 80%, 70%)"));
+            format(/\\/g,
+                jq => jq.css("color", "inherit").css("opacity", ".7"));
+            // string
+            format(/"[^"]*"/g,
+                jq => jq.css("color", "hsl(20, 70%, 70%)"));
+            // comment
+            format(/\'.*/g,
+                jq => jq.css("color", "hsl(100, 50%, 55%)").css("font-style", "italic"));
+        }
 
         // restore caret
         var loc = this.traceIndex(saveCaret, this.codeNative);

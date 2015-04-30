@@ -85,7 +85,7 @@ onReady.push(function () {
                         binaryUpdate();
                     });
                 }, function () { return names; });
-                //intelliElem.text = src;
+                intelliElem.text = src;
                 td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(function (eo) { return intelliElem.element.removeClass("coll"); }));
             });
             rtCompilePrelude.autoClose();

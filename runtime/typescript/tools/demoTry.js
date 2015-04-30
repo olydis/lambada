@@ -4,7 +4,7 @@ onReady.push(function () {
     var safeString = function (s) { return "[" + s.split("").map(function (x) { return x.charCodeAt(0).toString(); }).join(",") + "]"; };
     var currentRT = null;
     var debounceHandle = undefined;
-    var evalPad = new IntelliHTML(function (text) {
+    var evalPad = new IntelliHTML(true, function (text) {
         $("#evalRes").text("").append($("<i>").text("pending..."));
         $("#evalDebug").text("").append($("<i>").text("pending..."));
         clearTimeout(debounceHandle);
