@@ -3,16 +3,10 @@ arithmetic
 strFromN $ add 42 $ pow 10 2
 
 
-
-
-
 ---
 string
 --
 reverse $ listDistinct "Hallo Welt" isEQ
-
-
-
 
 
 ---
@@ -23,12 +17,19 @@ fibs = ListCons 1 $ ListCons 1 $ listZip fibs (listTail fibs) add
 strJoin (listMap (listTake fibs 50) strFromN) ", "
 
 
-
-
-
 ---
 ASCIIart
 --
 gDraw 30 22 $ gCircle 10 12 9 (listHead "#") 
             $ gCircle 20 7 7 (listHead ".") 
             $ gCanvas
+
+            
+---
+divergent
+--
+strConss [ if (i False)    "True" "False"
+         , if (i True)     "True" "False"
+         , if (halt False) "True" "False"
+         , if (halt True)  "True" "False"  ' comment me out
+         ]
