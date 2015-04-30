@@ -79,8 +79,8 @@ class IntelliHTML
                 eo.preventDefault();
                 this.showAC(eo.which == 40 ? 1 : -1);
             }
-            // AC enter
-            if (eo.which == 13 && this.acSpan.is(":visible"))
+            // enter
+            if (eo.which == 13)
             {
                 eo.preventDefault();
                 this.acSpan.hide();
@@ -88,22 +88,34 @@ class IntelliHTML
                 var range: Range = this.caretPosition;
                 if (range == null) return;
                 range = range.cloneRange();
-
-                // extract current identifier
                 var caretIndex = this.caretIndex(range);
-                var text = this.text.slice(0, caretIndex);
-                var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
-                if (vv == null)
-                    return;
-                var v = vv == null ? "" : vv[0];
 
-                range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
-                range.deleteContents();
-                var acNode = document.createTextNode(this.lastACitem);
-                range.insertNode(acNode);
-                range.setStartAfter(acNode);
-                setCaret(range);
-                this.triggerOnTextChanged();
+                // AC enter
+                if (this.acSpan.is(":visible"))
+                {
+                    // extract current identifier
+                    var text = this.text.slice(0, caretIndex);
+                    var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
+                    if (vv == null)
+                        return;
+                    var v = vv == null ? "" : vv[0];
+
+                    range.setStart(range.startContainer, Math.max(0, range.startOffset - v.length));
+                    range.deleteContents();
+                    var acNode = document.createTextNode(this.lastACitem);
+                    range.insertNode(acNode);
+                    range.setStartAfter(acNode);
+                    setCaret(range);
+                    this.triggerOnTextChanged();
+                }
+                else
+                {
+                    var breakNode = document.createTextNode("\n");
+                    range.insertNode(breakNode);
+                    range.setStartAfter(breakNode);
+                    setCaret(range);
+                    this.triggerOnTextChanged();
+                }
             }
             // Ctrl+Space
             if (eo.which == 32 && eo.ctrlKey)
