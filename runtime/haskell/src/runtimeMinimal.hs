@@ -10,14 +10,28 @@ instance Show Expression where
 valueOf :: Expression -> Expression
 valueOf x = maybe x valueOf $ reduce x
 
+spl :: [t] -> Maybe (t, [t])
+spl []     = Nothing
+spl (x:xs) = Just (x,xs)
+
+unr :: [Expression] -> Expression -> Expression
+unr es e = foldl (\a b -> App b a) e es
+
+reduceInternal :: Expression -> [Expression] -> Maybe Expression
+reduceInternal e l | e == App U (App U (App U (App U U))) = spl l >>= \(a,l) -> 
+                                                            spl l >>= \(b,l) -> 
+                                                            spl l >>= \(c,l) ->
+                                                            Just $ unr l $ App (App a c) (App b c)
+                   | e == App U (App U (App U U))         = spl l >>= \(a,l) -> 
+                                                            spl l >>= \(b,l) -> 
+                                                            Just $ unr l $ a
+                   | e == U                               = spl l >>= \(a,l) -> 
+                                                            Just $ unr l $ App (App a (App U (App U (App U (App U U))))) (App U (App U (App U U)))
+                   | App a b <- e = reduceInternal a (b : l)
+                   | otherwise    = Nothing
+
 reduce :: Expression -> Maybe Expression
-reduce (App U (App U (App U U)))                                 = Nothing
-reduce (App (App (App U (App U (App U U))) a) b)                 = Just $ a
-reduce (App U (App U (App U (App U U))))                         = Nothing
-reduce (App (App (App (App U (App U (App U (App U U)))) a) b) c) = Just $ App (App a c) (App b c)
-reduce (App U a)                                                 = Just $ App (App a (App U (App U (App U (App U U))))) (App U (App U (App U U)))
-reduce (App f a)                                                 = fmap (\f' -> App f' a) (reduce f)
-reduce _                                                         = Nothing
+reduce e = reduceInternal e []
 
 isNF :: Expression -> Bool
 isNF x = x == valueOf x
