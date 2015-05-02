@@ -44,7 +44,7 @@ envInitial :: Env
 envInitial = [("u", U)]
 
 envAdd :: String -> Expression -> Env -> Env
-envAdd name value []           = [(name, valueOf value)]
+envAdd name value []           = [(name, value)]
 envAdd name value ((a, b):env) = if a == name then ((a, value):env) else (a, b):envAdd name value env
 
 envGet :: String -> Env -> Expression
@@ -109,8 +109,9 @@ readString x = if pRes == pEmpty
               pCons = probe 1
               pRes = valueOf $ App (App x pEmpty) (App k (App k pCons))
 
-
-
+goed :: Expression -> String
+goed U = "1"
+goed (App a b) = goed a ++ goed b ++ "0"
 
 
 
