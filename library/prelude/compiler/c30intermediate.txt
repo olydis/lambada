@@ -47,13 +47,13 @@ nativeContainsLit = y(\this \n \lit
         (\literal strEquals lit literal)
         (\value False)
         (\value False)
-        (\o1 \o2 or (this o1 lit) (this o2 lit))
+        (\o1 \o2 lOr (this o1 lit) (this o2 lit))
     )
 
 ' S => S
 finalizeLiteral = \s
     if(strStartsWith s ":bound:")
-        (strSkip s 7)
+        (listSkip s 7)
         s
 
 ' NATIVE => NATIVE
@@ -142,7 +142,7 @@ _syntaxEmitTypeInstance = \items \ctrArgList \index \args \name
             name
             (
                 _syntaxToNative
-                (syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (listMap (listAddFront args (_createUniqueNameFromN index)) SyntaxName)))
+                (syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (listMap (ListCons (_createUniqueNameFromN index) args) SyntaxName)))
             ),
         NativeAssignment
             (strCons name "_Dispatch")

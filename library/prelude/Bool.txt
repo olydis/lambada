@@ -3,8 +3,8 @@ Bool = True | False
 if = i
 not = \b b False True
 
-and = \a \b a b False
-or = \a \b a True b
+lAnd = \a \b a b False
+lOr = \a \b a True b
 implies = \a \b a b True
 
 xor = \a \b if a (not b) b

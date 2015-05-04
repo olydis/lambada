@@ -20,22 +20,25 @@ onReady.push(() =>
             localStorage.setItem("fun", text);
             var srcs = splitSources(text);
 
+            var exFree = true;
+
             var onEx = (ex: any) =>
             {
                 if (currentRT == rtTrash)
                 {
                     srcs.length = 0;
                     $("#evalRes").text("").append($("<i>").text(ex));
+                    exFree = false;
                 }
             };
 
             srcs.forEach((text, i) =>
             {
                 rtTrash.compile(text,
-                    binary => rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? _ => { } : res => $("#evalRes").text(res), onEx),
+                    binary => rtTrash.eval(binary, exFree && (i < srcs.length - 1 || currentRT != rtTrash) ? _ => { } : res => $("#evalRes").text(res), onEx),
                     onEx);
                 rtTrash.compile("fullDebug " + safeString(text),
-                    binary => rtTrash.eval(binary, i < srcs.length - 1 || currentRT != rtTrash ? _ => { } : res => $("#evalDebug").text(res), onEx),
+                    binary => rtTrash.eval(binary, exFree && (i < srcs.length - 1 || currentRT != rtTrash) ? _ => { } : res => $("#evalDebug").text(res), onEx),
                     onEx);
             });
             rtTrash.autoClose();

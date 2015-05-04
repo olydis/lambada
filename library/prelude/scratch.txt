@@ -1,7 +1,7 @@
 ' basic evaluator
 evalnumber = parseWithWhitespace parsenumber
-evalProduct = y(\evalProduct parseOption (parseBind mul evalnumber (parseBindOverride (parseChar (strHead "*")) evalProduct)) evalnumber)
-evalSum = y(\evalSum parseOption (parseBind add evalProduct (parseBindOverride (parseChar (strHead "+")) evalSum)) evalProduct)
+evalProduct = y(\evalProduct parseOption (parseBind mul evalnumber (parseBindOverride (parseChar (head "*")) evalProduct)) evalnumber)
+evalSum = y(\evalSum parseOption (parseBind add evalProduct (parseBindOverride (parseChar (head "+")) evalSum)) evalProduct)
 eval = \s (strFromN (maybeTryGetValue (parseAcceptFullyConsumed (evalSum s)) 1337))    
 
 

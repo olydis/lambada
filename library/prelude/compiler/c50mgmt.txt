@@ -40,5 +40,5 @@ run2 = \menv \str maybeMap
                     (\synt fst 
                             (nativeToObj
                                 menv
-                                (_syntaxToNative $ listHead synt)
+                                (_syntaxToNative $ head synt)
                     ))

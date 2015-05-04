@@ -4,7 +4,7 @@ module LambadaRuntime
     var _perfAllocHeartbeat: number = 1000000;
     
     var _perfAppThresh: number = 100;
-    var _perfAllocThresh: number = 5;
+    var _perfAllocThresh: number = 50;
     var _perfBusyThresh: number = 60 * 1000;
     
     // TEMPS
@@ -553,12 +553,12 @@ module LambadaRuntime
                 stack => stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString()))));
             def("strEmpty", ShortcutExpression.createString(""));
 
-            //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
-            //{
-            //    var x = stack.pop().asString();
-            //    var y = stack.pop().asNumber();
-            //    stack.push(ShortcutExpression.createString(x.slice(y)));
-            //}));
+            def("strSkip", new BuiltinExpression(2, stack =>
+            {
+                var x = stack.pop().asString();
+                var y = stack.pop().asNumber();
+                stack.push(ShortcutExpression.createString(x.slice(y)));
+            }));
 
             def("msgBox", new BuiltinExpression(1,
                 stack => window.alert(stack[stack.length - 1].toString())));

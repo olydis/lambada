@@ -16,7 +16,7 @@ pow = \n \m m one (\dm mul n (pow n dm))
 _qadd = \a \n add a (mul (Succ three) n)
 
 
-isEQ = \a \b and (isZero $ sub a b) (isZero $ sub b a)
+isEQ = \a \b lAnd (isZero $ sub a b) (isZero $ sub b a)
 isLTE = \a \b isZero $ sub a b
 isGTE = \a \b isLTE b a
 isLT = \a \b not $ isGTE a b

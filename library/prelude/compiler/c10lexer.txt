@@ -1,17 +1,17 @@
-_eCharBrOpen = strHead "("
-_eCharBrClose = strHead ")"
-_eCharSqBrOpen = strHead "["
-_eCharSqBrClose = strHead "]"
-_eCharComma = strHead ","
-_eCharAbstr = strHead "\"
-_eCharOr = strHead "|"
-_eCharAnd = strHead "&"
-_eCharDollar = strHead "$"
+_eCharBrOpen = head "("
+_eCharBrClose = head ")"
+_eCharSqBrOpen = head "["
+_eCharSqBrClose = head "]"
+_eCharComma = head ","
+_eCharAbstr = head "\"
+_eCharOr = head "|"
+_eCharAnd = head "&"
+_eCharDollar = head "$"
 _eCharAssign = 61
 _eCharComment = 39
-_eStrColon = strReturn 58
-_eIsQuot = \x or (isEQ x 34) (isEQ x 96)
-_eIsNewLine = \x or (isEQ x 10) (isEQ x 13)
+_eStrColon = [58]
+_eIsQuot = \x lOr (isEQ x 34) (isEQ x 96)
+_eIsNewLine = \x lOr (isEQ x 10) (isEQ x 13)
 
 ' special chars
 Schar = ScharParenOpen
@@ -46,7 +46,7 @@ Token = TokenSpecialChar schar      ' schar
       | TokenConstN value           ' N
       | TokenComment value          ' S
 
-tokenLiteral = \literal if(isLowerCaseLetter (strHead literal)) (TokenLiteralLower literal) (TokenLiteralUpper literal) 
+tokenLiteral = \literal if(isLowerCaseLetter (head literal)) (TokenLiteralLower literal) (TokenLiteralUpper literal) 
 
 token_String = \x x
         schar_String

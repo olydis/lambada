@@ -164,6 +164,7 @@ class IntelliHTML
         this.acListNative = document.createElement("div");
         this.acList = $(this.acListNative);
         this.acList.appendTo(this.acSpan);
+        this.acList.css("z-index", "1");
         this.acList.css("min-width", "200px");
         this.acList.css("position", "relative");
         this.acList.css("display", "inline-block");

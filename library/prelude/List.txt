@@ -1,10 +1,9 @@
 List = ListEmpty | ListCons head tail
 
-listAddFront = \tail \head ListCons head tail
 listIsEmpty = \list list True (\head \tail False)
 listIsNotEmpty = b not listIsEmpty
-listHead = \list list i (\head \tail head)
-listTail = \list list i (\head \tail tail)
+head = \list list i (\head \tail head)
+tail = \list list i (\head \tail tail)
 
 foldl = \l \x \f l
             x
@@ -20,51 +19,45 @@ reverse = \l reverseBag l ListEmpty
 unfold = \x \f ListCons x (unfold (f x) f)
 repeat = \elem unfold elem i
 
-listConcat = \l \k foldr l k listAddFront
+listConcat = \l \k l k $ \h \t ListCons h $ listConcat t k
     
-listReturn = listAddFront ListEmpty
-listAddBack = \l \x listConcat l (listReturn x)
+listReturn = \x [x]
+listAddBack = \l \x listConcat l [x]
 
 cfold = \l \x \f ListCons x (l ListEmpty (\head \tail cfold tail (f x head) f))
 
 listTake = \l \n 
     l
-        ListEmpty
+        []
         (\head \tail n 
-            ListEmpty
+            []
             (\dn ListCons head (listTake tail dn))
         )
 
 listTakeWhile = \l \p 
     l
-        ListEmpty
+        []
         (\head \tail
             if(not (p head))
-                ListEmpty
+                []
                 (ListCons head (listTakeWhile tail p))
         )
 
 
-listBind = \l \f foldl l ListEmpty (\a \b listConcat a (f b))
-listMap = \l \f listBind l (b listReturn f)
-listWhere = \l \f foldr l ListEmpty (\a \b if(f b) (ListCons b a) a)
-listSkip = \l \n 
-    l
-        ListEmpty
-        (\head \tail n 
-            l
-            (\dn listSkip tail dn)
-        )
+listBind = \l \f foldl l [] (\a \b listConcat a (f b))
+listMap = \l \f l [] $ \h \t ListCons (f h) $ listMap t f
+listWhere = \l \f l [] $ \head \tail if (f head) (ListCons head) i $ listWhere tail f
+listSkip = \l \n l [] $ \head \tail n l $ listSkip tail
 listSkipWhile = \l \p
     l
-        ListEmpty
+        []
         (\head \tail 
             if(not (p head))
                 l
                 (listSkipWhile tail p)
         )
-listAny = \l \f not (listIsEmpty (listWhere l f))
-listAll = \l \f not (listAny l (b not f))
+listAny = \l \f not $ listIsEmpty $ listWhere l f
+listAll = \l \f not $ listAny l $ b not f
 ors = \conds listAny conds i
 ands = \conds listAll conds i
 
@@ -94,8 +87,7 @@ listZipLonger = \l1 \l2 \pad \op
                         (listZipLonger t1 t2 pad op) 
                 )
         )
-listEquals = \eq \l1 \l2 and (isEQ (listCount l1) (listCount l2)) (listAll (listZip l1 l2 eq) i)
-strEquals = listEquals isEQ
+listEquals = \eq \l1 \l2 lAnd (isEQ (listCount l1) (listCount l2)) (listAll (listZip l1 l2 eq) i)
 listMerge = \lt \l1 \l2
     l1
         l2
@@ -113,7 +105,7 @@ listSort = y(\sort \lt \l if(isGT (listCount l) one) ((\mid listMerge lt (sort l
 
 intSort = listSort isLT
 
-listElementAt = \l \n listHead $ listSkip l n
+listElementAt = \l \n head $ listSkip l n
 
 listStartsWith = \eq \l1 \l2 listEquals eq (listTake l1 (listCount l2)) l2
 

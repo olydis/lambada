@@ -48,7 +48,7 @@ printUnificationList = \typePairList strJoin (listMap typePairList (\pair pair (
 printUnificationResult = \mtypePairList strFromMaybe printUnificationList mtypePairList
 
 _typeEnumVariables = \type type
-                        (\uid listReturn uid)
+                        (\uid [uid])
                         (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
                         (\a \b listConcat (_typeEnumVariables a) (_typeEnumVariables b))
 typeEnumVariables = \type listDistinct (_typeEnumVariables type) isEQ

@@ -2,7 +2,7 @@
 nativeExprToExe = \n n
             (\literal literal)
             (\value strFromN value)
-            (\value (straddBack (straddFront value 34) 34))
+            (\value (listAddBack (ListCons 34 value) 34))
             (\o1 \o2 (strConss [nativeExprToExe o1, " ", nativeExprToExe o2, "."]))
 nativeDefToExe = \n strCons (n (\literal \o (strConss [literal, " ", nativeExprToExe o]))) "."
 

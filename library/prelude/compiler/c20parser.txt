@@ -7,7 +7,7 @@ SyntaxExpression = SyntaxName literal                             ' S
                  | SyntaxAssignment literal o                     ' S SYNTAX
                  | SyntaxType literalType listPairInstanceArgs    ' S [(S, [S])]
 
-syntaxCreateApplication = \syntaxes foldl (listTail syntaxes) (listHead syntaxes) SyntaxApplication
+syntaxCreateApplication = \syntaxes foldl (tail syntaxes) (head syntaxes) SyntaxApplication
 syntaxCreateAbstraction = \literals \body foldr literals body (\x \lit SyntaxAbstraction lit x)
 
 syntax_String = y $ \this \x
@@ -32,7 +32,7 @@ cstrParseAbstractionTail = \e
         (TokenLiteralLower_Dispatch 
             (\literal parseBindOperation 
                 e
-                (\rese listReturn $ SyntaxAbstraction literal rese)
+                (\rese [SyntaxAbstraction literal rese])
             ) 
             parseFail)
 
@@ -73,13 +73,13 @@ cstrParseListTail = \e parseBindDiscard
                             )
                             (parseReturn ListEmpty)
                         )
-                        (\list listReturn $ SyntaxList list)
+                        (\list [SyntaxList list])
                     )
                     cstrParseCloseSqBr
 
 cstrParseAssignTail = \literal \e parseBindOperation 
                         (parseBindOverride cstrParseAssign e)
-                        (\body listReturn $ SyntaxAssignment literal body)
+                        (\body [SyntaxAssignment literal body])
 
 cstrParseDataDefOption = parseBind
                             (\name \args Pair name args)
@@ -91,7 +91,7 @@ cstrParseDataDefTail2 = parseBind
                             (parseWhilesuccessful (parseBindOverride cstrParseSingleOr cstrParseDataDefOption))
 cstrParseDataDefTail = \literal \e parseBindOperation 
                         (parseBindOverride cstrParseAssign cstrParseDataDefTail2) 
-                        (\list listReturn $ SyntaxType literal list)
+                        (\list [SyntaxType literal list])
 
 ' B:
 ' Parser [Syntax]
@@ -113,15 +113,15 @@ cstrSyntaxSingle = \e
             (\literal 
                 parseOption
                     (cstrParseAssignTail literal e)
-                    (parseReturn (listReturn (SyntaxName literal)))
+                    (parseReturn [SyntaxName literal])
             )
             (\literal 
                 parseOption
                     (cstrParseDataDefTail literal e)
-                    (parseReturn (listReturn (SyntaxName literal)))
+                    (parseReturn [SyntaxName literal])
             )
-            (\value parseReturn $ listReturn $ SyntaxConstS value)
-            (\value parseReturn $ listReturn $ SyntaxConstN value)
+            (\value parseReturn $ [SyntaxConstS value])
+            (\value parseReturn $ [SyntaxConstN value])
             (k parseReturn ListEmpty)
         )
 
@@ -138,12 +138,8 @@ cstrSyntaxApplication = \e
                                             (parseBindOperation (parseBindOverride cstrParseDollar e) listReturn)
                                             (parseReturn ListEmpty)
                                         )
-                                        (\tail
-                                            (\ops foldl
-                                                (listTail ops) 
-                                                (listHead ops) 
-                                                (\x \y SyntaxApplication x y))
-                                            (listConcat ops tail))
+                                        (\tailx listConcat ops tailx u $ 
+                                            \head \tail foldl tail head SyntaxApplication)
                                     )
                                 ) (listBind list i)
                             )

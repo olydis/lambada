@@ -9,7 +9,7 @@ var LambadaRuntime;
     var _perfAppHeartbeat = 1000000;
     var _perfAllocHeartbeat = 1000000;
     var _perfAppThresh = 100;
-    var _perfAllocThresh = 5;
+    var _perfAllocThresh = 50;
     var _perfBusyThresh = 60 * 1000;
     // TEMPS
     // 0.._perf???Heartbeat
@@ -442,12 +442,11 @@ var LambadaRuntime;
             def("strEquals", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString())); }));
             def("strFromN", new BuiltinExpression(1, function (stack) { return stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString())); }));
             def("strEmpty", ShortcutExpression.createString(""));
-            //def("strSkip", new BuiltinExpression(stack => stack.length >= 2, stack =>
-            //{
-            //    var x = stack.pop().asString();
-            //    var y = stack.pop().asNumber();
-            //    stack.push(ShortcutExpression.createString(x.slice(y)));
-            //}));
+            def("strSkip", new BuiltinExpression(2, function (stack) {
+                var x = stack.pop().asString();
+                var y = stack.pop().asNumber();
+                stack.push(ShortcutExpression.createString(x.slice(y)));
+            }));
             def("msgBox", new BuiltinExpression(1, function (stack) { return window.alert(stack[stack.length - 1].toString()); }));
         }
         Runtime.create = function (binary) {
