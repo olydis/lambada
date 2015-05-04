@@ -519,6 +519,22 @@ module LambadaRuntime
                 stack.push(a);
             }));
 
+            var y = new BuiltinExpression(1, stack =>
+            {
+                var x = stack.pop();
+                stack.push(Expression.createApplication(y, x));
+                stack.push(x);
+            });
+            // WARNING: this impl. makes state-serialization hard
+            y = new BuiltinExpression(1, stack =>
+            {
+                var x = stack.pop();
+                x = Expression.createApplication(x, x);
+                (<any>x).stack[0] = x;
+                stack.push(x);
+            });
+            def("y", y);
+
             def("Zero", ShortcutExpression.createNumber(0));
             def("add", new BuiltinExpression(2, 
                 stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber()))));
