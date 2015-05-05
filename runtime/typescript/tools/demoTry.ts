@@ -22,10 +22,11 @@ onReady.push(() =>
             var srcs = splitSources(text);
 
             var exFree = true;
+            var active = (i: number) => exFree && currentRT == rtTrash && (i == null || i == srcs.length - 1);
 
             var onEx = (ex: any) =>
             {
-                if (currentRT == rtTrash)
+                if (active(null))
                 {
                     srcs.length = 0;
                     $("#evalRes").text("").append($("<i>").text(ex));
@@ -36,10 +37,13 @@ onReady.push(() =>
             srcs.forEach((text, i) =>
             {
                 rtTrash.compile(text,
-                    binary => rtTrash.eval(binary, exFree && (i < srcs.length - 1 || currentRT != rtTrash) ? _ => { } : res => $("#evalRes").text(res), onEx),
-                    onEx);
-                rtTrash.compile("fullDebug " + safeString(text),
-                    binary => rtTrash.eval(binary, exFree && (i < srcs.length - 1 || currentRT != rtTrash) ? _ => { } : res => $("#evalDebug").text(res), onEx),
+                    binary => 
+                        rtTrash.eval(binary, active(i) ? res => {
+                            $("#evalRes").text(res);
+                            rtTrash.compile("fullDebug " + safeString(text),
+                                binary => rtTrash.eval(binary, active(i) ? res => $("#evalDebug").text(res) : _ => { }, onEx),
+                                onEx);
+                        } : _ => { }, onEx),
                     onEx);
             });
             rtTrash.autoClose();
@@ -51,9 +55,9 @@ onReady.push(() =>
     $.get(libraryPath + "samples.txt",(data: string) =>
     {
         var sSpan = $("#samples");
-        data.split("---").forEach((str, i) =>
+        data.split("~~~").forEach((str, i) =>
         {
-            var parts = str.split("--");
+            var parts = str.split("~~");
             if (i > 0) sSpan.append("&nbsp;&nbsp;&nbsp;");
             sSpan.append($("<a>")
                 .text(parts[0].trim())

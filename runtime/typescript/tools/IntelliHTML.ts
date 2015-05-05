@@ -28,6 +28,7 @@ class IntelliHTML
     private triggerOnTextChanged(): void
     {
         var newText = this.text;
+        this.updateHighlight(newText); 
         if (this.lastText == newText)
             return;
         this.lastText = newText;
@@ -64,7 +65,7 @@ class IntelliHTML
 
     public constructor(private highlight: boolean, onTextChanged: (text: string) => void, getACitems: () => string[], pre: JQuery = $("<pre>"))
     {
-        this.onTextChanged = text => { onTextChanged(text); this.updateHighlight(text); }
+        this.onTextChanged = onTextChanged;
         this.getACitems = getACitems;
 
         this.pre = pre;
@@ -213,7 +214,10 @@ class IntelliHTML
         range.insertNode(elem[0]);
         return elem;
     }
-    private updateHighlight(text: string)
+    
+    private debHLid: number = null;
+    
+    private _updateHighlight(text: string)
     {
         var saveCaret = this.caretIndex(this.caretPosition);
 
@@ -263,6 +267,12 @@ class IntelliHTML
         var range = document.createRange();
         range.setStart(loc.node, loc.index);
         setCaret(range);
+    }
+    private updateHighlight(text: string)
+    {
+        if (this.debHLid != null)
+            clearTimeout(this.debHLid);
+        this.debHLid = setTimeout(() => this._updateHighlight(text), 1000);
     }
 
     private get caretPosition(): Range

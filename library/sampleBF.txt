@@ -1,16 +1,16 @@
-_bfSkip = \s s "" $ \x \s (\p 
+_bfSkip = \s s "" $ \x \s (\p
     if (p $ listFirst "[") (_bfSkip $ _bfSkip s) $
     if (p $ listFirst "]") s $
     _bfSkip s
   ) $ isEQ x
 _bf2fun = \state \ci \re \bf \s bf "" $ \x \xs switchCond (isEQ x) [
-    Pair (listFirst "+") $ _bf2fun (\in if (isEQ in ci) Succ i $ state in) ci re xs s, 
-    Pair (listFirst "-") $ _bf2fun (\in if (isEQ in ci) pred i $ state in) ci re xs s, 
-    Pair (listFirst ">") $ _bf2fun state (Succ ci) re xs s, 
-    Pair (listFirst "<") $ _bf2fun state (pred ci) re xs s, 
-    Pair (listFirst "[") $ isZero (state ci) (_bf2fun state ci re (_bfSkip xs) s) (_bf2fun state ci (ListCons xs re) xs s), 
-    Pair (listFirst "]") $ re "" $ \r \rex isZero (state ci) (_bf2fun state ci rex xs s) (_bf2fun state ci re r s), 
-    Pair (listFirst ".") $ ListCons (state ci) $ _bf2fun state re ci xs s, 
+    Pair (listFirst "+") $ _bf2fun (\in if (isEQ in ci) Succ i $ state in) ci re xs s,
+    Pair (listFirst "-") $ _bf2fun (\in if (isEQ in ci) pred i $ state in) ci re xs s,
+    Pair (listFirst ">") $ _bf2fun state (Succ ci) re xs s,
+    Pair (listFirst "<") $ _bf2fun state (pred ci) re xs s,
+    Pair (listFirst "[") $ isZero (state ci) (_bf2fun state ci re (_bfSkip xs) s) (_bf2fun state ci (ListCons xs re) xs s),
+    Pair (listFirst "]") $ re "" $ \r \rex isZero (state ci) (_bf2fun state ci rex xs s) (_bf2fun state ci re r s),
+    Pair (listFirst ".") $ ListCons (state ci) $ _bf2fun state re ci xs s,
     Pair (listFirst ",") $ s "" $ \c \s _bf2fun (\in if (isEQ in ci) c $ state in) ci re xs s
     ] $ _bf2fun state re ci xs s
 bf2fun = _bf2fun (k 0) 0 []

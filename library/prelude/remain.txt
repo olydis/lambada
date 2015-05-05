@@ -31,7 +31,6 @@ RBTree = RBTreeLeaf | RBTreeNodeRed label left right lt | RBTreeNodeBlack label 
 ' recursive functions
 nats0 = unfold Zero Succ
 nats = unfold one Succ
-zeroes = repeat 0
 byteVals = take 256 nats0
 
 toBinSeq = \n map (c mod 2) $ takeWhile (b not isZero) (unfold n (c div 2))
@@ -47,7 +46,6 @@ num = filter isNum byteVals
 isAlphaNum = \c lOr (isAlpha c) (isNum c)
 isWhiteSpace = \c isLT c 34
 whiteSpace = filter isWhiteSpace byteVals
-newLine = [13, 10]
 
 toUpperCaseLetter = \c if(isLowerCaseLetter c) (add c 32) c
 toLowerCaseLetter = \c if(isUpperCaseLetter c) (sub c 32) c

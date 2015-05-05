@@ -18,7 +18,8 @@ var IntelliHTML = (function () {
             phrase: "",
             caretIndex: 0
         };
-        this.onTextChanged = function (text) { onTextChanged(text); _this.updateHighlight(text); };
+        this.debHLid = null;
+        this.onTextChanged = onTextChanged;
         this.getACitems = getACitems;
         this.pre = pre;
         this.pre.css("cursor", "text");
@@ -116,6 +117,7 @@ var IntelliHTML = (function () {
     }
     IntelliHTML.prototype.triggerOnTextChanged = function () {
         var newText = this.text;
+        this.updateHighlight(newText);
         if (this.lastText == newText)
             return;
         this.lastText = newText;
@@ -163,7 +165,7 @@ var IntelliHTML = (function () {
         range.insertNode(elem[0]);
         return elem;
     };
-    IntelliHTML.prototype.updateHighlight = function (text) {
+    IntelliHTML.prototype._updateHighlight = function (text) {
         var _this = this;
         var saveCaret = this.caretIndex(this.caretPosition);
         // clear all formatting
@@ -198,6 +200,12 @@ var IntelliHTML = (function () {
         var range = document.createRange();
         range.setStart(loc.node, loc.index);
         setCaret(range);
+    };
+    IntelliHTML.prototype.updateHighlight = function (text) {
+        var _this = this;
+        if (this.debHLid != null)
+            clearTimeout(this.debHLid);
+        this.debHLid = setTimeout(function () { return _this._updateHighlight(text); }, 1000);
     };
     Object.defineProperty(IntelliHTML.prototype, "caretPosition", {
         get: function () {
