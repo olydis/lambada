@@ -43,7 +43,7 @@ takeWhile = \p \l
                 (ListCons head $ takeWhile p tail)
         )
 
-
+replicate = \n \x take n $ repeat x
 listBind = \f \l foldl l [] (\a \b listConcat a (f b))
 map = \f \l l [] $ \h \t ListCons (f h) $ map f t
 filter = \f \l l [] $ \head \tail if (f head) (ListCons head) i $ filter f tail

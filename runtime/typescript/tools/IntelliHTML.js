@@ -341,7 +341,9 @@ var IntelliHTML = (function () {
     };
     Object.defineProperty(IntelliHTML.prototype, "text", {
         get: function () {
-            return this.code.text();
+            var cl = this.code.clone();
+            cl.find("br").replaceWith("\n");
+            return cl.text();
         },
         set: function (text) {
             this.acSpan.hide();

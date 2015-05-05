@@ -432,7 +432,9 @@ class IntelliHTML
 
     public get text(): string
     {
-        return this.code.text();
+        var cl = this.code.clone();
+        cl.find("br").replaceWith("\n");
+        return cl.text();
     }
 
     public set text(text: string)

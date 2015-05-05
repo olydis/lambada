@@ -1,0 +1,68 @@
+Integer = Integer bitList
+
+showBits = b (y $ \showBits \b b "" $ \h \t ListCons (if h 49 48) $ showBits t) reverse
+showIntegerBits = \i i showBits  
+'showInteger 
+
+natToBits = \n n [] $ \m ListCons (not $ isZero $ mod n 2) $ natToBits $ div n 2
+natToInteger = b Integer natToBits 
+
+bitsToNat = \bs bs 0 $ \h \t if h Succ i $ mul 2 $ bitsToNat t
+integerToNat = \i i bitsToNat 
+
+bitsIsZero = b not or
+integerZero = Integer []
+
+bitsSucc = \b b [True] $ \h \t if h (ListCons False $ bitsSucc t) (ListCons True t)
+integerSucc = \i i $ b Integer bitsSucc 
+
+bitsPred = \b b [] $ \h \t if h (if (listIsEmpty t) [] $ ListCons False t) (ListCons True $ bitsPred t)
+integerPred = \i i $ b Integer bitsPred
+
+
+bitsAdd = \b1 \b2 
+    b1 b2 $ \h1 \t1 
+    b2 b1 $ \h2 \t2 
+    if (lAnd h1 h2)
+        (ListCons False $ bitsSucc $ bitsAdd t1 t2)
+        (ListCons (lOr h1 h2) $ bitsAdd t1 t2)
+integerAdd = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsAdd b1 b2
+
+bitsDiff = \b1 \b2 
+    b1 b2 $ \h1 \t1 
+    b2 b1 $ \h2 \t2 
+    if (lAnd (not h1) h2)
+        (ListCons True $ bitsPred $ bitsDiff t1 t2)
+        (ListCons (lAnd h1 (not h2)) $ bitsDiff t1 t2)
+integerDiff = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsDiff b1 b2
+
+bitsEQ = listEquals eq
+bitsLTE = \b1 \b2 bitsEQ b2 $ bitsAdd b1 $ bitsDiff b2 b1 ' UGLY
+
+bitsSub = \b1 \b2 if (bitsLTE b1 b2) [] $ bitsDiff b1 b2
+integerSub = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsSub b1 b2
+
+bitsMul = \b1 \b2 b1 [] $ \h1 \t1 if h1 (bitsAdd b2) i $ ListCons False $ bitsMul t1 b2
+integerMul = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsMul b1 b2
+
+bitsPow = \b1 \b2 b2 [True] $ \h2 \t2 if h2 (bitsMul b1) i $ bitsPow (bitsMul b1 b1) t2
+integerPow = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsPow b1 b2
+
+bitsShiftLeft = \n \b n b $ \m ListCons False $ bitsShiftLeft m b ' N dependent
+
+bitsModDiv = \b1 \b2 if (not $ bitsLTE b2 b1) (Pair b1 []) $ bitsModDiv b1 (ListCons False b2) $ \mod \div (\fits Pair (if fits (bitsSub mod b2) mod) (ListCons fits div)) $ bitsLTE b2 mod
+
+bitsDiv = \b1 \b2 snd $ bitsModDiv b1 b2
+integerDiv = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsDiv b1 b2
+
+bitsMod = \b1 \b2 fst $ bitsModDiv b1 b2
+integerMod = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsMod b1 b2
+
+i111 = natToInteger 111
+i42 = natToInteger 42
+i9 = natToInteger 9
+i7 = natToInteger 7
+i3 = natToInteger 3
+
+strFromN $ integerToNat $ integerMod i111 i3
+
