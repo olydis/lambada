@@ -3,6 +3,9 @@ import Data.Char
 -- Abstract Syntax
 data Expression = App Expression Expression | U deriving Eq
 instance Show Expression where
+  show (App U U) = "i"
+  show (App U (App U (App U U))) = "k"
+  show (App U (App U (App U (App U U)))) = "s"
   show (App f a)   = "(" ++ show f ++ " " ++ show a ++ ")"
   show U           = "u"
 
@@ -15,7 +18,7 @@ spl []     = Nothing
 spl (x:xs) = Just (x,xs)
 
 unr :: [Expression] -> Expression -> Expression
-unr es e = foldl (\a b -> App b a) e es
+unr es e = foldl App e es
 
 _s = App U (App U (App U (App U U)))
 _k = App U (App U (App U U))
