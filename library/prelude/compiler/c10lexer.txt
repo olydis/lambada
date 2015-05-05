@@ -55,7 +55,7 @@ token_String = \x x
         (\value strConss ["<CONSTS(", value, ")>"])
         (\value strConss ["<CONSTN(", strFromN value, ")>"])
         (k "<COMMENT>")
-token_String_list = \xs strJoin (listMap xs token_String) " "
+token_String_list = \xs strJoin (map token_String xs) " "
 
 ' :: Parser Token
 eatParenOpen        = parseBindOperation (parseChar _eCharBrOpen)    $ k $ TokenSpecialChar ScharParenOpen

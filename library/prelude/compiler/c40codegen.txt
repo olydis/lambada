@@ -17,11 +17,11 @@ nativeToObj = y $ \this \env \n n
 ' S => S
 native_Run = \s strFromMaybe i $ maybeMap 
                                     (maybeMap (maybeBind (token_Process s) syntax_Process) (\l listBind l syntaxToNative))
-                                    (\ns strJoin (listMap ns nativeDefToExe) "; ")
+                                    (\ns strJoin (map nativeDefToExe ns) "; ")
                                     ' native_String_list
 
 ' [NATIVE] => S
-output_Process = \natives strConss $ listMap natives nativeDefToExe
+output_Process = \natives strConss $ map nativeDefToExe natives
 
 ' [NATIVE] => S
-output_ProcessType = \natives strConss $ listMap natives $ b nativeDefToExe nativeDefToTypeNative
+output_ProcessType = \natives strConss $ map (b nativeDefToExe nativeDefToTypeNative) natives

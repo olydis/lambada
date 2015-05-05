@@ -43,8 +43,8 @@ printType = \type type
                 (\uid strFromN uid)
                 (\a \b strConss ["(", printType a, " -> ", printType b, ")"])
                 (\a \b strConss ["(", printType a, " ^ ", printType b, ")"])
-printRestrictionList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [printType a, " = ", printType b]))) ", "
-printUnificationList = \typePairList strJoin (listMap typePairList (\pair pair (\a \b strConss [strFromN a, " => ", printType b]))) ", "
+printRestrictionList = \typePairList strJoin (map (\pair pair (\a \b strConss [printType a, " = ", printType b])) typePairList) ", "
+printUnificationList = \typePairList strJoin (map (\pair pair (\a \b strConss [strFromN a, " => ", printType b])) typePairList) ", "
 printUnificationResult = \mtypePairList strFromMaybe printUnificationList mtypePairList
 
 _typeEnumVariables = \type type
@@ -62,8 +62,8 @@ typeCountUsage = \type \uid type
 _removeSingletons = \type \removeUidPred type
                         (\uid type)
                         (\a \b TypeAbstraction (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
-                        (\a \b if (listAll (typeEnumVariables a) removeUidPred) b
-                              (if (listAll (typeEnumVariables b) removeUidPred) a 
+                        (\a \b if (all removeUidPred (typeEnumVariables a)) b
+                              (if (all removeUidPred (typeEnumVariables b)) a 
                               (TypeIntersection (_removeSingletons a removeUidPred) (_removeSingletons b removeUidPred))
                               )
                         )
@@ -76,11 +76,11 @@ typeNormalize = \type (\type _typeNormalize type (typeEnumVariables type))
                       (
                         (\singletons _removeSingletons 
                             type 
-                            (\uidx listAny 
-                                singletons
+                            (\uidx any 
                                 (isEQ uidx)
+                                singletons
                             )
-                        ) (listWhere (typeEnumVariables type) (\uid isEQ 1 (typeCountUsage type uid)))
+                        ) (filter (\uid isEQ 1 (typeCountUsage type uid)) (typeEnumVariables type))
                       )
 
 
@@ -92,14 +92,14 @@ _typeShift = \type \offset type
                         (\a \b TypeIntersection (_typeShift a offset) (_typeShift b offset))
 
 typeNextSafeVariable = \type foldl (typeEnumVariables (_typeShift type 1)) 0 max
-typeContainsVariableUid = \uid \type listAny (typeEnumVariables type) (isEQ uid)
+typeContainsVariableUid = \uid \type any (isEQ uid) (typeEnumVariables type)
 
 typeReplaceUidWithType = \uid \type \containerType containerType
                         (\uidx if(isEQ uid uidx) type containerType)
                         (\a \b TypeAbstraction (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
                         (\a \b TypeIntersection (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))
 
-typeListReplaceUidWithType = \uid \type \tlist listMap tlist (\pair pair (\a \b Pair (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b)))
+typeListReplaceUidWithType = \uid \type \tlist map (\pair pair (\a \b Pair (typeReplaceUidWithType uid type a) (typeReplaceUidWithType uid type b))) tlist
 
 
 
@@ -156,7 +156,7 @@ _intersectionSplit = \unify \nextSafeUid \ia \ib \other \c2
         (\otherA \otherB
             maybeMap 
                 (unify (mul 3 nextSafeUid) (listConcat c2 [Pair ia otherA, Pair ib otherB])) 
-                i'(listConcat (listMap (typeEnumVariables other) (\uid Pair uid (TypeIntersection (TypeVariable (add uid nextSafeUid)) (TypeVariable (add uid (mul 2 nextSafeUid)))))))
+                i
         ) (_typeShift other nextSafeUid) (_typeShift other (mul 2 nextSafeUid))
     )
 
@@ -189,7 +189,7 @@ _typeUnify = \breakN \interesting \nextSafeUid \c breakN
             )
 
 ' Type -> [Pair Type Type] -> Maybe Type
-typeUnify = \interesting \c _typeUnify 40 interesting (foldl (listMap c (\pair pair (\a \b max (typeNextSafeVariable a) (typeNextSafeVariable b)))) 0 max) c
+typeUnify = \interesting \c _typeUnify 40 interesting (foldl (map (\pair pair (\a \b max (typeNextSafeVariable a) (typeNextSafeVariable b))) c) 0 max) c
 
 ' Type -> Type -> Maybe Type
 typeApply = \a \b maybeMap ((\oa \ob typeUnify (TypeVariable (add oa ob)) [Pair a (TypeAbstraction (_typeShift b oa) (TypeVariable (add oa ob)))]) (typeNextSafeVariable a) (typeNextSafeVariable b)) typeNormalize

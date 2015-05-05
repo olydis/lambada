@@ -12,16 +12,16 @@ reverse $ listDistinct "Hallo Welt" isEQ
 ---
 fibonacci
 --
-fibs = ListCons 1 $ ListCons 1 $ listZip fibs (listTail fibs) add
+fibs = ListCons 1 $ ListCons 1 $ listZip fibs (tail fibs) add
 
-strJoin (listMap (listTake fibs 50) strFromN) ", "
+strJoin (map strFromN $ listTake fibs 50) ", "
 
 
 ---
 ASCIIart
 --
-gDraw 30 22 $ gCircle 10 12 9 (listHead "#") 
-            $ gCircle 20 7 7 (listHead ".") 
+gDraw 30 22 $ gCircle 10 12 9 (head "#") 
+            $ gCircle 20 7 7 (head ".") 
             $ gCanvas
 
             

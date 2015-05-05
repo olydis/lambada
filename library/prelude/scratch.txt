@@ -32,8 +32,8 @@ calledOften1 = \opId \arg  (lengthyOp opId) arg
 calledOften2 = \opId \arg  (\arg  \opId (lengthyOp opId) arg) arg opId
 
 
-scenario1 = \a foldl (listTake nats 5) "0" (\b \_ calledOften1 "42" (strCons a b))
-scenario2 = \a foldl (listTake nats 5) "0" (\b \_ calledOften2 "42" (strCons a b))
+scenario1 = \a foldl (take 5 nats) "0" (\b \_ calledOften1 "42" (strCons a b))
+scenario2 = \a foldl (take 5 nats) "0" (\b \_ calledOften2 "42" (strCons a b))
 
 ' : (native_Run "\opId \arg  (\arg  \opId (lengthyOp (c (c (c (c opId))))) (c (c (c (c arg))))) arg opId")
 

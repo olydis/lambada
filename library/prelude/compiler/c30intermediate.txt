@@ -16,8 +16,8 @@ nativeExpr_String = y(\this \x
     )
 nativeDef_String = y $ \this \x x $ \literal \o strConss ["assign(", literal, ", ", nativeExpr_String o, ")"]
     
-nativeDef_String_list = \xs strJoin (listMap xs nativeExpr_String) "; "
-nativeExpr_String_list = \xs strJoin (listMap xs nativeDef_String) "; "
+nativeDef_String_list = \xs strJoin (map nativeExpr_String xs) "; "
+nativeExpr_String_list = \xs strJoin (map nativeDef_String xs) "; "
 
 nativeI = NativeLiteral ":bound:i"
 nativeK = NativeLiteral ":bound:k"
@@ -53,7 +53,7 @@ nativeContainsLit = y(\this \n \lit
 ' S => S
 finalizeLiteral = \s
     if(strStartsWith s ":bound:")
-        (listSkip s 7)
+        (skip 7 s)
         s
 
 ' NATIVE => NATIVE
@@ -142,7 +142,7 @@ _syntaxEmitTypeInstance = \items \ctrArgList \index \args \name
             name
             (
                 _syntaxToNative
-                (syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (listMap (ListCons (_createUniqueNameFromN index) args) SyntaxName)))
+                (syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (map SyntaxName (ListCons (_createUniqueNameFromN index) args))))
             ),
         NativeAssignment
             (strCons name "_Dispatch")
@@ -153,11 +153,11 @@ _syntaxEmitTypeInstance = \items \ctrArgList \index \args \name
                         (syntaxCreateApplication 
                             (ListCons 
                                 (SyntaxName argItem)
-                                (listMap items (\item 
+                                (map (\item 
                                     if(isEQ index (snd item)) 
                                         (SyntaxName argDisp)
                                         (syntaxCreateAbstraction (snd (fst item)) (SyntaxName argAlt))
-                                ))
+                                ) items)
                             )
                         )
                     )
@@ -186,9 +186,9 @@ _syntaxEmitTypeStuff = \typeName \items \ctrArgList ' listConcat
 '                        (syntaxCreateApplication 
 '                            (ListCons 
 '                                (SyntaxName argItem)
-'                                (listMap items (\item 
+'                                (map (\item 
 '                                    syntaxCreateAbstraction (snd (fst item)) (SyntaxConstN (snd item))
-'                                ))
+'                                ) items)
 '                            )
 '                        )
 '                    )
@@ -216,12 +216,12 @@ _syntaxToNativeDefs = \syntax
         (\typeLiteral \pairs 
             (\optionCount \items
                 (\ctrArgList _syntaxEmitTypeStuff typeLiteral items ctrArgList)
-                (listMap (listTake nats0 optionCount) _createUniqueNameFromN)
+                (map _createUniqueNameFromN $ take optionCount nats0)
             )
-            (listCount pairs)
-            (listZip pairs nats0 Pair)
+            (length pairs)
+            (zip pairs nats0)
         )
-syntaxToNative = \s listMap (_syntaxToNativeDefs s) finalizeNativeDefs
+syntaxToNative = \s map finalizeNativeDefs (_syntaxToNativeDefs s)
 
 ' NATIVE => NATIVE
 _nlB = NativeLiteral "b"

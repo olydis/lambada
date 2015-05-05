@@ -26,12 +26,12 @@ listAddBack = \l \x listConcat l [x]
 
 cfold = \l \x \f ListCons x (l ListEmpty (\head \tail cfold tail (f x head) f))
 
-listTake = \l \n 
+take = \n \l
     l
         []
         (\head \tail n 
             []
-            (\dn ListCons head (listTake tail dn))
+            (\dn ListCons head (take dn tail))
         )
 
 listTakeWhile = \l \p 
@@ -45,9 +45,9 @@ listTakeWhile = \l \p
 
 
 listBind = \l \f foldl l [] (\a \b listConcat a (f b))
-listMap = \l \f l [] $ \h \t ListCons (f h) $ listMap t f
-listWhere = \l \f l [] $ \head \tail if (f head) (ListCons head) i $ listWhere tail f
-listSkip = \l \n l [] $ \head \tail n l $ listSkip tail
+map = \f \l l [] $ \h \t ListCons (f h) $ map f t
+filter = \f \l l [] $ \head \tail if (f head) (ListCons head) i $ filter f tail
+skip = \n \l l [] $ \head \tail n l (\n skip n tail)
 listSkipWhile = \l \p
     l
         []
@@ -56,14 +56,14 @@ listSkipWhile = \l \p
                 l
                 (listSkipWhile tail p)
         )
-listAny = \l \f not $ listIsEmpty $ listWhere l f
-listAll = \l \f not $ listAny l $ b not f
-ors = \conds listAny conds i
-ands = \conds listAll conds i
+any = \f \l not $ listIsEmpty $ filter f l
+all = \f \l not $ any (b not f) l
+ors = any i
+ands = all i
 
-listCount = \l foldl l Zero (b k Succ)
+length = \l foldl l Zero (b k Succ)
 
-listZip = \l1 \l2 \op 
+zipWith = \op \l1 \l2 
     l1
         ListEmpty
         (\h1 \t1
@@ -72,22 +72,24 @@ listZip = \l1 \l2 \op
                 (\h2 \t2
                     ListCons 
                         (op h1 h2)
-                        (listZip t1 t2 op) 
+                        (zipWith op t1 t2) 
                 )
         )
+zip = zipWith Pair
+
 listZipLonger = \l1 \l2 \pad \op 
     l1
-        (listMap l2 (\item2 op pad item2))
+        (map (\item2 op pad item2) l2)
         (\h1 \t1
             l2
-                (listMap l1 (\item1 op item1 pad))
+                (map (\item1 op item1 pad) l1)
                 (\h2 \t2
                     ListCons 
                         (op h1 h2)
                         (listZipLonger t1 t2 pad op) 
                 )
         )
-listEquals = \eq \l1 \l2 lAnd (isEQ (listCount l1) (listCount l2)) (listAll (listZip l1 l2 eq) i)
+listEquals = \eq \l1 \l2 lAnd (isEQ (length l1) (length l2)) (ands $ zipWith eq l1 l2)
 listMerge = \lt \l1 \l2
     l1
         l2
@@ -101,13 +103,13 @@ listMerge = \lt \l1 \l2
                 )
         )
 
-listSort = y(\sort \lt \l if(isGT (listCount l) one) ((\mid listMerge lt (sort lt (listTake l mid))  (sort lt (listSkip l mid))) (div (listCount l) two)) l)
+listSort = y(\sort \lt \l if(isGT (length l) one) ((\mid listMerge lt (sort lt (take mid l))  (sort lt (skip mid l))) (div (length l) two)) l)
 
 intSort = listSort isLT
 
-listElementAt = \l \n head $ listSkip l n
+listElementAt = \l \n head $ skip n l
 
-listStartsWith = \eq \l1 \l2 listEquals eq (listTake l1 (listCount l2)) l2
+listStartsWith = \eq \l1 \l2 listEquals eq (take (length l2) l1) l2
 
 listJoin = \lists \sepa lists
     ListEmpty 

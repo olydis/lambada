@@ -15,12 +15,12 @@ syntax_String = y $ \this \x
         (\literal strConss ["literal(", literal, ")"])
         (\value strConss ["constn(", strFromN value, ")"])
         (\value strConss ["consts(", value, ")"])
-        (\list strConss ["list(", strJoin (listMap list this) ", ", ")"])
+        (\list strConss ["list(", strJoin (map this list) ", ", ")"])
         (\literal \body strConss ["abstract(", literal, ", ", this body, ")"])
         (\o1 \o2 strConss ["apply(", this o1, ", ", this o2, ")"])
         (\literal \o strConss ["assign(", literal, ", ", this o, ")"])
-        (\literalType \listPairInstanceArgs strConss ["type(", literalType, "; ", (strJoin (listMap listPairInstanceArgs (\pair strCons (fst pair) (strConss (listMap (snd pair) (strCons " "))))) ", "), ")"])
-syntax_String_list = \xs strJoin (listMap xs syntax_String) "; "
+        (\literalType \listPairInstanceArgs strConss ["type(", literalType, "; ", (strJoin (map (\pair strCons (fst pair) (strConss (map (strCons " ") (snd pair)))) listPairInstanceArgs) ", "), ")"])
+syntax_String_list = \xs strJoin (map syntax_String xs) "; "
 
 ' B :=  lit=E | \lit E | lit | constS | constN | (E) | comment | [E*]   'return [Syntax]
 ' E :=  app  :=  B* | B* $ E                                            'return Syntax

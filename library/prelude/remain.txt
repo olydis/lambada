@@ -32,65 +32,61 @@ RBTree = RBTreeLeaf | RBTreeNodeRed label left right lt | RBTreeNodeBlack label 
 nats0 = unfold Zero Succ
 nats = unfold one Succ
 zeroes = repeat 0
-byteVals = listTake nats0 256
+byteVals = take 256 nats0
 
-toBinSeq = \n listMap (listTakeWhile (unfold n (c div 2)) (b not isZero)) (c mod 2)
-fromBinSeq = \l foldl (listZip l nats0 (\a \b mul a (pow 2 b))) 0 add
+toBinSeq = \n map (c mod 2) $ listTakeWhile (unfold n (c div 2)) (b not isZero)
+fromBinSeq = \l foldl (zipWith (\a \b mul a (pow 2 b)) l nats0) 0 add
 nxor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y mod (add x y) 2))
 
 isUpperCaseLetter = \c lAnd (isGT c 64) (isLT c 91)
 isLowerCaseLetter = \c lOr (lAnd (isGT c 96) (isLT c 123)) (isEQ c 95)
 isAlpha = \c lOr (isUpperCaseLetter c) (isLowerCaseLetter c)
-alpha = listWhere byteVals isAlpha
+alpha = filter isAlpha byteVals
 isNum = \c lAnd (isGT c 47) (isLT c 58)
-num = listWhere byteVals isNum
+num = filter isNum byteVals
 isAlphaNum = \c lOr (isAlpha c) (isNum c)
 isWhiteSpace = \c isLT c 34
-whiteSpace = listWhere byteVals isWhiteSpace
+whiteSpace = filter isWhiteSpace byteVals
 newLine = [13, 10]
 
 toUpperCaseLetter = \c if(isLowerCaseLetter c) (add c 32) c
 toLowerCaseLetter = \c if(isUpperCaseLetter c) (sub c 32) c
 
-toUpperCaseString = \s listMap s toUpperCaseLetter
-toLowerCaseString = \s listMap s toLowerCaseLetter
+toUpperCaseString = map toUpperCaseLetter
+toLowerCaseString = map toLowerCaseLetter
 
 halt = \x (if x halt i) x
-fak = \n foldl (listTake nats n) 1 mul
+fak = \n foldl (take n nats) 1 mul
 
 ' awesome sequences...
-_nextCandids = \prime \candids (listWhere candids (\n (not (isZero (mod n prime)))))
+_nextCandids = \prime \candids (filter (\n (not (isZero (mod n prime)))) candids)
 _primes = \candids (\newPrime ListCons newPrime (_primes (_nextCandids newPrime candids))) (head candids)
-primes = _primes (listSkip nats 1)
-fibs = ListCons 1 $ ListCons 1 $ listZip fibs (tail fibs) add
+primes = _primes (tail nats)
+fibs = ListCons 1 $ ListCons 1 $ zipWith add fibs (tail fibs)
 
 '_modUint = \x mod x (pow 2 32)
 '_quadEx = \quad \f f (fst (fst quad)) (snd (fst quad)) (fst (snd quad)) (snd (snd quad))
 '_getT = \x xor x (_modUint (mul x (pow 2 11)))
 '_randomPermut = \quad _quadEx quad (\x \y \z \w Pair (Pair y z) (Pair w ((\t xor (xor w (div w (pow 2 19))) (xor t (div t 256))) (_getT x))))
 '_randomGet = \quad _quadEx quad (\x \y \z \w mod w (pow 2 31))
-'randoms = \seed tail (listMap (unfold (Pair (Pair seed 842502087) (Pair 3579807591 273326509)) _randomPermut) _randomGet)
-'randomsBound = \seed \min \max listMap (randoms seed) (\x add min (mod x (sub max min)))
+'randoms = \seed tail (map _randomGet (unfold (Pair (Pair seed 842502087) (Pair 3579807591 273326509)) _randomPermut))
+'randomsBound = \seed \min \max map (\x add min (mod x (sub max min))) (randoms seed)
 
 
 
-listCutAt = \l \f if(lOr (listIsEmpty l) (f (head l))) (Pair ListEmpty l) (changeFst (listCutAt (tail l) f) (ListCons (head l)))
+listCutAt = \l \f l (Pair [] l) $ \h \t if(f h) (Pair [] l) (changeFst (listCutAt t f) (ListCons h))
 
 strFromSS = \ss foldl ss strEmpty (\s \x strCons s (strCons x [10]))
-xlistSplitAt = \l \f unfold (listCutAt l (k True)) (\p changeSnd (listCutAt (snd p) f) (\li listSkip li one))
-listSplitAt = \l \f listBind (listCutAt (listSkip (xlistSplitAt l f) one) (\x listIsEmpty (snd x))) (\x [snd x])
+xlistSplitAt = \l \f unfold (listCutAt l (k True)) (\p changeSnd (listCutAt (snd p) f) tail)
+listSplitAt = \l \f listBind (listCutAt (tail (xlistSplitAt l f)) (\x listIsEmpty (snd x))) (\x [snd x])
  
-listContains = \list \elem \eq listAny list (\x eq elem x)
+listContains = \list \elem \eq any (\x eq elem x) list
 strContains = \list \elem listContains list elem isEQ
 
-listRepeat = \n \list listBind (listTake (repeat list) n) i
+listRepeat = \n \list listBind (take n (repeat list)) i
 
-strBurst = \str listMap str (\c [c])
+strBurst = map (\c [c])
 strTrim = \str reverse (listSkipWhile (reverse (listSkipWhile str isWhiteSpace)) isWhiteSpace)
-
-strCutAt = listCutAt
-
-
 
 strFromMaybe = \formatter \m m (\x strCons "Just " (formatter x)) "Nothing"
 
@@ -115,7 +111,7 @@ parseCharIf = \cond (\string string (parseFail string) $ \head \tail if (cond he
 parseCharX = \set parseCharIf (\c listContains set c isEQ)
 parseChar = \c parseCharIf (isEQ c)
 parseSingle = parseCharIf (k True)
-parseString = \str foldl (listMap str parseChar) (parseReturn strEmpty) (parseBind listAddBack)
+parseString = \str foldl (map parseChar str) (parseReturn strEmpty) (parseBind listAddBack)
 parseUntil = \cond \str (\p parseReturn (fst p) (snd p)) (listCutAt str cond)
 parseWhile = \cond parseUntil (b not cond)
 parseWhileMinOne = \cond \str (\res if(listIsEmpty (ParseResult_Dispatch (\remaining \item item) "" res)) (parseFail str) res) (parseWhile cond str)
@@ -144,11 +140,11 @@ parseWhilesuccessful =
 
 ' map
 mapCreate = \eq Pair eq ListEmpty
-mapGetAll = \map \key listWhere (snd map) (\x fst map key (fst x))
-mapHasKey = \map \key listAny (mapGetAll map key) (k True)
-mapCount = b listCount snd
+mapGetAll = \map \key filter (\x fst map key (fst x)) (snd map)
+mapHasKey = \map \key any (k True) (mapGetAll map key)
+mapCount = b length snd
 mapadd = \map \key \value changeSnd map (ListCons (Pair key value))
-mapRemove = \map \key changeSnd map (\list listWhere list (\elem not (fst map key (fst elem))))
+mapRemove = \map \key changeSnd map (filter (\elem not (fst map key (fst elem))))
 mapSet = \map \key \value mapadd (mapRemove map key) key value
 mapGet = \map \key snd (head (mapGetAll map key))
 
@@ -169,8 +165,8 @@ newLine = [10]
 
 empty = [32]
 
-gDrawL = \w \y \f listBind (listTake nats0 w) (\x (f x y))
-gDraw = \w \h \f listBind (listTake nats0 h) (\y listConcat (gDrawL w y f) newLine)
+gDrawL = \w \y \f listBind (take w nats0) (\x (f x y))
+gDraw = \w \h \f listBind (take h nats0) (\y listConcat (gDrawL w y f) newLine)
 
 gCanvas = k (k empty)
 gOverlay = \sel \col \canvas \x \y if (sel x y) [col] (canvas x y)
@@ -202,7 +198,7 @@ seqConcat = \s1 \s2 Pair (add (seqLength s1) (seqLength s2)) (\i if(isLT i (seqL
 seqRangeUnsafe = \seq \offset \count Pair count (\i seqGet seq (sub i offset))
 seqRange = \seq \offset \count seqRangeUnsafe seq offset (min count (sub (seqLength seq) offset))
 
-seqToList = \seq listMap (listTake nats0 (seqLength seq)) (\i seqGet seq i)
+seqToList = \seq map (seqGet seq) $ take (seqLength seq) nats0
 listToSeq = \list foldr list seqEmpty (\seq \x seqaddFront seq x)
 
 _switchCond = \listpairxres \alt \cond foldr listpairxres alt (\inner \pair if(cond (fst pair)) (snd pair) inner)
