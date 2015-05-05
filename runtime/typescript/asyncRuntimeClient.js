@@ -5,6 +5,7 @@ var AsyncRuntime = (function () {
         this.binary = binary;
         this.nextReq = 0;
         this.nextRes = 0;
+        this.closed = false;
         this._uid = Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
         this.master = new Worker(masterUri);
         this.jobs = [];
@@ -30,6 +31,7 @@ var AsyncRuntime = (function () {
         };
         this.master.onerror = function (e) {
             _this.close();
+            // panic, because should have been handled by server ==> unexpected behaviour
             throw "AsyncRuntime-PANIC: " + e;
         };
         // setup
@@ -66,8 +68,7 @@ var AsyncRuntime = (function () {
         throw "AsyncRuntime-Error: " + exception;
     };
     AsyncRuntime.prototype.post = function (code, callback, error) {
-        if (callback === void 0) { callback = function (_) {
-        }; }
+        if (callback === void 0) { callback = function (_) { }; }
         if (error === void 0) { error = this.throwException; }
         if (this.nextReq != this.jobs.length)
             throw "unexpected request id";
@@ -106,8 +107,7 @@ var AsyncRuntime = (function () {
         this.post([
             "rt.define(" + JSON.stringify("__value ListEmpty.") + ")",
             "rt.define(" + JSON.stringify(binary || "") + ")",
-            "d.__value.asString()"
-        ], function (result) { return callback(result); }, function (ex) { return error(ex); });
+            "d.__value.asString()"], function (result) { return callback(result); }, function (ex) { return error(ex); });
     };
     AsyncRuntime.prototype.getNames = function (callback) {
         this.post(["rt.getNames()"], function (names) { return callback(names); });
@@ -117,22 +117,20 @@ var AsyncRuntime = (function () {
         this.onIdle(function () { return _this.close(); });
     };
     AsyncRuntime.prototype.close = function () {
-        this.master.terminate();
-        this.master = undefined;
-        this.post = undefined;
-        AsyncRuntime.onClose(this);
+        if (!this.closed) {
+            this.closed = true;
+            this.master.terminate();
+            this.master = undefined;
+            this.post = undefined;
+            AsyncRuntime.onClose(this);
+        }
     };
     AsyncRuntime.prototype.toString = function () {
         return this.uid + " (#req: " + this.nextReq + ", #res: " + this.nextRes + ")";
     };
-    AsyncRuntime.onOpen = function (rt) {
-        console.log("opened client " + rt.toString());
-    };
-    AsyncRuntime.onClose = function (rt) {
-        console.log("closed client " + rt.toString());
-    };
-    AsyncRuntime.onPerf = function (_) {
-    };
+    AsyncRuntime.onOpen = function (rt) { console.log("opened client " + rt.toString()); };
+    AsyncRuntime.onClose = function (rt) { console.log("closed client " + rt.toString()); };
+    AsyncRuntime.onPerf = function (_) { };
     return AsyncRuntime;
 })();
 //var stats: (cnt: number) => string;
@@ -184,4 +182,3 @@ var AsyncRuntime = (function () {
 //    result.fullReduce();
 //    return result.toString();
 //} 
-//# sourceMappingURL=asyncRuntimeClient.js.map

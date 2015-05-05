@@ -18,10 +18,7 @@ var IntelliHTML = (function () {
             phrase: "",
             caretIndex: 0
         };
-        this.onTextChanged = function (text) {
-            onTextChanged(text);
-            _this.updateHighlight(text);
-        };
+        this.onTextChanged = function (text) { onTextChanged(text); _this.updateHighlight(text); };
         this.getACitems = getACitems;
         this.pre = pre;
         this.pre.css("cursor", "text");
@@ -286,9 +283,10 @@ var IntelliHTML = (function () {
         if (result.length == 0)
             return;
         // handle/update lastACitem
-        var indexs = result.map(function (x, i) {
-            return { x: x.x, i: i };
-        }).filter(function (t) { return t.x == _this.acState.item; }).map(function (t) { return t.i; });
+        var indexs = result
+            .map(function (x, i) { return { x: x.x, i: i }; })
+            .filter(function (t) { return t.x == _this.acState.item; })
+            .map(function (t) { return t.i; });
         var index = indexs.length == 0 ? 0 : indexs[0];
         index = (index + moveSelection + result.length) % result.length;
         this.acState.item = result[index].x;
@@ -347,4 +345,3 @@ var IntelliHTML = (function () {
     });
     return IntelliHTML;
 })();
-//# sourceMappingURL=IntelliHTML.js.map

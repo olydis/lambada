@@ -12,7 +12,7 @@ sub = \a \b b a (\db sub (pred a) db)
 mul = \n \m m Zero (\dm add n (mul n dm))
 pow = \n \m m one (\dm mul n (pow n dm))
 
-        
+
 _qadd = \a \n add a (mul (Succ three) n)
 
 

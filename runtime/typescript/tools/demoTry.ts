@@ -16,6 +16,7 @@ onReady.push(() =>
         debounceHandle = setTimeout(() =>
         {
             var rtTrash = rtClean.clone();
+            if (currentRT != null) currentRT.close();
             currentRT = rtTrash;
             localStorage.setItem("fun", text);
             var srcs = splitSources(text);

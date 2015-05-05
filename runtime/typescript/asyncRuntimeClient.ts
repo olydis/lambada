@@ -15,6 +15,8 @@
 
     private nextReq: number = 0;
     private nextRes: number = 0;
+    
+    private closed: boolean = false;
 
     public get isIdle(): boolean
     {
@@ -150,11 +152,15 @@
 
     public close(): void
     {
-        this.master.terminate();
-        this.master = undefined;
-        this.post = undefined;
+        if (!this.closed)
+        {
+            this.closed = true;
+            this.master.terminate();
+            this.master = undefined;
+            this.post = undefined;
 
-        AsyncRuntime.onClose(this);
+            AsyncRuntime.onClose(this);
+        }
     }
 
     public toString()
