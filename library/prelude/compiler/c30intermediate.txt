@@ -1,7 +1,5 @@
 NativeDefinition = NativeAssignment literal o   ' S Native
 NativeExpression = NativeLiteral literal        ' S
-                 | NativeConstN value           ' N
-                 | NativeConstS value           ' S
                  | NativeApplication o1 o2      ' Native Native
         
 getCollisionFreeLiteral = \literal strCons ":arg:" literal
@@ -10,8 +8,6 @@ getCollisionFreeLiteral = \literal strCons ":arg:" literal
 nativeExpr_String = y(\this \x
     x
         (\literal strConss ["literal(", literal, ")"])
-        (\value strConss ["constn(", strFromN value, ")"])
-        (\value strConss ["consts(", value, ")"])
         (\o1 \o2 strConss ["apply(", this o1, ", ", this o2, ")"])
     )
 nativeDef_String = y $ \this \x x $ \literal \o strConss ["assign(", literal, ", ", nativeExpr_String o, ")"]
@@ -45,15 +41,13 @@ isNativeLiteral = \lit \nat NativeLiteral_Dispatch
 nativeContainsLit = y(\this \n \lit
     n
         (\literal strEquals lit literal)
-        (\value False)
-        (\value False)
         (\o1 \o2 lOr (this o1 lit) (this o2 lit))
     )
 
 ' S => S
 finalizeLiteral = \s
     if(strStartsWith s ":bound:")
-        (skip 7 s)
+        (drop 7 s)
         s
 
 ' NATIVE => NATIVE
@@ -61,8 +55,6 @@ finalizeNativeExpr =
     y(\this \n
         n
             (\literal NativeLiteral (finalizeLiteral literal))
-            (\value n)
-            (\value n)
             (\o1 \o2 (\a1 \a2
                 (\defres 
                     if(isNativeLiteral "y" a1)
@@ -130,8 +122,8 @@ _syntaxToNative = y $ \this \syntax
             (this body)
         )
         (\o1 \o2 NativeApplication (this o1) (this o2))
-        (\literal \o NativeAssignment "fail" (NativeConstS "fail"))
-        (\typeLiteral NativeAssignment "fail" (NativeConstS "fail")) 
+        (\literal \o NativeAssignment "fail" (_sToNative "fail"))
+        (\typeLiteral NativeAssignment "fail" (_sToNative "fail")) 
     
 _createUniqueNameFromN = \n strCons ":bound:" (strFromN n)
 _createUniqueNameFromS = \s strCons ":bound:" s
@@ -169,12 +161,13 @@ _syntaxEmitTypeInstance = \items \ctrArgList \index \args \name
     ]
 _syntaxEmitTypeStuff = \typeName \items \ctrArgList ' listConcat
     (
-        listBind items
+        listBind 
         (\item 
             (\pair \index _syntaxEmitTypeInstance items ctrArgList index (snd pair) (fst pair))
             (fst item)
             (snd item)
         )
+        items
     )
 '    [
 '        NativeAssignment
@@ -229,8 +222,6 @@ _nlMB = NativeLiteral "maybeBind"
 _nlTA = NativeLiteral "typeApply"
 nativeToTypeNative = \native native
             (\literal NativeLiteral (strCons literal "_Type"))
-            (\value NativeLiteral "Zero_Type")
-            (\value NativeLiteral "ListEmpty_Type")
             (\o1 \o2 
                 NativeApplication
                     (NativeApplication _nlMB (nativeToTypeNative o1))
@@ -248,4 +239,4 @@ nativeDefToTypeNative = \native native
         
 
 ' [SYNTAX] => M [NATIVE]
-native_Process = \synts maybeReturn $ listBind synts syntaxToNative
+native_Process = \synts maybeReturn $ listBind syntaxToNative synts

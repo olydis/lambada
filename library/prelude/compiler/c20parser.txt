@@ -141,7 +141,7 @@ cstrSyntaxApplication = \e
                                         (\tailx listConcat ops tailx u $ 
                                             \head \tail foldl tail head SyntaxApplication)
                                     )
-                                ) (listBind list i)
+                                ) (listBind i list)
                             )
 
 cstrSyntaxEverything = parseWhilesuccessful $ y cstrSyntaxApplication

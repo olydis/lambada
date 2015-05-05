@@ -34,32 +34,32 @@ take = \n \l
             (\dn ListCons head (take dn tail))
         )
 
-listTakeWhile = \l \p 
+takeWhile = \p \l 
     l
         []
         (\head \tail
             if(not (p head))
                 []
-                (ListCons head (listTakeWhile tail p))
+                (ListCons head $ takeWhile p tail)
         )
 
 
-listBind = \l \f foldl l [] (\a \b listConcat a (f b))
+listBind = \f \l foldl l [] (\a \b listConcat a (f b))
 map = \f \l l [] $ \h \t ListCons (f h) $ map f t
 filter = \f \l l [] $ \head \tail if (f head) (ListCons head) i $ filter f tail
-skip = \n \l l [] $ \head \tail n l (\n skip n tail)
-listSkipWhile = \l \p
+drop = \n \l l [] $ \head \tail n l (\n drop n tail)
+dropWhile = \p \l
     l
         []
         (\head \tail 
             if(not (p head))
                 l
-                (listSkipWhile tail p)
+                (dropWhile p tail)
         )
 any = \f \l not $ listIsEmpty $ filter f l
 all = \f \l not $ any (b not f) l
-ors = any i
-ands = all i
+or = any i
+and = all i
 
 length = \l foldl l Zero (b k Succ)
 
@@ -89,7 +89,7 @@ listZipLonger = \l1 \l2 \pad \op
                         (listZipLonger t1 t2 pad op) 
                 )
         )
-listEquals = \eq \l1 \l2 lAnd (isEQ (length l1) (length l2)) (ands $ zipWith eq l1 l2)
+listEquals = \eq \l1 \l2 lAnd (isEQ (length l1) (length l2)) (and $ zipWith eq l1 l2)
 listMerge = \lt \l1 \l2
     l1
         l2
@@ -103,11 +103,11 @@ listMerge = \lt \l1 \l2
                 )
         )
 
-listSort = y(\sort \lt \l if(isGT (length l) one) ((\mid listMerge lt (sort lt (take mid l))  (sort lt (skip mid l))) (div (length l) two)) l)
+listSort = y(\sort \lt \l if(isGT (length l) one) ((\mid listMerge lt (sort lt (take mid l))  (sort lt (drop mid l))) (div (length l) two)) l)
 
 intSort = listSort isLT
 
-listElementAt = \l \n head $ skip n l
+listElementAt = \l \n head $ drop n l
 
 listStartsWith = \eq \l1 \l2 listEquals eq (take (length l2) l1) l2
 

@@ -6,7 +6,7 @@ _48 = mul three _16
 _10 = add two (add _4 _4)
 xstrFromNat = y(\temp \acc \n if(isZero n) acc (temp (ListCons (add _48 (mod n _10)) acc) (div n _10)))
 strFromN = \n if(isZero n) [_48] (xstrFromNat strEmpty n)
-strFromNs = \ns listBind ns (\n strCons (strFromN n) [_32])
+strFromNs = listBind (\n strCons (strFromN n) [_32])
 strToN = \str foldl str Zero (\i \c add (mul i _10) (sub c _48))
 strFromB = \b if(b) "True" "False"
 strFromS = \s strConss [[96], s, [96]]
@@ -34,7 +34,7 @@ nats = unfold one Succ
 zeroes = repeat 0
 byteVals = take 256 nats0
 
-toBinSeq = \n map (c mod 2) $ listTakeWhile (unfold n (c div 2)) (b not isZero)
+toBinSeq = \n map (c mod 2) $ takeWhile (b not isZero) (unfold n (c div 2))
 fromBinSeq = \l foldl (zipWith (\a \b mul a (pow 2 b)) l nats0) 0 add
 nxor = \a \b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\x \y mod (add x y) 2))
 
@@ -78,15 +78,15 @@ listCutAt = \l \f l (Pair [] l) $ \h \t if(f h) (Pair [] l) (changeFst (listCutA
 
 strFromSS = \ss foldl ss strEmpty (\s \x strCons s (strCons x [10]))
 xlistSplitAt = \l \f unfold (listCutAt l (k True)) (\p changeSnd (listCutAt (snd p) f) tail)
-listSplitAt = \l \f listBind (listCutAt (tail (xlistSplitAt l f)) (\x listIsEmpty (snd x))) (\x [snd x])
+listSplitAt = \l \f listBind (\x [snd x]) (listCutAt (tail (xlistSplitAt l f)) (\x listIsEmpty (snd x)))
  
 listContains = \list \elem \eq any (\x eq elem x) list
 strContains = \list \elem listContains list elem isEQ
 
-listRepeat = \n \list listBind (take n (repeat list)) i
+listRepeat = \n \list listBind i (take n (repeat list))
 
 strBurst = map (\c [c])
-strTrim = \str reverse (listSkipWhile (reverse (listSkipWhile str isWhiteSpace)) isWhiteSpace)
+strTrim = \str reverse $ dropWhile isWhiteSpace $ reverse $ dropWhile isWhiteSpace str
 
 strFromMaybe = \formatter \m m (\x strCons "Just " (formatter x)) "Nothing"
 
@@ -165,8 +165,8 @@ newLine = [10]
 
 empty = [32]
 
-gDrawL = \w \y \f listBind (take w nats0) (\x (f x y))
-gDraw = \w \h \f listBind (take h nats0) (\y listConcat (gDrawL w y f) newLine)
+gDrawL = \w \y \f listBind (\x (f x y)) (take w nats0)
+gDraw = \w \h \f listBind (\y listConcat (gDrawL w y f) newLine) (take h nats0)
 
 gCanvas = k (k empty)
 gOverlay = \sel \col \canvas \x \y if (sel x y) [col] (canvas x y)
