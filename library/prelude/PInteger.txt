@@ -11,6 +11,8 @@ bitsToNat = \bs bs 0 $ \h \t if h Succ i $ mul 2 $ bitsToNat t
 integerToNat = \i i bitsToNat 
 
 bitsIsZero = b not or
+integerIsZero = \i i bitsIsZero
+
 integerZero = Integer []
 
 bitsSucc = \b b [True] $ \h \t if h (ListCons False $ bitsSucc t) (ListCons True t)
@@ -58,11 +60,14 @@ integerDiv = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsDiv b1 b2
 bitsMod = \b1 \b2 fst $ bitsModDiv b1 b2
 integerMod = \i1 \i2 i1 $ \b1 i2 $ \b2 Integer $ bitsMod b1 b2
 
+showBitsInteger = reverse $ y $ \showBitsInteger \b bitsModDiv b (natToBits 10) $ \mod \div ListCons (add 48 $ bitsToNat mod) $ if (integerIsZero div) [] $ showBitsInteger div
+showInteger = \i i showBitsInteger
+
 i111 = natToInteger 111
 i42 = natToInteger 42
 i9 = natToInteger 9
 i7 = natToInteger 7
 i3 = natToInteger 3
 
-strFromN $ integerToNat $ integerMod i111 i3
-
+strFromN $ integerToNat $ integerDiv i111 i3
+showInteger $ integerDiv i111 i3
