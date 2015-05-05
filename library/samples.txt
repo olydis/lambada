@@ -12,9 +12,9 @@ reverse $ listDistinct "Hallo Welt" isEQ
 ---
 fibonacci
 --
-fibs = ListCons 1 $ ListCons 1 $ listZip fibs (tail fibs) add
+fibs = ListCons 1 $ ListCons 1 $ zipWith add fibs (tail fibs)
 
-strJoin (map strFromN $ listTake fibs 50) ", "
+strJoin (map strFromN $ take 50 fibs) ", "
 
 
 ---
