@@ -61,3 +61,16 @@ bf2fun = \bf \s _bf2fun (k 0) 0 [] bf (listConcat s $ repeat 0)
 bf2fun ",[.,]" "Hallo"
 ' Hello World program
 bf2fun "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++." "irrelevant input"
+
+
+
+~~~
+primes
+~~
+_pr = Pair 
+    (\n all (\m mod n m False $ k True) $ takeWhile (\m isGTE n $ mul m m) (snd _pr))
+    (ListCons 2 $ filter (fst _pr) $ drop 3 nats0)
+isPrime = fst _pr
+primes  = snd _pr
+
+strFromNs $ take 50 primes
