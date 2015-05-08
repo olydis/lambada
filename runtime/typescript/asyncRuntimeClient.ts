@@ -143,7 +143,11 @@
     {
         this.post(["rt.getNames()"],(names: string[]) => callback(names));
     }
-    
+
+    public dumpStats(cnt: number = 10): void
+    {
+        this.post(["rt.getStats()"], stats => console.debug(JSON.stringify(stats)));
+    }
 
     public autoClose(): void
     {
@@ -168,23 +172,6 @@
         return this.uid + " (#req: " + this.nextReq + ", #res: " + this.nextRes + ")";
     }
 }
-
-
-
-
-
-//var stats: (cnt: number) => string;
-//var rstats: () => void;
-//stats = (cnt: number) =>
-//{
-//    if (cnt == undefined) cnt = 10;
-//    var x: LambadaRuntime.ExpressionBase[] = [];
-//    for (var prop in d) x.push(d[prop]);
-//    x = x.sort((a, b) => (<any>b).called - (<any>a).called);
-//    return x.slice(0, cnt).map(y => "{ n: " + (<any>y).alias + ", " + "c: " + (<any>y).called + " }").join("\n");
-//};
-//rstats = () => { for (var prop in d) d[prop].called = 0; };
-
 
 //function runTests()
 //{

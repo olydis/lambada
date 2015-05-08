@@ -526,13 +526,13 @@ module LambadaRuntime
                 stack.push(x);
             });
             // WARNING: this impl. makes state-serialization hard
-            /*y = new BuiltinExpression(1, stack =>
+            y = new BuiltinExpression(1, stack =>
             {
                 var x = stack.pop();
                 x = Expression.createApplication(x, x);
                 (<any>x).stack[0] = x;
                 stack.push(x);
-            });*/
+            });
             def("y", y);
 
             def("Zero", ShortcutExpression.createNumber(0));
@@ -545,20 +545,20 @@ module LambadaRuntime
             def("div", new BuiltinExpression(2,
                 stack => stack.push(ShortcutExpression.createNumber((stack.pop().asNumber() / stack.pop().asNumber()) | 0))));
 
-            def("strCons", new BuiltinExpression(2,
-                stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
+            //def("strCons", new BuiltinExpression(2,
+            //    stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
             def("strEquals", new BuiltinExpression(2,
                 stack => stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString()))));
             def("strFromN", new BuiltinExpression(1, 
                 stack => stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString()))));
             def("strEmpty", ShortcutExpression.createString(""));
 
-            def("strSkip", new BuiltinExpression(2, stack =>
+            /*def("strSkip", new BuiltinExpression(2, stack =>
             {
                 var x = stack.pop().asString();
                 var y = stack.pop().asNumber();
                 stack.push(ShortcutExpression.createString(x.slice(y)));
-            }));
+            }));*/
 
             def("msgBox", new BuiltinExpression(1,
                 stack => window.alert(stack[stack.length - 1].toString())));
@@ -628,6 +628,14 @@ module LambadaRuntime
 
                 reader.readWhitespace();
             }
+        }
+
+        public getStats(cnt: number = 10): { alias: string; called: number }[]
+        {
+            var x: LambadaRuntime.ExpressionBase[] = [];
+            for (var prop in this.defs) x.push(this.defs[prop]);
+            x = x.sort((a, b) => (<any>b).called - (<any>a).called);
+            return x.slice(0, cnt).map(y => { return { alias: (<any>y).alias, called: (<any>y).called }; });
         }
     }
 }

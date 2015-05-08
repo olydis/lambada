@@ -113,8 +113,12 @@ var LambadaRuntime;
         ExpressionBase.init = function () {
             ExpressionBase.probeSTOP = new BuiltinExpression(undefined);
         };
-        ExpressionBase.prototype.apply = function (stack) { return false; };
-        ExpressionBase.prototype.reduce = function () { return false; };
+        ExpressionBase.prototype.apply = function (stack) {
+            return false;
+        };
+        ExpressionBase.prototype.reduce = function () {
+            return false;
+        };
         ExpressionBase.prototype.fullReduce = function () {
         };
         ExpressionBase.prototype.asNumber = function () {
@@ -167,7 +171,8 @@ var LambadaRuntime;
     var BuiltinExpression = (function (_super) {
         __extends(BuiltinExpression, _super);
         function BuiltinExpression(arity, applyTo) {
-            if (applyTo === void 0) { applyTo = function (x) { }; }
+            if (applyTo === void 0) { applyTo = function (x) {
+            }; }
             _super.call(this);
             this.arity = arity;
             this.applyTo = applyTo;
@@ -191,9 +196,16 @@ var LambadaRuntime;
             this.slave = slave;
             this.called = 0;
         }
-        AliasExpression.prototype.apply = function (stack) { this.called++; return this.slave.apply(stack); };
-        AliasExpression.prototype.reduce = function () { return this.slave.reduce(); };
-        AliasExpression.prototype.fullReduce = function () { this.slave.fullReduce(); };
+        AliasExpression.prototype.apply = function (stack) {
+            this.called++;
+            return this.slave.apply(stack);
+        };
+        AliasExpression.prototype.reduce = function () {
+            return this.slave.reduce();
+        };
+        AliasExpression.prototype.fullReduce = function () {
+            this.slave.fullReduce();
+        };
         AliasExpression.prototype.toString = function () {
             // DEBUG
             //if (arguments.callee.caller == null 
@@ -320,17 +332,13 @@ var LambadaRuntime;
         function ShortcutExpression() {
         }
         ShortcutExpression.createNumber = function (n) {
-            var se = n == 0
-                ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
+            var se = n == 0 ? ShortcutExpression.ADTo_2_0 : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
             se._asNumber = se.asNumber = function () { return n; };
             se.toString = function () { return n.toString(); };
             return se;
         };
         ShortcutExpression.createString2 = function (s, offset) {
-            var se = s.length == offset
-                ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
+            var se = s.length == offset ? ShortcutExpression.ADTo_2_0 : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
             se._asString = se.asString = function () { return s.slice(offset); };
             se.toString = function () { return "\"" + s.slice(offset) + "\""; };
             return se;
@@ -418,28 +426,29 @@ var LambadaRuntime;
                 stack.push(x);
             });
             // WARNING: this impl. makes state-serialization hard
-            /*y = new BuiltinExpression(1, stack =>
-            {
+            y = new BuiltinExpression(1, function (stack) {
                 var x = stack.pop();
                 x = Expression.createApplication(x, x);
-                (<any>x).stack[0] = x;
+                x.stack[0] = x;
                 stack.push(x);
-            });*/
+            });
             def("y", y);
             def("Zero", ShortcutExpression.createNumber(0));
             def("add", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber())); }));
             def("sub", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber()))); }));
             def("mul", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber())); }));
             def("div", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber((stack.pop().asNumber() / stack.pop().asNumber()) | 0)); }));
-            def("strCons", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString())); }));
+            //def("strCons", new BuiltinExpression(2,
+            //    stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
             def("strEquals", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString())); }));
             def("strFromN", new BuiltinExpression(1, function (stack) { return stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString())); }));
             def("strEmpty", ShortcutExpression.createString(""));
-            def("strSkip", new BuiltinExpression(2, function (stack) {
+            /*def("strSkip", new BuiltinExpression(2, stack =>
+            {
                 var x = stack.pop().asString();
                 var y = stack.pop().asNumber();
                 stack.push(ShortcutExpression.createString(x.slice(y)));
-            }));
+            }));*/
             def("msgBox", new BuiltinExpression(1, function (stack) { return window.alert(stack[stack.length - 1].toString()); }));
         }
         Runtime.create = function (binary) {
@@ -496,8 +505,19 @@ var LambadaRuntime;
                 reader.readWhitespace();
             }
         };
+        Runtime.prototype.getStats = function (cnt) {
+            if (cnt === void 0) { cnt = 10; }
+            var x = [];
+            for (var prop in this.defs)
+                x.push(this.defs[prop]);
+            x = x.sort(function (a, b) { return b.called - a.called; });
+            return x.slice(0, cnt).map(function (y) {
+                return { alias: y.alias, called: y.called };
+            });
+        };
         Runtime.maybeNothing = Expression.createADTo(2, 1);
         return Runtime;
     })(BuiltinExpression);
     LambadaRuntime.Runtime = Runtime;
 })(LambadaRuntime || (LambadaRuntime = {}));
+//# sourceMappingURL=runtime.js.map

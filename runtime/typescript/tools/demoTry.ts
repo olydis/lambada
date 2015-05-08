@@ -9,8 +9,8 @@ onReady.push(() =>
     var debounceHandle: number = undefined;
     var evalPad = new IntelliHTML(true, text => 
     {
-        $("#evalRes").text("").append($("<i>").text("pending..."));
-        $("#evalDebug").text("").append($("<i>").text("pending..."));
+        $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
+        $("#evalRes").text("").append($("<i>").text("compiling..."));
 
         clearTimeout(debounceHandle);
         debounceHandle = setTimeout(() =>
@@ -34,18 +34,24 @@ onReady.push(() =>
                 }
             };
 
+            var totalBinary = "";
             srcs.forEach((text, i) =>
             {
                 rtTrash.compile(text,
                     binary => 
-                        rtTrash.eval(binary, active(i) ? res => {
-                            $("#evalRes").text(res);
-                            rtTrash.compile("fullDebug " + safeString(text),
-                                binary => rtTrash.eval(binary, active(i) ? res => $("#evalDebug").text(res) : _ => { }, onEx),
-                                onEx);
-                        } : _ => { }, onEx),
+                    {
+                        totalBinary += binary;
+                        if (active(null))
+                            $("#evalBin").text(totalBinary);
+                        if (active(i))
+                        {
+                            $("#evalRes").text("").append($("<i>").text("running..."));
+                            rtTrash.eval(totalBinary, active(i) ? res => $("#evalRes").text(res) : _ => { }, onEx);
+                        }
+                    },
                     onEx);
             });
+            rtTrash.dumpStats();
             rtTrash.autoClose();
         }, 500);
     },() => names, $("#evalSrc").css("min-height", "15px"));
