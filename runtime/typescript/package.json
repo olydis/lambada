@@ -1,0 +1,10 @@
+{
+  "name": "LambAda runtime",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "install": "tsc -noImplicitAny -t ES5 buildRoot.ts"
+  },
+  "dependencies": {
+  }
+}

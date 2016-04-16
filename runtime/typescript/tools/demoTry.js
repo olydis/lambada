@@ -32,8 +32,7 @@ onReady.push(function () {
                         $("#evalBin").text(totalBinary);
                     if (active(i)) {
                         $("#evalRes").text("").append($("<i>").text("running..."));
-                        rtTrash.eval(totalBinary, active(i) ? function (res) { return $("#evalRes").text(res); } : function (_) {
-                        }, onEx);
+                        rtTrash.eval(totalBinary, active(i) ? function (res) { return $("#evalRes").text(res); } : function (_) { }, onEx);
                     }
                 }, onEx);
             });
@@ -49,7 +48,10 @@ onReady.push(function () {
             var parts = str.split("~~");
             if (i > 0)
                 sSpan.append("&nbsp;&nbsp;&nbsp;");
-            sSpan.append($("<a>").text(parts[0].trim()).css("cursor", "pointer").click(function () { return evalPad.text = parts[1].trim(); }));
+            sSpan.append($("<a>")
+                .text(parts[0].trim())
+                .css("cursor", "pointer")
+                .click(function () { return evalPad.text = parts[1].trim(); }));
         });
     }, "text");
 });
