@@ -5,12 +5,12 @@ tagline: "the lightweight, flexible and precise approach to express and perform 
 published: true
 ---
 
-<script src="lambada/runtime/typescript/jquery-1.11.2.min.js"></script>
-<script src="lambada/runtime/typescript/asyncRuntimeClient.js"></script>
-<script src="lambada/runtime/typescript/tools/IntelliHTML.js"></script>
-<script>var libraryPath = "lambada/library/"; var runtimePath = "lambada/runtime/typescript/";</script>
-<script src="lambada/runtime/typescript/tools/demoCommon.js"></script>
-<script src="lambada/runtime/typescript/tools/demoTry.js"></script>
+<script src="runtime/jquery-1.11.2.min.js"></script>
+<script src="runtime/asyncRuntimeClient.js"></script>
+<script src="runtime/tools/IntelliHTML.js"></script>
+<script>var libraryPath = "lambada/library/"; var runtimePath = "runtime/";</script>
+<script src="runtime/tools/demoCommon.js"></script>
+<script src="runtime/tools/demoTry.js"></script>
 
 ### Source code, Haskell flavored (samples: <span id="samples"></span>)
 {% raw %}

@@ -5,12 +5,12 @@ header : LambAda
 tagline: close to the singularity
 group: navigation
 ---
-<script src="lambada/runtime/typescript/jquery-1.11.2.min.js"></script>
-<script src="lambada/runtime/typescript/asyncRuntimeClient.js"></script>
-<script src="lambada/runtime/typescript/tools/IntelliHTML.js"></script>
-<script>var libraryPath = "lambada/library/"; var runtimePath = "lambada/runtime/typescript/";</script>
-<script src="lambada/runtime/typescript/tools/demoCommon.js"></script>
-<script src="lambada/runtime/typescript/tools/demoCompile.js"></script>
+<script src="runtime/jquery-1.11.2.min.js"></script>
+<script src="runtime/asyncRuntimeClient.js"></script>
+<script src="runtime/tools/IntelliHTML.js"></script>
+<script>var libraryPath = "lambada/library/"; var runtimePath = "runtime/";</script>
+<script src="runtime/tools/demoCommon.js"></script>
+<script src="runtime/tools/demoCompile.js"></script>
 
 ## Bootstrapping / Prelude Compilation
 {% raw %}
