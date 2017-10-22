@@ -8,7 +8,7 @@ published: true
 <script src="runtime/jquery-1.11.2.min.js"></script>
 <script src="runtime/asyncRuntimeClient.js"></script>
 <script src="runtime/tools/IntelliHTML.js"></script>
-<script>var libraryPath = "lambada/library/"; var runtimePath = "runtime/";</script>
+<script>var libraryPath = "library/"; var runtimePath = "runtime/";</script>
 <script src="runtime/tools/demoCommon.js"></script>
 <script src="runtime/tools/demoTry.js"></script>
 
