@@ -16,17 +16,21 @@ published: true
 #### Lessons: <span id="lessons"></span>
 #### Samples: <span id="samples"></span>
 {% raw %}
+<br>
 <pre id='evalSrc' style="min-height: 50px"></pre>
+<br>
 {% endraw %}
 
-### Output
+### Output (source code must evaluate to string value)
 {% raw %}
+<br>
 <pre id='evalRes'></pre>
+<br>
 {% endraw %}
 
-### Binary
 {% raw %}
-<pre id='evalBin'></pre>
+<!--### Binary
+<pre id='evalBin'></pre>-->
 {% endraw %}
 
 ## Further Information
