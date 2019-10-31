@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Try LambAda!"
-tagline: "the lightweight, flexible and precise approach to express and perform computation"
+tagline: "a lightweight, flexible language bootstrapped from the Iota combinator"
 published: true
 ---
 
