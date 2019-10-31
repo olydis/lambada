@@ -28,8 +28,8 @@ published: true
 {% endraw %}
 
 ## Further Information
-- [Language Documentation]({{ BASE_PATH }}/documentation.html)
-- [Implementation Instructions]({{ BASE_PATH }}/implementation.html)
+- [Language Documentation]({{ BASE_PATH }}/lambada/documentation.html)
+- [Implementation Instructions]({{ BASE_PATH }}/lambada/implementation.html)
 - [Download / Contribute](https://github.com/olydis/lambada)
 
 <br>
