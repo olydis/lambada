@@ -12,7 +12,9 @@ published: true
 <script src="runtime/tools/demoCommon.js"></script>
 <script src="runtime/tools/demoTry.js"></script>
 
-### Source codes (samples: <span id="samples"></span>)
+### Source code
+#### Lessons: <span id="lessons"></span>
+#### Samples: <span id="samples"></span>
 {% raw %}
 <pre id='evalSrc' style="min-height: 50px"></pre>
 {% endraw %}
