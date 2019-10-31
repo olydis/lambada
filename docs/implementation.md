@@ -2,7 +2,7 @@
 layout: page
 title: Implementation
 header: LambAda Implementation
-tagline: of minimal LambAda runtimes (including computation ability)
+tagline: of minimal LambAda runtimes
 group: navigation
 published: true
 ---

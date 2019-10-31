@@ -12,7 +12,7 @@ published: true
 <script src="runtime/tools/demoCommon.js"></script>
 <script src="runtime/tools/demoTry.js"></script>
 
-### Source code, Haskell flavored (samples: <span id="samples"></span>)
+### Source codes (samples: <span id="samples"></span>)
 {% raw %}
 <pre id='evalSrc' style="min-height: 50px"></pre>
 {% endraw %}
@@ -29,7 +29,7 @@ published: true
 
 ## Further Information
 - [Language Documentation]({{ BASE_PATH }}/lambada/documentation.html)
-- [Implementation Instructions]({{ BASE_PATH }}/lambada/implementation.html)
+- [Reference Implementation]({{ BASE_PATH }}/lambada/implementation.html)
 - [Download / Contribute](https://github.com/olydis/lambada)
 
 <br>
