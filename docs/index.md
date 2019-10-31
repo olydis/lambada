@@ -12,20 +12,17 @@ published: true
 <script src="runtime/tools/demoCommon.js"></script>
 <script src="runtime/tools/demoTry.js"></script>
 
-### Source code
-#### Lessons: <span id="lessons"></span>
-#### Samples: <span id="samples"></span>
+## Source code
+### Lessons: <span id="lessons"></span>
+### Samples: <span id="samples"></span>
 {% raw %}
-<br>
 <pre id='evalSrc' style="min-height: 50px"></pre>
-<br>
 {% endraw %}
 
-### Output (source code must evaluate to string value)
+## Output
+### Source code must evaluate to string value
 {% raw %}
-<br>
 <pre id='evalRes'></pre>
-<br>
 {% endraw %}
 
 {% raw %}
