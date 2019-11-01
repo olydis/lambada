@@ -4,5 +4,5 @@
 /// <reference path="asyncRuntimeClient.ts" />
 /// <reference path="tools/IntelliHTML.ts" />
 /// <reference path="tools/demoCompile.ts" />
-/// <reference path="tools/demoTry.ts" /> 
+/// <reference path="tools/demoTry.ts" />
 //# sourceMappingURL=buildRoot.js.map

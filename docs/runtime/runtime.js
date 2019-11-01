@@ -202,7 +202,7 @@ var LambadaRuntime;
         AliasExpression.prototype.fullReduce = function () { this.slave.fullReduce(); };
         AliasExpression.prototype.toString = function () {
             // DEBUG
-            //if (arguments.callee.caller == null 
+            //if (arguments.callee.caller == null
             //|| arguments.callee.caller.toString().indexOf("toString") == -1)
             //    return this.slave.toString();
             return this.alias;
@@ -456,10 +456,7 @@ var LambadaRuntime;
             return rt;
         };
         Runtime.prototype.getNames = function () {
-            var names = [];
-            for (name in this.defs)
-                names.push(name);
-            return names;
+            return Object.keys(this.defs);
         };
         Runtime.prototype.define = function (binaryDefinition) {
             var reader = new StringReader(binaryDefinition);

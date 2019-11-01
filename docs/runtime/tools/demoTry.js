@@ -5,7 +5,7 @@ onReady.push(function () {
     var currentRT = null;
     var debounceHandle = undefined;
     var evalPad = new IntelliHTML(true, function (text) {
-        $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
+        // $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
         $("#evalRes").text("").append($("<i>").text("compiling..."));
         clearTimeout(debounceHandle);
         debounceHandle = setTimeout(function () {
@@ -28,8 +28,8 @@ onReady.push(function () {
             srcs.forEach(function (text, i) {
                 rtTrash.compile(text, function (binary) {
                     totalBinary += binary;
-                    if (active(null))
-                        $("#evalBin").text(totalBinary);
+                    // if (active(null))
+                    //     $("#evalBin").text(totalBinary);
                     if (active(i)) {
                         $("#evalRes").text("").append($("<i>").text("running..."));
                         rtTrash.eval(totalBinary, active(i) ? function (res) { return $("#evalRes").text(res); } : function (_) { }, onEx);
