@@ -11,7 +11,7 @@ onmessage = function (e) {
     var exception;
     try {
         eval("LambadaRuntime._perfReset()");
-        elapsedMS = measure(function () { return result = eval(e.data.code); });
+        elapsedMS = measure(() => result = eval(e.data.code));
     }
     catch (ex) {
         success = false;

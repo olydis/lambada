@@ -1,7 +1,5 @@
 /// <reference path="demoCommon.ts" />
-function statusUpdate(message, status, binary) {
-    if (status === void 0) { status = null; }
-    if (binary === void 0) { binary = null; }
+function statusUpdate(message, status = null, binary = null) {
     var js = $("#status");
     js.text("Status: " + message + "\n\n");
     js.off("click");
@@ -9,25 +7,25 @@ function statusUpdate(message, status, binary) {
     if (status != null)
         js.addClass(status);
     if (binary != null)
-        js.append($("<a>").text("download binary").click(function () { return window.open("data:;base64," + btoa(binary)); }));
+        js.append($("<a>").text("download binary").click(() => window.open("data:;base64," + btoa(binary))));
 }
-onReady.push(function () {
-    $.get(libraryPath + "prelude.txt", function (source) {
+onReady.push(() => {
+    $.get(libraryPath + "prelude.txt", (source) => {
         var preludeParts = source
             .split("\n")
-            .map(function (l) { return l.trim(); })
-            .filter(function (l) { return l != "" && l.charAt(0) != "'"; });
-        var gPSs = preludeParts.map(function (l) { return $.get(libraryPath + l, function () { }, "text"); });
-        $.when.apply($, gPSs).done(function () {
+            .map(l => l.trim())
+            .filter(l => l != "" && l.charAt(0) != "'");
+        var gPSs = preludeParts.map(l => $.get(libraryPath + l, () => { }, "text"));
+        $.when.apply($, gPSs).done(() => {
             var sources = [];
-            gPSs.forEach(function (x) { return sources.push(x.responseText); });
+            gPSs.forEach(x => sources.push(x.responseText));
             // layout
-            var binaryBuffer = Array(sources.length).map(function (x) { return null; });
+            var binaryBuffer = Array(sources.length).map(x => null);
             var d1 = new Date().getTime();
             var detailStats = [];
-            var binaryUpdate = function () {
-                if (binaryBuffer.some(function (x) { return x == null; })) {
-                    statusUpdate("compiling " + binaryBuffer.map(function (x) { return x == null ? "-" : "#"; }).join("")
+            var binaryUpdate = () => {
+                if (binaryBuffer.some(x => x == null)) {
+                    statusUpdate("compiling " + binaryBuffer.map(x => x == null ? "-" : "#").join("")
                         + "\n\n" + detailStats.join("\n"));
                     return;
                 }
@@ -62,22 +60,22 @@ onReady.push(function () {
             var rtCompilePrelude = rtClean.clone();
             var table = $("#table");
             var dc1 = new Date().getTime();
-            sources.forEach(function (src, i) {
+            sources.forEach((src, i) => {
                 detailStats[i] = "    " + preludeParts[i] + ": ";
                 var tr = $("<tr>").appendTo(table);
                 var td1 = $("<td>").appendTo(tr);
                 var td2 = $("<td>"); //.appendTo(tr);
                 var target = $("<pre>").css("word-wrap", "break-word").appendTo(td2);
-                var intelliElem = new IntelliHTML(false, function (text) {
+                var intelliElem = new IntelliHTML(false, text => {
                     intelliElem.element.removeClass("dirty error");
                     intelliElem.element.addClass("dirty");
                     binaryBuffer[i] = null;
                     binaryUpdate();
                     var parts = splitSources(text);
                     var partBuffers = [];
-                    parts.forEach(function (part, i) { return rtCompilePrelude.compile(part, function (bin) { return partBuffers[i] = bin; }); });
-                    rtCompilePrelude.onDone(function () {
-                        var bin = partBuffers.some(function (x) { return x == null; }) ? null : partBuffers.join("");
+                    parts.forEach((part, i) => rtCompilePrelude.compile(part, bin => partBuffers[i] = bin));
+                    rtCompilePrelude.onDone(() => {
+                        var bin = partBuffers.some(x => x == null) ? null : partBuffers.join("");
                         binaryBuffer[i] = bin;
                         target.text(bin);
                         if (bin != null) {
@@ -90,9 +88,9 @@ onReady.push(function () {
                             intelliElem.element.addClass("error");
                         binaryUpdate();
                     });
-                }, function () { return names; });
+                }, () => names);
                 intelliElem.text = src;
-                td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(function (eo) { return intelliElem.element.removeClass("coll"); }));
+                td1.append(intelliElem.element.css("margin", "0px").addClass("coll").dblclick(eo => intelliElem.element.removeClass("coll")));
             });
             rtCompilePrelude.autoClose();
         });

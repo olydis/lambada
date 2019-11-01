@@ -1,29 +1,29 @@
 module LambadaRuntime {
-    var _perfAppHeartbeat: number = 1000000;
-    var _perfAllocHeartbeat: number = 1000000;
+    const _perfAppHeartbeat: number = 1000000;
+    const _perfAllocHeartbeat: number = 1000000;
 
-    var _perfAppThresh: number = 100;
-    var _perfAllocThresh: number = 50;
-    var _perfBusyThresh: number = 60 * 1000;
+    const _perfAppThresh: number = 100;
+    const _perfAllocThresh: number = 50;
+    const _perfBusyThresh: number = 60 * 1000;
 
     // TEMPS
 
     // 0.._perf???Heartbeat
-    var _perfAppCounter: number = 0;
-    var _perfAllocCounter: number = 0;
+    let _perfAppCounter: number = 0;
+    let _perfAllocCounter: number = 0;
 
     // 0.._perf???Thresh
-    var _perfAppCount: number = 0;
-    var _perfAllocCount: number = 0;
+    let _perfAppCount: number = 0;
+    let _perfAllocCount: number = 0;
 
-    var _perfLastJob: number;
+    let _perfLastJob: number;
 
     // TOTALS
-    var _perfAppCountTotal: number = 0;
-    var _perfAllocCountTotal: number = 0;
+    let _perfAppCountTotal: number = 0;
+    let _perfAllocCountTotal: number = 0;
 
     function _perfReport() {
-        var timeBusy = new Date().getTime() - _perfLastJob;
+        const timeBusy = new Date().getTime() - _perfLastJob;
         (<any>postMessage)({
             "id": -1,
             "nApp": _perfAppCountTotal,
@@ -84,7 +84,7 @@ module LambadaRuntime {
         }
 
         public readWhile(pred: (ch: string) => boolean): string {
-            var start = this.index;
+            const start = this.index;
             while (this.index < this.len && pred(this.str[this.index]))
                 this.index++;
             return this.str.slice(start, this.index);
@@ -99,7 +99,7 @@ module LambadaRuntime {
         }
 
         public readChar(expected: string): boolean {
-            var b = true;
+            let b = true;
             return this.readWhile(ch => {
                 if (!b) return false;
                 b = false;
@@ -131,14 +131,14 @@ module LambadaRuntime {
 
         public _asNumber: (() => number) = undefined;
         public asNumber(): number {
-            var n = 0;
-            var probeN: ExpressionBase;
-            var probeSucc = new BuiltinExpression(1, stack => {
+            let n = 0;
+            let probeN: ExpressionBase;
+            const probeSucc = new BuiltinExpression(1, stack => {
                 n++;
                 stack.push(probeN);
             });
             probeN = new BuiltinExpression(1, stack => {
-                var num: any = stack.pop();
+                const num: any = stack.pop();
                 if (num._asNumber) {
                     n += num._asNumber();
                     return;
@@ -148,7 +148,7 @@ module LambadaRuntime {
                 stack.push(num);
             });
 
-            var expr = Expression.createApplication(probeN, this);
+            const expr = Expression.createApplication(probeN, this);
             expr.fullReduce();
 
             this._asNumber = this.asNumber = () => n;
@@ -158,14 +158,14 @@ module LambadaRuntime {
 
         public _asString: (() => string) = undefined;
         public asString(): string {
-            var s = "";
-            var probeS: ExpressionBase;
-            var probeCons = new BuiltinExpression(2, stack => {
+            let s = "";
+            let probeS: ExpressionBase;
+            const probeCons = new BuiltinExpression(2, stack => {
                 s += String.fromCharCode(stack.pop().asNumber());
                 stack.push(probeS);
             });
             probeS = new BuiltinExpression(1, stack => {
-                var num: any = stack.pop();
+                const num: any = stack.pop();
                 if (num._asString) {
                     s += num._asString();
                     return;
@@ -175,7 +175,7 @@ module LambadaRuntime {
                 stack.push(num);
             });
 
-            var expr = Expression.createApplication(probeS, this);
+            const expr = Expression.createApplication(probeS, this);
             expr.fullReduce();
 
             this._asString = this.asString = () => s;
@@ -227,26 +227,26 @@ module LambadaRuntime {
     export class Expression extends ExpressionBase {
         public static createADTo(arity: number, index: number, ...args: (() => ExpressionBase)[]): ExpressionBase {
             return new BuiltinExpression(arity, stack => {
-                var head: ExpressionBase = stack[stack.length - index - 1];
+                const head: ExpressionBase = stack[stack.length - index - 1];
 
-                for (var i = 0; i < arity; i++)
+                for (let i = 0; i < arity; i++)
                     stack.pop();
 
-                for (var i = args.length - 1; i >= 0; i--)
+                for (let i = args.length - 1; i >= 0; i--)
                     stack.push(args[i]());
                 stack.push(head);
             });
         }
 
         public static createApplication(a: ExpressionBase, b: ExpressionBase): ExpressionBase {
-            var e = new Expression();
+            const e = new Expression();
             e.stack.push(b);
             e.stack.push(a);
             return e;
         }
 
         public static createApplicationx(...expressions: ExpressionBase[]): ExpressionBase {
-            var e = new Expression();
+            const e = new Expression();
             Array.prototype.push.apply(e.stack, expressions);
             e.stack.reverse();
             return e;
@@ -272,17 +272,17 @@ module LambadaRuntime {
         public reduce(): boolean {
             if (this.hnf || this.stack.length == 0)
                 return false;
-            var exprs: Expression[] = [this];
+            const exprs: Expression[] = [this];
             while (true) {
-                var top = exprs[exprs.length - 1].top;
+                const top = exprs[exprs.length - 1].top;
                 if (top instanceof Expression && top.stack.length > 0)
                     exprs.push(top);
                 else
                     break;
             }
             while (exprs.length > 0) {
-                var stack = exprs.pop().stack;
-                var top = stack.pop();
+                const stack = exprs.pop().stack;
+                const top = stack.pop();
 
                 if (top.reduce()) {
                     stack.push(top);
@@ -299,10 +299,10 @@ module LambadaRuntime {
 
         public fullReduce() {
             if (this.stack.length > 0) {
-                var exprs: Expression[] = [this];
+                const exprs: Expression[] = [this];
                 while (exprs.length > 0) {
                     while (true) {
-                        var top = exprs[exprs.length - 1].top;
+                        const top = exprs[exprs.length - 1].top;
                         if (top instanceof Expression && top.stack.length > 0)
                             exprs.push(top);
                         else
@@ -310,10 +310,10 @@ module LambadaRuntime {
                     }
 
                     do {
-                        var expr = exprs.pop();
+                        const expr = exprs.pop();
                         if (expr.stack.length == 0)
                             continue;
-                        var top = expr.stack.pop();
+                        const top = expr.stack.pop();
                         top.fullReduce();
                         if (top.apply(expr.stack)) {
                             exprs.push(expr);
@@ -332,7 +332,7 @@ module LambadaRuntime {
         public toString(): string {
             if (this.stack.length == 0)
                 return "i";
-            var res = "";
+            let res = "";
             this.stack.forEach((x, i) => res = (i == this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res);
             return res.trim();
         }
@@ -342,7 +342,7 @@ module LambadaRuntime {
         private static ADTo_2_0 = Expression.createADTo(2, 0);
         private static ADTo_2_1 = Expression.createADTo(2, 1);
         public static createNumber(n: number): ExpressionBase {
-            var se: any = n == 0
+            const se: any = n == 0
                 ? ShortcutExpression.ADTo_2_0
                 : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1));
             se._asNumber = se.asNumber = () => n;
@@ -350,7 +350,7 @@ module LambadaRuntime {
             return se;
         }
         private static createString2(s: string, offset: number): ExpressionBase {
-            var se: any = s.length == offset
+            const se: any = s.length == offset
                 ? ShortcutExpression.ADTo_2_0
                 : Expression.createADTo(2, 1,
                     () => ShortcutExpression.createNumber(s.charCodeAt(offset)),
@@ -375,7 +375,7 @@ module LambadaRuntime {
         private static maybeNothing = Expression.createADTo(2, 1);
 
         public static create(binary: string): Runtime {
-            var rt = new Runtime();
+            const rt = new Runtime();
             rt.define(binary);
             return rt;
         }
@@ -385,7 +385,7 @@ module LambadaRuntime {
 
         public constructor() {
             super(1, stack => {
-                var result = this.defs[stack.pop().asString()];
+                const result = this.defs[stack.pop().asString()];
                 if (result)
                     stack.push(Expression.createADTo(2, 0, () => result));
                 else
@@ -395,23 +395,23 @@ module LambadaRuntime {
             this.defs = {};
             this.rodefs = {};
 
-            var def = (name: string, expr: ExpressionBase, predefine: boolean = false) => {
+            const def = (name: string, expr: ExpressionBase, predefine: boolean = false) => {
                 this.rodefs[name] = new AliasExpression(name, expr);
                 if (predefine)
                     this.defs[name] = this.rodefs[name];
             };
 
             def("u", new BuiltinExpression(1, stack => {
-                var x = stack.pop();
+                const x = stack.pop();
                 stack.push(new BuiltinExpression(2, stack => {
-                    var x = stack.pop();
+                    const x = stack.pop();
                     stack.pop();
                     stack.push(x);
                 }));
                 stack.push(new BuiltinExpression(3, stack => {
-                    var a = stack.pop();
-                    var b = stack.pop();
-                    var c = stack.pop();
+                    const a = stack.pop();
+                    const b = stack.pop();
+                    const c = stack.pop();
                     stack.push(Expression.createApplication(b, c));
                     stack.push(c);
                     stack.push(a);
@@ -421,42 +421,42 @@ module LambadaRuntime {
 
             def("i", new BuiltinExpression(0));
             def("k", new BuiltinExpression(2, stack => {
-                var x = stack.pop();
+                const x = stack.pop();
                 stack.pop();
                 stack.push(x);
             }));
             def("s", new BuiltinExpression(3, stack => {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
+                const a = stack.pop();
+                const b = stack.pop();
+                const c = stack.pop();
                 stack.push(Expression.createApplication(b, c));
                 stack.push(c);
                 stack.push(a);
             }));
             def("b", new BuiltinExpression(3, stack => {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
+                const a = stack.pop();
+                const b = stack.pop();
+                const c = stack.pop();
                 stack.push(Expression.createApplication(b, c));
                 stack.push(a);
             }));
             def("c", new BuiltinExpression(3, stack => {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
+                const a = stack.pop();
+                const b = stack.pop();
+                const c = stack.pop();
                 stack.push(b);
                 stack.push(c);
                 stack.push(a);
             }));
 
-            var y = new BuiltinExpression(1, stack => {
-                var x = stack.pop();
+            let y = new BuiltinExpression(1, stack => {
+                const x = stack.pop();
                 stack.push(Expression.createApplication(y, x));
                 stack.push(x);
             });
             // WARNING: this impl. makes state-serialization hard
             y = new BuiltinExpression(1, stack => {
-                var x = stack.pop();
+                let x = stack.pop();
                 x = Expression.createApplication(x, x);
                 (<any>x).stack[0] = x;
                 stack.push(x);
@@ -483,8 +483,8 @@ module LambadaRuntime {
 
             /*def("strSkip", new BuiltinExpression(2, stack =>
             {
-                var x = stack.pop().asString();
-                var y = stack.pop().asNumber();
+                const x = stack.pop().asString();
+                const y = stack.pop().asNumber();
                 stack.push(ShortcutExpression.createString(x.slice(y)));
             }));*/
 
@@ -497,14 +497,14 @@ module LambadaRuntime {
         }
 
         public define(binaryDefinition: string): void {
-            var reader = new StringReader(binaryDefinition);
+            const reader = new StringReader(binaryDefinition);
 
             reader.readWhitespace();
             while (reader.charsLeft > 0) {
                 // begin parse definition
-                var name = reader.readToken();
+                const name = reader.readToken();
 
-                var expressionStack: ExpressionBase[] = [];
+                const expressionStack: ExpressionBase[] = [];
 
                 while (true) {
                     reader.readWhitespace();
@@ -513,8 +513,8 @@ module LambadaRuntime {
                     if (reader.readChar(".")) {
                         if (expressionStack.length < 2)
                             break;
-                        var b = expressionStack.pop();
-                        var a = expressionStack.pop();
+                        const b = expressionStack.pop();
+                        const a = expressionStack.pop();
                         if (a instanceof Expression) {
                             (<Expression>a).stack.unshift(b);
                             expressionStack.push(a);
@@ -526,14 +526,14 @@ module LambadaRuntime {
                     }
 
                     // defref
-                    var defRef = reader.readToken();
-                    var def = this.defs[defRef];
+                    const defRef = reader.readToken();
+                    const def = this.defs[defRef];
                     if (def == undefined)
                         throw "unresolved reference: " + defRef;
                     expressionStack.push(def);
                 }
 
-                var content = expressionStack.pop();
+                const content = expressionStack.pop();
                 //console.log(name + " = " + content.toString());
                 if (this.rodefs[name] == undefined)
                     this.defs[name] = (function (content: ExpressionBase) {
@@ -548,8 +548,7 @@ module LambadaRuntime {
         }
 
         public getStats(cnt: number = 10): { alias: string; called: number }[] {
-            var x: LambadaRuntime.ExpressionBase[] = [];
-            for (var prop in this.defs) x.push(this.defs[prop]);
+            let x: LambadaRuntime.ExpressionBase[] = Object.values(this.defs);
             x = x.sort((a, b) => (<any>b).called - (<any>a).called);
             return x.slice(0, cnt).map(y => { return { alias: (<any>y).alias, called: (<any>y).called }; });
         }

@@ -1,33 +1,23 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var LambadaRuntime;
 (function (LambadaRuntime) {
-    var _perfAppHeartbeat = 1000000;
-    var _perfAllocHeartbeat = 1000000;
-    var _perfAppThresh = 100;
-    var _perfAllocThresh = 50;
-    var _perfBusyThresh = 60 * 1000;
+    const _perfAppHeartbeat = 1000000;
+    const _perfAllocHeartbeat = 1000000;
+    const _perfAppThresh = 100;
+    const _perfAllocThresh = 50;
+    const _perfBusyThresh = 60 * 1000;
     // TEMPS
     // 0.._perf???Heartbeat
-    var _perfAppCounter = 0;
-    var _perfAllocCounter = 0;
+    let _perfAppCounter = 0;
+    let _perfAllocCounter = 0;
     // 0.._perf???Thresh
-    var _perfAppCount = 0;
-    var _perfAllocCount = 0;
-    var _perfLastJob;
+    let _perfAppCount = 0;
+    let _perfAllocCount = 0;
+    let _perfLastJob;
     // TOTALS
-    var _perfAppCountTotal = 0;
-    var _perfAllocCountTotal = 0;
+    let _perfAppCountTotal = 0;
+    let _perfAllocCountTotal = 0;
     function _perfReport() {
-        var timeBusy = new Date().getTime() - _perfLastJob;
+        const timeBusy = new Date().getTime() - _perfLastJob;
         postMessage({
             "id": -1,
             "nApp": _perfAppCountTotal,
@@ -70,66 +60,61 @@ var LambadaRuntime;
             console.warn("ALLOC (" + _perfAllocCount + "): " + self.uid || "n/a");
         }
     }
-    var StringReader = /** @class */ (function () {
-        function StringReader(str) {
+    class StringReader {
+        constructor(str) {
             this.str = str;
             this.index = 0;
             this.len = str.length;
         }
-        StringReader.prototype.readWhile = function (pred) {
-            var start = this.index;
+        readWhile(pred) {
+            const start = this.index;
             while (this.index < this.len && pred(this.str[this.index]))
                 this.index++;
             return this.str.slice(start, this.index);
-        };
-        StringReader.prototype.readWhitespace = function () {
-            return this.readWhile(function (ch) { return /^\s$/.test(ch); });
-        };
-        StringReader.prototype.readToken = function () {
-            return this.readWhile(function (ch) { return /^[a-zA-Z0-9_]$/.test(ch); });
-        };
-        StringReader.prototype.readChar = function (expected) {
-            var b = true;
-            return this.readWhile(function (ch) {
+        }
+        readWhitespace() {
+            return this.readWhile(ch => /^\s$/.test(ch));
+        }
+        readToken() {
+            return this.readWhile(ch => /^[a-zA-Z0-9_]$/.test(ch));
+        }
+        readChar(expected) {
+            let b = true;
+            return this.readWhile(ch => {
                 if (!b)
                     return false;
                 b = false;
                 return ch == expected;
             }).length == 1;
-        };
-        Object.defineProperty(StringReader.prototype, "charsLeft", {
-            get: function () {
-                return this.len - this.index;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        StringReader.prototype.toString = function () {
+        }
+        get charsLeft() {
+            return this.len - this.index;
+        }
+        toString() {
             return this.index + " / " + this.len;
-        };
-        return StringReader;
-    }());
-    var ExpressionBase = /** @class */ (function () {
-        function ExpressionBase() {
+        }
+    }
+    class ExpressionBase {
+        constructor() {
             this._asNumber = undefined;
             this._asString = undefined;
         }
-        ExpressionBase.init = function () {
+        static init() {
             ExpressionBase.probeSTOP = new BuiltinExpression(undefined);
-        };
-        ExpressionBase.prototype.apply = function (stack) { return false; };
-        ExpressionBase.prototype.reduce = function () { return false; };
-        ExpressionBase.prototype.fullReduce = function () {
-        };
-        ExpressionBase.prototype.asNumber = function () {
-            var n = 0;
-            var probeN;
-            var probeSucc = new BuiltinExpression(1, function (stack) {
+        }
+        apply(stack) { return false; }
+        reduce() { return false; }
+        fullReduce() {
+        }
+        asNumber() {
+            let n = 0;
+            let probeN;
+            const probeSucc = new BuiltinExpression(1, stack => {
                 n++;
                 stack.push(probeN);
             });
-            probeN = new BuiltinExpression(1, function (stack) {
-                var num = stack.pop();
+            probeN = new BuiltinExpression(1, stack => {
+                const num = stack.pop();
                 if (num._asNumber) {
                     n += num._asNumber();
                     return;
@@ -138,20 +123,20 @@ var LambadaRuntime;
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
             });
-            var expr = Expression.createApplication(probeN, this);
+            const expr = Expression.createApplication(probeN, this);
             expr.fullReduce();
-            this._asNumber = this.asNumber = function () { return n; };
+            this._asNumber = this.asNumber = () => n;
             return n;
-        };
-        ExpressionBase.prototype.asString = function () {
-            var s = "";
-            var probeS;
-            var probeCons = new BuiltinExpression(2, function (stack) {
+        }
+        asString() {
+            let s = "";
+            let probeS;
+            const probeCons = new BuiltinExpression(2, stack => {
                 s += String.fromCharCode(stack.pop().asNumber());
                 stack.push(probeS);
             });
-            probeS = new BuiltinExpression(1, function (stack) {
-                var num = stack.pop();
+            probeS = new BuiltinExpression(1, stack => {
+                const num = stack.pop();
                 if (num._asString) {
                     s += num._asString();
                     return;
@@ -160,24 +145,20 @@ var LambadaRuntime;
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
             });
-            var expr = Expression.createApplication(probeS, this);
+            const expr = Expression.createApplication(probeS, this);
             expr.fullReduce();
-            this._asString = this.asString = function () { return s; };
+            this._asString = this.asString = () => s;
             return s;
-        };
-        return ExpressionBase;
-    }());
-    LambadaRuntime.ExpressionBase = ExpressionBase;
-    var BuiltinExpression = /** @class */ (function (_super) {
-        __extends(BuiltinExpression, _super);
-        function BuiltinExpression(arity, applyTo) {
-            if (applyTo === void 0) { applyTo = function (x) { }; }
-            var _this = _super.call(this) || this;
-            _this.arity = arity;
-            _this.applyTo = applyTo;
-            return _this;
         }
-        BuiltinExpression.prototype.apply = function (stack) {
+    }
+    LambadaRuntime.ExpressionBase = ExpressionBase;
+    class BuiltinExpression extends ExpressionBase {
+        constructor(arity, applyTo = x => { }) {
+            super();
+            this.arity = arity;
+            this.applyTo = applyTo;
+        }
+        apply(stack) {
             // PERF
             _perfApp();
             if (stack.length >= this.arity) {
@@ -185,88 +166,74 @@ var LambadaRuntime;
                 return true;
             }
             return false;
-        };
-        return BuiltinExpression;
-    }(ExpressionBase));
-    var AliasExpression = /** @class */ (function (_super) {
-        __extends(AliasExpression, _super);
-        function AliasExpression(alias, slave) {
-            var _this = _super.call(this) || this;
-            _this.alias = alias;
-            _this.slave = slave;
-            _this.called = 0;
-            return _this;
         }
-        AliasExpression.prototype.apply = function (stack) { this.called++; return this.slave.apply(stack); };
-        AliasExpression.prototype.reduce = function () { return this.slave.reduce(); };
-        AliasExpression.prototype.fullReduce = function () { this.slave.fullReduce(); };
-        AliasExpression.prototype.toString = function () {
+    }
+    class AliasExpression extends ExpressionBase {
+        constructor(alias, slave) {
+            super();
+            this.alias = alias;
+            this.slave = slave;
+            this.called = 0;
+        }
+        apply(stack) { this.called++; return this.slave.apply(stack); }
+        reduce() { return this.slave.reduce(); }
+        fullReduce() { this.slave.fullReduce(); }
+        toString() {
             // DEBUG
             //if (arguments.callee.caller == null
             //|| arguments.callee.caller.toString().indexOf("toString") == -1)
             //    return this.slave.toString();
             return this.alias;
-        };
-        return AliasExpression;
-    }(ExpressionBase));
-    var Expression = /** @class */ (function (_super) {
-        __extends(Expression, _super);
-        function Expression() {
-            var _this = _super.call(this) || this;
-            _this.hnf = false;
-            _this.stack = [];
+        }
+    }
+    class Expression extends ExpressionBase {
+        constructor() {
+            super();
+            this.hnf = false;
+            this.stack = [];
             // PERF
             _perfAlloc();
-            return _this;
         }
-        Expression.createADTo = function (arity, index) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            return new BuiltinExpression(arity, function (stack) {
-                var head = stack[stack.length - index - 1];
-                for (var i = 0; i < arity; i++)
+        static createADTo(arity, index, ...args) {
+            return new BuiltinExpression(arity, stack => {
+                const head = stack[stack.length - index - 1];
+                for (let i = 0; i < arity; i++)
                     stack.pop();
-                for (var i = args.length - 1; i >= 0; i--)
+                for (let i = args.length - 1; i >= 0; i--)
                     stack.push(args[i]());
                 stack.push(head);
             });
-        };
-        Expression.createApplication = function (a, b) {
-            var e = new Expression();
+        }
+        static createApplication(a, b) {
+            const e = new Expression();
             e.stack.push(b);
             e.stack.push(a);
             return e;
-        };
-        Expression.createApplicationx = function () {
-            var expressions = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                expressions[_i] = arguments[_i];
-            }
-            var e = new Expression();
+        }
+        static createApplicationx(...expressions) {
+            const e = new Expression();
             Array.prototype.push.apply(e.stack, expressions);
             e.stack.reverse();
             return e;
-        };
-        Expression.prototype.apply = function (stack) {
+        }
+        apply(stack) {
             Array.prototype.push.apply(stack, this.stack);
             return true;
-        };
-        Expression.prototype.reduce = function () {
+        }
+        reduce() {
             if (this.hnf || this.stack.length == 0)
                 return false;
-            var exprs = [this];
+            const exprs = [this];
             while (true) {
-                var top = exprs[exprs.length - 1].top;
+                const top = exprs[exprs.length - 1].top;
                 if (top instanceof Expression && top.stack.length > 0)
                     exprs.push(top);
                 else
                     break;
             }
             while (exprs.length > 0) {
-                var stack = exprs.pop().stack;
-                var top = stack.pop();
+                const stack = exprs.pop().stack;
+                const top = stack.pop();
                 if (top.reduce()) {
                     stack.push(top);
                     return true;
@@ -278,23 +245,23 @@ var LambadaRuntime;
             }
             this.hnf = true;
             return false;
-        };
-        Expression.prototype.fullReduce = function () {
+        }
+        fullReduce() {
             if (this.stack.length > 0) {
-                var exprs = [this];
+                const exprs = [this];
                 while (exprs.length > 0) {
                     while (true) {
-                        var top = exprs[exprs.length - 1].top;
+                        const top = exprs[exprs.length - 1].top;
                         if (top instanceof Expression && top.stack.length > 0)
                             exprs.push(top);
                         else
                             break;
                     }
                     do {
-                        var expr = exprs.pop();
+                        const expr = exprs.pop();
                         if (expr.stack.length == 0)
                             continue;
-                        var top = expr.stack.pop();
+                        const top = expr.stack.pop();
                         top.fullReduce();
                         if (top.apply(expr.stack)) {
                             exprs.push(expr);
@@ -304,85 +271,74 @@ var LambadaRuntime;
                     } while (exprs.length > 0);
                 }
             }
-        };
-        Object.defineProperty(Expression.prototype, "top", {
-            get: function () {
-                return this.stack[this.stack.length - 1];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Expression.prototype.toString = function () {
-            var _this = this;
+        }
+        get top() {
+            return this.stack[this.stack.length - 1];
+        }
+        toString() {
             if (this.stack.length == 0)
                 return "i";
-            var res = "";
-            this.stack.forEach(function (x, i) { return res = (i == _this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res; });
+            let res = "";
+            this.stack.forEach((x, i) => res = (i == this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res);
             return res.trim();
-        };
-        return Expression;
-    }(ExpressionBase));
-    LambadaRuntime.Expression = Expression;
-    var ShortcutExpression = /** @class */ (function () {
-        function ShortcutExpression() {
         }
-        ShortcutExpression.createNumber = function (n) {
-            var se = n == 0
+    }
+    LambadaRuntime.Expression = Expression;
+    class ShortcutExpression {
+        static createNumber(n) {
+            const se = n == 0
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
-            se._asNumber = se.asNumber = function () { return n; };
-            se.toString = function () { return n.toString(); };
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1));
+            se._asNumber = se.asNumber = () => n;
+            se.toString = () => n.toString();
             return se;
-        };
-        ShortcutExpression.createString2 = function (s, offset) {
-            var se = s.length == offset
+        }
+        static createString2(s, offset) {
+            const se = s.length == offset
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
-            se._asString = se.asString = function () { return s.slice(offset); };
-            se.toString = function () { return "\"" + s.slice(offset) + "\""; };
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(s.charCodeAt(offset)), () => ShortcutExpression.createString2(s, offset + 1));
+            se._asString = se.asString = () => s.slice(offset);
+            se.toString = () => "\"" + s.slice(offset) + "\"";
             return se;
-        };
-        ShortcutExpression.createString = function (s) {
+        }
+        static createString(s) {
             return ShortcutExpression.createString2(s, 0);
-        };
-        ShortcutExpression.createBoolean = function (b) {
+        }
+        static createBoolean(b) {
             return b ? ShortcutExpression.ADTo_2_0 : ShortcutExpression.ADTo_2_1;
-        };
-        ShortcutExpression.ADTo_2_0 = Expression.createADTo(2, 0);
-        ShortcutExpression.ADTo_2_1 = Expression.createADTo(2, 1);
-        return ShortcutExpression;
-    }());
+        }
+    }
+    ShortcutExpression.ADTo_2_0 = Expression.createADTo(2, 0);
+    ShortcutExpression.ADTo_2_1 = Expression.createADTo(2, 1);
     LambadaRuntime.ShortcutExpression = ShortcutExpression;
     ExpressionBase.init();
-    var Runtime = /** @class */ (function (_super) {
-        __extends(Runtime, _super);
-        function Runtime() {
-            var _this = _super.call(this, 1, function (stack) {
-                var result = _this.defs[stack.pop().asString()];
+    class Runtime extends BuiltinExpression {
+        constructor() {
+            super(1, stack => {
+                const result = this.defs[stack.pop().asString()];
                 if (result)
-                    stack.push(Expression.createADTo(2, 0, function () { return result; }));
+                    stack.push(Expression.createADTo(2, 0, () => result));
                 else
                     stack.push(Runtime.maybeNothing);
-            }) || this;
-            _this.defs = {};
-            _this.rodefs = {};
-            var def = function (name, expr, predefine) {
-                if (predefine === void 0) { predefine = false; }
-                _this.rodefs[name] = new AliasExpression(name, expr);
+            });
+            this.defs = {};
+            this.rodefs = {};
+            const def = (name, expr, predefine = false) => {
+                this.rodefs[name] = new AliasExpression(name, expr);
                 if (predefine)
-                    _this.defs[name] = _this.rodefs[name];
+                    this.defs[name] = this.rodefs[name];
             };
-            def("u", new BuiltinExpression(1, function (stack) {
-                var x = stack.pop();
-                stack.push(new BuiltinExpression(2, function (stack) {
-                    var x = stack.pop();
+            def("u", new BuiltinExpression(1, stack => {
+                const x = stack.pop();
+                stack.push(new BuiltinExpression(2, stack => {
+                    const x = stack.pop();
                     stack.pop();
                     stack.push(x);
                 }));
-                stack.push(new BuiltinExpression(3, function (stack) {
-                    var a = stack.pop();
-                    var b = stack.pop();
-                    var c = stack.pop();
+                stack.push(new BuiltinExpression(3, stack => {
+                    const a = stack.pop();
+                    const b = stack.pop();
+                    const c = stack.pop();
                     stack.push(Expression.createApplication(b, c));
                     stack.push(c);
                     stack.push(a);
@@ -390,89 +346,88 @@ var LambadaRuntime;
                 stack.push(x);
             }), true);
             def("i", new BuiltinExpression(0));
-            def("k", new BuiltinExpression(2, function (stack) {
-                var x = stack.pop();
+            def("k", new BuiltinExpression(2, stack => {
+                const x = stack.pop();
                 stack.pop();
                 stack.push(x);
             }));
-            def("s", new BuiltinExpression(3, function (stack) {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
+            def("s", new BuiltinExpression(3, stack => {
+                const a = stack.pop();
+                const b = stack.pop();
+                const c = stack.pop();
                 stack.push(Expression.createApplication(b, c));
                 stack.push(c);
                 stack.push(a);
             }));
-            def("b", new BuiltinExpression(3, function (stack) {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
+            def("b", new BuiltinExpression(3, stack => {
+                const a = stack.pop();
+                const b = stack.pop();
+                const c = stack.pop();
                 stack.push(Expression.createApplication(b, c));
                 stack.push(a);
             }));
-            def("c", new BuiltinExpression(3, function (stack) {
-                var a = stack.pop();
-                var b = stack.pop();
-                var c = stack.pop();
+            def("c", new BuiltinExpression(3, stack => {
+                const a = stack.pop();
+                const b = stack.pop();
+                const c = stack.pop();
                 stack.push(b);
                 stack.push(c);
                 stack.push(a);
             }));
-            var y = new BuiltinExpression(1, function (stack) {
-                var x = stack.pop();
+            let y = new BuiltinExpression(1, stack => {
+                const x = stack.pop();
                 stack.push(Expression.createApplication(y, x));
                 stack.push(x);
             });
             // WARNING: this impl. makes state-serialization hard
-            y = new BuiltinExpression(1, function (stack) {
-                var x = stack.pop();
+            y = new BuiltinExpression(1, stack => {
+                let x = stack.pop();
                 x = Expression.createApplication(x, x);
                 x.stack[0] = x;
                 stack.push(x);
             });
             def("y", y);
             def("Zero", ShortcutExpression.createNumber(0));
-            def("add", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber())); }));
-            def("sub", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber()))); }));
-            def("mul", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber())); }));
-            def("div", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createNumber((stack.pop().asNumber() / stack.pop().asNumber()) | 0)); }));
+            def("add", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber()))));
+            def("sub", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber())))));
+            def("mul", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber()))));
+            def("div", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber((stack.pop().asNumber() / stack.pop().asNumber()) | 0))));
             //def("strCons", new BuiltinExpression(2,
             //    stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
-            def("strEquals", new BuiltinExpression(2, function (stack) { return stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString())); }));
-            def("strFromN", new BuiltinExpression(1, function (stack) { return stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString())); }));
+            def("strEquals", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString()))));
+            def("strFromN", new BuiltinExpression(1, stack => stack.push(ShortcutExpression.createString(stack.pop().asNumber().toString()))));
             def("strEmpty", ShortcutExpression.createString(""));
             /*def("strSkip", new BuiltinExpression(2, stack =>
             {
-                var x = stack.pop().asString();
-                var y = stack.pop().asNumber();
+                const x = stack.pop().asString();
+                const y = stack.pop().asNumber();
                 stack.push(ShortcutExpression.createString(x.slice(y)));
             }));*/
-            def("msgBox", new BuiltinExpression(1, function (stack) { return window.alert(stack[stack.length - 1].toString()); }));
-            return _this;
+            def("msgBox", new BuiltinExpression(1, stack => window.alert(stack[stack.length - 1].toString())));
         }
-        Runtime.create = function (binary) {
-            var rt = new Runtime();
+        static create(binary) {
+            const rt = new Runtime();
             rt.define(binary);
             return rt;
-        };
-        Runtime.prototype.getNames = function () {
+        }
+        getNames() {
             return Object.keys(this.defs);
-        };
-        Runtime.prototype.define = function (binaryDefinition) {
-            var reader = new StringReader(binaryDefinition);
+        }
+        define(binaryDefinition) {
+            const reader = new StringReader(binaryDefinition);
             reader.readWhitespace();
             while (reader.charsLeft > 0) {
                 // begin parse definition
-                var name = reader.readToken();
-                var expressionStack = [];
+                const name = reader.readToken();
+                const expressionStack = [];
                 while (true) {
                     reader.readWhitespace();
                     // apply
                     if (reader.readChar(".")) {
                         if (expressionStack.length < 2)
                             break;
-                        var b = expressionStack.pop();
-                        var a = expressionStack.pop();
+                        const b = expressionStack.pop();
+                        const a = expressionStack.pop();
                         if (a instanceof Expression) {
                             a.stack.unshift(b);
                             expressionStack.push(a);
@@ -483,13 +438,13 @@ var LambadaRuntime;
                         continue;
                     }
                     // defref
-                    var defRef = reader.readToken();
-                    var def = this.defs[defRef];
+                    const defRef = reader.readToken();
+                    const def = this.defs[defRef];
                     if (def == undefined)
                         throw "unresolved reference: " + defRef;
                     expressionStack.push(def);
                 }
-                var content = expressionStack.pop();
+                const content = expressionStack.pop();
                 //console.log(name + " = " + content.toString());
                 if (this.rodefs[name] == undefined)
                     this.defs[name] = (function (content) {
@@ -500,18 +455,14 @@ var LambadaRuntime;
                 // end parse definition
                 reader.readWhitespace();
             }
-        };
-        Runtime.prototype.getStats = function (cnt) {
-            if (cnt === void 0) { cnt = 10; }
-            var x = [];
-            for (var prop in this.defs)
-                x.push(this.defs[prop]);
-            x = x.sort(function (a, b) { return b.called - a.called; });
-            return x.slice(0, cnt).map(function (y) { return { alias: y.alias, called: y.called }; });
-        };
-        Runtime.maybeNothing = Expression.createADTo(2, 1);
-        return Runtime;
-    }(BuiltinExpression));
+        }
+        getStats(cnt = 10) {
+            let x = Object.values(this.defs);
+            x = x.sort((a, b) => b.called - a.called);
+            return x.slice(0, cnt).map(y => { return { alias: y.alias, called: y.called }; });
+        }
+    }
+    Runtime.maybeNothing = Expression.createADTo(2, 1);
     LambadaRuntime.Runtime = Runtime;
 })(LambadaRuntime || (LambadaRuntime = {}));
 //# sourceMappingURL=runtime.js.map

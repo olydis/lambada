@@ -1,75 +1,58 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var LambadaRuntimeMinimal;
 (function (LambadaRuntimeMinimal) {
-    var StringReader = /** @class */ (function () {
-        function StringReader(str) {
+    class StringReader {
+        constructor(str) {
             this.str = str;
             this.index = 0;
             this.len = str.length;
         }
-        StringReader.prototype.readWhile = function (pred) {
+        readWhile(pred) {
             var start = this.index;
             while (this.index < this.len && pred(this.str[this.index]))
                 this.index++;
             return this.str.slice(start, this.index);
-        };
-        StringReader.prototype.readWhitespace = function () {
-            return this.readWhile(function (ch) { return /^\s$/.test(ch); });
-        };
-        StringReader.prototype.readNaturalNumber = function () {
-            var num = this.readWhile(function (ch) { return /^[0-9]$/.test(ch); });
+        }
+        readWhitespace() {
+            return this.readWhile(ch => /^\s$/.test(ch));
+        }
+        readNaturalNumber() {
+            var num = this.readWhile(ch => /^[0-9]$/.test(ch));
             return num == "" ? null : parseInt(num);
-        };
-        StringReader.prototype.readToken = function () {
-            return this.readWhile(function (ch) { return /^[a-zA-Z0-9_]$/.test(ch); });
-        };
-        StringReader.prototype.readChar = function (expected) {
+        }
+        readToken() {
+            return this.readWhile(ch => /^[a-zA-Z0-9_]$/.test(ch));
+        }
+        readChar(expected) {
             var b = true;
-            return this.readWhile(function (ch) {
+            return this.readWhile(ch => {
                 if (!b)
                     return false;
                 b = false;
                 return ch == expected;
             }).length == 1;
-        };
-        Object.defineProperty(StringReader.prototype, "charsLeft", {
-            get: function () {
-                return this.len - this.index;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return StringReader;
-    }());
-    var ExpressionBase = /** @class */ (function () {
-        function ExpressionBase() {
         }
-        ExpressionBase.init = function () {
+        get charsLeft() {
+            return this.len - this.index;
+        }
+    }
+    class ExpressionBase {
+        static init() {
             ExpressionBase.probeSTOP = new BuiltinExpression(undefined);
-        };
-        ExpressionBase.prototype.apply = function (stack) { return false; };
-        ExpressionBase.prototype.reduce = function () { return false; };
-        ExpressionBase.prototype.fullReduce = function () {
+        }
+        apply(stack) { return false; }
+        reduce() { return false; }
+        fullReduce() {
             while (this.reduce())
                 ;
-        };
-        ExpressionBase.prototype.asNumber = function () {
+        }
+        asNumber() {
             var n = 0;
             var probeN;
-            var probeSucc = new BuiltinExpression(1, function (stack) {
+            var probeSucc = new BuiltinExpression(1, stack => {
                 n++;
                 stack.push(probeN);
             });
-            probeN = new BuiltinExpression(1, function (stack) {
+            probeN = new BuiltinExpression(1, stack => {
                 var num = stack.pop();
                 stack.push(probeSucc);
                 stack.push(ExpressionBase.probeSTOP);
@@ -78,15 +61,15 @@ var LambadaRuntimeMinimal;
             var expr = Expression.createApplication(probeN, this);
             expr.fullReduce();
             return n;
-        };
-        ExpressionBase.prototype.asString = function () {
+        }
+        asString() {
             var s = "";
             var probeS;
-            var probeCons = new BuiltinExpression(2, function (stack) {
+            var probeCons = new BuiltinExpression(2, stack => {
                 s += String.fromCharCode(stack.pop().asNumber());
                 stack.push(probeS);
             });
-            probeS = new BuiltinExpression(1, function (stack) {
+            probeS = new BuiltinExpression(1, stack => {
                 var num = stack.pop();
                 stack.push(probeCons);
                 stack.push(ExpressionBase.probeSTOP);
@@ -95,57 +78,43 @@ var LambadaRuntimeMinimal;
             var expr = Expression.createApplication(probeS, this);
             expr.fullReduce();
             return s;
-        };
-        return ExpressionBase;
-    }());
-    var BuiltinExpression = /** @class */ (function (_super) {
-        __extends(BuiltinExpression, _super);
-        function BuiltinExpression(arity, applyTo) {
-            if (applyTo === void 0) { applyTo = function (x) { }; }
-            var _this = _super.call(this) || this;
-            _this.arity = arity;
-            _this.applyTo = applyTo;
-            return _this;
         }
-        BuiltinExpression.prototype.apply = function (stack) {
+    }
+    class BuiltinExpression extends ExpressionBase {
+        constructor(arity, applyTo = x => { }) {
+            super();
+            this.arity = arity;
+            this.applyTo = applyTo;
+        }
+        apply(stack) {
             if (stack.length >= this.arity) {
                 this.applyTo(stack);
                 return true;
             }
             return false;
-        };
-        return BuiltinExpression;
-    }(ExpressionBase));
-    var AliasExpression = /** @class */ (function (_super) {
-        __extends(AliasExpression, _super);
-        function AliasExpression(alias, slave) {
-            var _this = _super.call(this) || this;
-            _this.alias = alias;
-            _this.slave = slave;
-            _this.called = 0;
-            return _this;
         }
-        AliasExpression.prototype.apply = function (stack) { this.called++; return this.slave.apply(stack); };
-        AliasExpression.prototype.reduce = function () { return this.slave.reduce(); };
-        AliasExpression.prototype.fullReduce = function () { this.slave.fullReduce(); };
-        AliasExpression.prototype.toString = function () {
+    }
+    class AliasExpression extends ExpressionBase {
+        constructor(alias, slave) {
+            super();
+            this.alias = alias;
+            this.slave = slave;
+            this.called = 0;
+        }
+        apply(stack) { this.called++; return this.slave.apply(stack); }
+        reduce() { return this.slave.reduce(); }
+        fullReduce() { this.slave.fullReduce(); }
+        toString() {
             return this.alias;
-        };
-        return AliasExpression;
-    }(ExpressionBase));
-    var Expression = /** @class */ (function (_super) {
-        __extends(Expression, _super);
-        function Expression() {
-            var _this = _super.call(this) || this;
-            _this.stack = [];
-            return _this;
         }
-        Expression.createADTo = function (arity, index) {
-            var args = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                args[_i - 2] = arguments[_i];
-            }
-            return new BuiltinExpression(arity, function (stack) {
+    }
+    class Expression extends ExpressionBase {
+        constructor() {
+            super();
+            this.stack = [];
+        }
+        static createADTo(arity, index, ...args) {
+            return new BuiltinExpression(arity, stack => {
                 var head = stack[stack.length - index - 1];
                 for (var i = 0; i < arity; i++)
                     stack.pop();
@@ -153,28 +122,24 @@ var LambadaRuntimeMinimal;
                     stack.push(args[i]());
                 stack.push(head);
             });
-        };
-        Expression.createApplication = function (a, b) {
+        }
+        static createApplication(a, b) {
             var e = new Expression();
             e.stack.push(b);
             e.stack.push(a);
             return e;
-        };
-        Expression.createApplicationx = function () {
-            var expressions = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                expressions[_i] = arguments[_i];
-            }
+        }
+        static createApplicationx(...expressions) {
             var e = new Expression();
             Array.prototype.push.apply(e.stack, expressions);
             e.stack.reverse();
             return e;
-        };
-        Expression.prototype.apply = function (stack) {
+        }
+        apply(stack) {
             Array.prototype.push.apply(stack, this.stack);
             return true;
-        };
-        Expression.prototype.reduce = function () {
+        }
+        reduce() {
             if (this.stack.length == 0)
                 return false;
             var exprs = [this];
@@ -198,76 +163,66 @@ var LambadaRuntimeMinimal;
                     return true;
             }
             return false;
-        };
-        Object.defineProperty(Expression.prototype, "top", {
-            get: function () {
-                return this.stack[this.stack.length - 1];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Expression.prototype.toString = function () {
-            var _this = this;
-            var res = "";
-            this.stack.forEach(function (x, i) { return res = (i == _this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res; });
-            return res.trim();
-        };
-        return Expression;
-    }(ExpressionBase));
-    LambadaRuntimeMinimal.Expression = Expression;
-    var ShortcutExpression = /** @class */ (function () {
-        function ShortcutExpression() {
         }
-        ShortcutExpression.createNumber = function (n) {
+        get top() {
+            return this.stack[this.stack.length - 1];
+        }
+        toString() {
+            var res = "";
+            this.stack.forEach((x, i) => res = (i == this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res);
+            return res.trim();
+        }
+    }
+    LambadaRuntimeMinimal.Expression = Expression;
+    class ShortcutExpression {
+        static createNumber(n) {
             var se = n == 0
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(n - 1); });
-            se._asNumber = se.asNumber = function () { return n; };
-            se.toString = function () { return n.toString(); };
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1));
+            se._asNumber = se.asNumber = () => n;
+            se.toString = () => n.toString();
             return se;
-        };
-        ShortcutExpression.createString2 = function (s, offset) {
+        }
+        static createString2(s, offset) {
             var se = s.length == offset
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, function () { return ShortcutExpression.createNumber(s.charCodeAt(offset)); }, function () { return ShortcutExpression.createString2(s, offset + 1); });
-            se._asString = se.asString = function () { return s.slice(offset); };
-            se.toString = function () { return "\"" + s.slice(offset) + "\""; };
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(s.charCodeAt(offset)), () => ShortcutExpression.createString2(s, offset + 1));
+            se._asString = se.asString = () => s.slice(offset);
+            se.toString = () => "\"" + s.slice(offset) + "\"";
             return se;
-        };
-        ShortcutExpression.createString = function (s) {
+        }
+        static createString(s) {
             return ShortcutExpression.createString2(s, 0);
-        };
-        ShortcutExpression.createBoolean = function (b) {
+        }
+        static createBoolean(b) {
             return b ? ShortcutExpression.ADTo_2_0 : ShortcutExpression.ADTo_2_1;
-        };
-        ShortcutExpression.ADTo_2_0 = Expression.createADTo(2, 0);
-        ShortcutExpression.ADTo_2_1 = Expression.createADTo(2, 1);
-        return ShortcutExpression;
-    }());
+        }
+    }
+    ShortcutExpression.ADTo_2_0 = Expression.createADTo(2, 0);
+    ShortcutExpression.ADTo_2_1 = Expression.createADTo(2, 1);
     LambadaRuntimeMinimal.ShortcutExpression = ShortcutExpression;
     ExpressionBase.init();
-    var Runtime = /** @class */ (function (_super) {
-        __extends(Runtime, _super);
-        function Runtime() {
-            var _this = _super.call(this, 1, function (stack) {
-                var result = _this.defs[stack.pop().asString()];
+    class Runtime extends BuiltinExpression {
+        constructor() {
+            super(1, stack => {
+                var result = this.defs[stack.pop().asString()];
                 if (result)
-                    stack.push(Expression.createADTo(2, 0, function () { return result; }));
+                    stack.push(Expression.createADTo(2, 0, () => result));
                 else
                     stack.push(Runtime.maybeNothing);
-            }) || this;
-            _this.defs = {};
-            var def = function (name, expr) {
-                _this.defs[name] = new AliasExpression(name, expr);
+            });
+            this.defs = {};
+            var def = (name, expr) => {
+                this.defs[name] = new AliasExpression(name, expr);
             };
-            def("u", new BuiltinExpression(1, function (stack) {
+            def("u", new BuiltinExpression(1, stack => {
                 var x = stack.pop();
-                stack.push(new BuiltinExpression(2, function (stack) {
+                stack.push(new BuiltinExpression(2, stack => {
                     var x = stack.pop();
                     stack.pop();
                     stack.push(x);
                 }));
-                stack.push(new BuiltinExpression(3, function (stack) {
+                stack.push(new BuiltinExpression(3, stack => {
                     var a = stack.pop();
                     var b = stack.pop();
                     var c = stack.pop();
@@ -277,15 +232,14 @@ var LambadaRuntimeMinimal;
                 }));
                 stack.push(x);
             }));
-            def("msgBox", new BuiltinExpression(1, function (stack) { return window.alert(stack[stack.length - 1].toString()); }));
-            return _this;
+            def("msgBox", new BuiltinExpression(1, stack => window.alert(stack[stack.length - 1].toString())));
         }
-        Runtime.create = function (binary) {
+        static create(binary) {
             var rt = new Runtime();
             rt.define(binary);
             return rt;
-        };
-        Runtime.prototype.define = function (binaryDefinition) {
+        }
+        define(binaryDefinition) {
             var reader = new StringReader(binaryDefinition);
             reader.readWhitespace();
             while (reader.charsLeft > 0) {
@@ -317,7 +271,7 @@ var LambadaRuntimeMinimal;
                     }
                     // string
                     if (reader.readChar("\"")) {
-                        var s = reader.readWhile(function (ch) { return ch != "\""; });
+                        var s = reader.readWhile(ch => ch != "\"");
                         reader.readChar("\"");
                         expressionStack.push(ShortcutExpression.createString(s));
                         continue;
@@ -339,10 +293,9 @@ var LambadaRuntimeMinimal;
                 // end parse definition
                 reader.readWhitespace();
             }
-        };
-        Runtime.maybeNothing = Expression.createADTo(2, 1);
-        return Runtime;
-    }(BuiltinExpression));
+        }
+    }
+    Runtime.maybeNothing = Expression.createADTo(2, 1);
     LambadaRuntimeMinimal.Runtime = Runtime;
 })(LambadaRuntimeMinimal || (LambadaRuntimeMinimal = {}));
 //# sourceMappingURL=runtimeMinimal.js.map

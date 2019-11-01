@@ -12,7 +12,7 @@ instance Show Expression where
 -- Semantics
 valueOf :: Expression -> Expression
 valueOf x = maybe x valueOf $ reduce x
- 
+
 reduce :: Expression -> Maybe Expression
 reduce (App (App K a) b)         = Just $ a
 reduce (App (App (App S a) b) c) = Just $ App (App a c) (App b c)
@@ -46,12 +46,12 @@ envParseBag stack   name     Nothing  (' '  : s)   env = envParseBag stack name 
 envParseBag []      _        Nothing  ('.'  : s)   env = error "unexpected application (stack was empty)"
 envParseBag [e]     (Just n) Nothing  ('.'  : s)   env = envParseBag [] Nothing Nothing s (envAdd n e env)
 envParseBag (b:a:e) name     Nothing  ('.'  : s)   env = envParseBag (App a b : e) name Nothing s env
- 
+
 envParseBag stack   Nothing  (Just x) t@(' '  : s) env = envParseBag stack (Just x) Nothing t env
-envParseBag stack   Nothing  (Just x) t@('.'  : s) env = envParseBag stack (Just x) Nothing t env 
+envParseBag stack   Nothing  (Just x) t@('.'  : s) env = envParseBag stack (Just x) Nothing t env
 
 envParseBag stack   name     (Just x) t@(' '  : s) env = envParseBag (envGet x env : stack) name Nothing t env
-envParseBag stack   name     (Just x) t@('.'  : s) env = envParseBag (envGet x env : stack) name Nothing t env 
+envParseBag stack   name     (Just x) t@('.'  : s) env = envParseBag (envGet x env : stack) name Nothing t env
 
 envParseBag stack   name     Nothing  t@(c : s)    env = envParseBag stack name (Just "") t env
 envParseBag stack   name     (Just x) (c : s)      env = envParseBag stack name (Just (x ++ [c])) s env
@@ -75,7 +75,7 @@ createNum 0 = preludeGet "Zero"
 createNum n = App (preludeGet "Succ") (createNum $ n-1)
 
 readNum :: Expression -> Integer
-readNum x = if pRes == pZero 
+readNum x = if pRes == pZero
                 then 0
                 else 1 + (readNum $ valueOf $ App (App x U) i)
         where pZero = probe 0
@@ -87,7 +87,7 @@ createString [] = preludeGet "ListEmpty"
 createString (c : cs) = App (App (preludeGet "ListCons") (createNum $ fromIntegral $ ord c)) (createString cs)
 
 readString :: Expression -> String
-readString x = if pRes == pEmpty 
+readString x = if pRes == pEmpty
                 then []
                 else (chr $ fromInteger $ readNum $ valueOf $ App (App x U) k) : (readString $ valueOf $ App (App x U) (App k i))
         where pEmpty = probe 0

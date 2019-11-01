@@ -4,7 +4,7 @@
 // PERF MAPPING
 var layer;
 var rtDebugMap = {};
-AsyncRuntime.onOpen = function (rt) {
+AsyncRuntime.onOpen = rt => {
     var debugPanel = $("<div>");
     debugPanel.width(160);
     debugPanel.css("font-family", "monospace");
@@ -19,24 +19,24 @@ AsyncRuntime.onOpen = function (rt) {
     layer.append(debugPanel);
     rtDebugMap[rt.uid] = { rt: rt, jq: debugPanel };
 };
-AsyncRuntime.onClose = function (rt) {
+AsyncRuntime.onClose = rt => {
     var jq = rtDebugMap[rt.uid].jq;
-    jq.fadeOut(3000, function () { return jq.remove(); });
+    jq.fadeOut(3000, () => jq.remove());
     delete rtDebugMap[rt.toString()];
 };
-AsyncRuntime.onPerf = function (rt, data) {
+AsyncRuntime.onPerf = (rt, data) => {
     var jq = rtDebugMap[rt.uid].jq;
     var text = "\n"
         + "\n#apps    " + (data.nApp / 1000000 | 0) + " million"
         + "\n#allocs  " + (data.nAlloc / 1000000 | 0) + " million"
         + "\nhang for " + (data.timeBusy / 1000 | 0) + " seconds";
     jq.text("").append($("<b>").text("Runtime <" + rt.uid + ">"));
-    text.split("\n").forEach(function (line) {
+    text.split("\n").forEach(line => {
         jq.append(line.replace(/ /g, "&nbsp;"));
         jq.append("<br>");
     });
 };
-$(function () {
+$(() => {
     var layer2 = $("<p>");
     layer2.css("position", "absolute");
     layer2.offset({ left: 0, top: 0 });
@@ -55,8 +55,8 @@ var rtClean;
 var names;
 function init(binary) {
     rtClean = new AsyncRuntime(runtimePath + "asyncRuntimeServer.js", binary);
-    rtClean.getNames(function (res) { return names = res; });
-    rtClean.onDone(function () { return console.log("Loaded binary (" + binary.length + " bytes)."); });
+    rtClean.getNames(res => names = res);
+    rtClean.onDone(() => console.log("Loaded binary (" + binary.length + " bytes)."));
     rtClean.autoClose();
 }
 function splitSources(sources) {
@@ -75,7 +75,7 @@ function splitSources(sources) {
     }
     return result;
 }
-var compareStrings = function (a, b) { return a.toLowerCase() <= b.toLowerCase() ? -1 : 1; };
+var compareStrings = (a, b) => a.toLowerCase() <= b.toLowerCase() ? -1 : 1;
 function bsearch(x, xs) {
     var s = -1;
     var e = xs.length;
@@ -91,9 +91,9 @@ function bsearch(x, xs) {
 }
 var onReady = [];
 $(function () {
-    $.get(libraryPath + "prelude.native.txt", function (binary) {
+    $.get(libraryPath + "prelude.native.txt", (binary) => {
         init(binary);
-        onReady.forEach(function (f) { return f(); });
+        onReady.forEach(f => f());
     }, "text");
 });
 //# sourceMappingURL=demoCommon.js.map
