@@ -1,0 +1,76 @@
+arithmetic
+~~
+strFromN $ add 42 $ pow 10 2
+
+
+~~~
+string
+~~
+reverse $ listDistinct "Hallo Welt" isEQ
+
+
+~~~
+fibonacci
+~~
+fibs = ListCons 1 $ ListCons 1 $ zipWith add fibs (tail fibs)
+
+strJoin (map strFromN $ take 50 fibs) ", "
+
+
+~~~
+ASCIIart
+~~
+gDraw 30 22 $ gCircle 10 12 9 (head "#") 
+            $ gCircle 20 7 7 (head ".") 
+            $ gCanvas
+
+            
+~~~
+divergent
+~~
+strJoin [ if (i False)    "True" "False"
+        , if (i True)     "True" "False"
+        , if (halt False) "True" "False"
+        , if (halt True)  "True" "False"  ' comment me out
+        ] ", "
+
+        
+        
+        
+~~~
+Brainf***
+~~
+_bfSkip = \s s "" $ \x \s (\p
+    if (p $ head "[") (_bfSkip $ _bfSkip s) $
+    if (p $ head "]") s $
+    _bfSkip s
+  ) $ isEQ x
+_bf2fun = \state \ci \re \bf \s bf "" $ \x \xs switchCond (isEQ x) [
+    Pair (head "+") $ _bf2fun (\in if (isEQ in ci) Succ i $ state in) ci re xs s,
+    Pair (head "-") $ _bf2fun (\in if (isEQ in ci) pred i $ state in) ci re xs s,
+    Pair (head ">") $ _bf2fun state (Succ ci) re xs s,
+    Pair (head "<") $ _bf2fun state (pred ci) re xs s,
+    Pair (head "[") $ isZero (state ci) (_bf2fun state ci re (_bfSkip xs) s) (_bf2fun state ci (ListCons xs re) xs s),
+    Pair (head "]") $ re "" $ \r \rex isZero (state ci) (_bf2fun state ci rex xs s) (_bf2fun state ci re r s),
+    Pair (head ".") $ ListCons (state ci) $ _bf2fun state ci re xs s,
+    Pair (head ",") $ s "" $ \c \s _bf2fun (\in if (isEQ in ci) c $ state in) ci re xs s
+    ] $ _bf2fun state ci re xs s
+bf2fun = \bf \s _bf2fun (k 0) 0 [] bf (listConcat s $ repeat 0)
+
+' echo
+bf2fun ",[.,]" "Hallo"
+' Hello World program
+bf2fun "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++." "irrelevant input"
+
+
+
+~~~
+primes
+~~
+_pr = Pair 
+    (\n all (\m mod n m False $ k True) $ takeWhile (\m isGTE n $ mul m m) (snd _pr))
+    (ListCons 2 $ filter (fst _pr) $ drop 3 nats0)
+isPrime = fst _pr
+primes  = snd _pr
+
+strFromNs $ take 50 primes

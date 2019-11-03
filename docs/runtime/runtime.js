@@ -355,29 +355,23 @@ var LambadaRuntime;
                 const a = stack.pop();
                 const b = stack.pop();
                 const c = stack.pop();
-                stack.push(Expression.createApplication(b, c));
-                stack.push(c);
-                stack.push(a);
+                stack.push(Expression.createApplication(b, c), c, a);
             }));
             def("b", new BuiltinExpression(3, stack => {
                 const a = stack.pop();
                 const b = stack.pop();
                 const c = stack.pop();
-                stack.push(Expression.createApplication(b, c));
-                stack.push(a);
+                stack.push(Expression.createApplication(b, c), a);
             }));
             def("c", new BuiltinExpression(3, stack => {
                 const a = stack.pop();
                 const b = stack.pop();
                 const c = stack.pop();
-                stack.push(b);
-                stack.push(c);
-                stack.push(a);
+                stack.push(b, c, a);
             }));
             let y = new BuiltinExpression(1, stack => {
                 const x = stack.pop();
-                stack.push(Expression.createApplication(y, x));
-                stack.push(x);
+                stack.push(Expression.createApplication(y, x), x);
             });
             // WARNING: this impl. makes state-serialization hard
             y = new BuiltinExpression(1, stack => {

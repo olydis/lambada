@@ -1,50 +1,42 @@
 /// <reference path="demoCommon.ts" />
 
-onReady.push(() =>
-{
+onReady.push(() => {
     // EVAL PAD
-    var safeString = (s: string) => "[" + s.split("").map(x => x.charCodeAt(0).toString()).join(",") + "]";
+    const safeString = (s: string) => "[" + s.split("").map(x => x.charCodeAt(0).toString()).join(",") + "]";
 
-    var currentRT: AsyncRuntime = null;
-    var debounceHandle: number = undefined;
-    var evalPad = new IntelliHTML(true, text =>
-    {
+    let currentRT: AsyncRuntime = null;
+    let debounceHandle: number = undefined;
+    const evalPad = new IntelliHTML(true, text => {
         // $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
         $("#evalRes").text("").append($("<i>").text("compiling..."));
 
         clearTimeout(debounceHandle);
-        debounceHandle = setTimeout(() =>
-        {
-            var rtTrash = rtClean.clone();
+        debounceHandle = setTimeout(() => {
+            const rtTrash = rtClean.clone();
             if (currentRT != null) currentRT.close();
             currentRT = rtTrash;
             localStorage.setItem("fun", text);
-            var srcs = splitSources(text);
+            const srcs = splitSources(text);
 
-            var exFree = true;
-            var active = (i: number) => exFree && currentRT == rtTrash && (i == null || i == srcs.length - 1);
+            let exFree = true;
+            const active = (i: number) => exFree && currentRT == rtTrash && (i == null || i == srcs.length - 1);
 
-            var onEx = (ex: any) =>
-            {
-                if (active(null))
-                {
+            const onEx = (ex: any) => {
+                if (active(null)) {
                     srcs.length = 0;
                     $("#evalRes").text("").append($("<i>").text(ex));
                     exFree = false;
                 }
             };
 
-            var totalBinary = "";
-            srcs.forEach((text, i) =>
-            {
+            let totalBinary = "";
+            srcs.forEach((text, i) => {
                 rtTrash.compile(text,
-                    binary =>
-                    {
+                    binary => {
                         totalBinary += binary;
                         // if (active(null))
                         //     $("#evalBin").text(totalBinary);
-                        if (active(i))
-                        {
+                        if (active(i)) {
                             $("#evalRes").text("").append($("<i>").text("running..."));
                             rtTrash.eval(totalBinary, active(i) ? res => $("#evalRes").text(res) : _ => { }, onEx);
                         }
@@ -54,21 +46,23 @@ onReady.push(() =>
             rtTrash.dumpStats();
             rtTrash.autoClose();
         }, 500);
-    },() => names, $("#evalSrc").css("min-height", "15px"));
+    }, () => names, $("#evalSrc").css("min-height", "15px"));
     evalPad.text = localStorage.getItem("fun") || "reverse $ listDistinct \"Hallo Welt\" isEQ";
     evalPad.focus();
 
-    $.get(libraryPath + "samples.txt",(data: string) =>
-    {
-        var sSpan = $("#samples");
-        data.split("~~~").forEach((str, i) =>
-        {
-            var parts = str.split("~~");
-            if (i > 0) sSpan.append("&nbsp;&nbsp;&nbsp;");
-            sSpan.append($("<a>")
-                .text(parts[0].trim())
-                .css("cursor", "pointer")
-                .click(() => evalPad.text = parts[1].trim()));
-        });
-    }, "text");
+    const populate = (lib: string) => {
+        $.get(libraryPath + lib + ".txt", (data: string) => {
+            var sSpan = $("#" + lib);
+            data.split("~~~").forEach((str, i) => {
+                var parts = str.split("~~");
+                if (i > 0) sSpan.append("&nbsp;&nbsp;&nbsp;");
+                sSpan.append($("<a>")
+                    .text(parts[0].trim())
+                    .css("cursor", "pointer")
+                    .click(() => evalPad.text = parts[1].trim()));
+            });
+        }, "text");
+    }
+    populate('samples');
+    populate('lessons');
 });
