@@ -64,5 +64,6 @@ onReady.push(() => {
         }, "text");
     }
     populate('samples');
-    populate('lessons');
+    populate('llessons');
+    populate('clessons');
 });

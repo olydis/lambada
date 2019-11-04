@@ -27,8 +27,7 @@ repeat 65 10
 ~~~
 Data Types
 ~~
-' LambAda desugars algebraic data types via Scott-encoding
-' and automatically generates helper functions.
+' LambAda desugars algebraic data types into helper functions that follow Scott-encoding.
 data
 
 

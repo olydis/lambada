@@ -5,7 +5,7 @@ onReady.push(() => {
     let currentRT = null;
     let debounceHandle = undefined;
     const evalPad = new IntelliHTML(true, text => {
-        // $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
+        $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
         $("#evalRes").text("").append($("<i>").text("compiling..."));
         clearTimeout(debounceHandle);
         debounceHandle = setTimeout(() => {
@@ -28,8 +28,8 @@ onReady.push(() => {
             srcs.forEach((text, i) => {
                 rtTrash.compile(text, binary => {
                     totalBinary += binary;
-                    // if (active(null))
-                    //     $("#evalBin").text(totalBinary);
+                    if (active(null))
+                        $("#evalBin").text(totalBinary);
                     if (active(i)) {
                         $("#evalRes").text("").append($("<i>").text("running..."));
                         rtTrash.eval(totalBinary, active(i) ? res => $("#evalRes").text(res) : _ => { }, onEx);
@@ -57,6 +57,7 @@ onReady.push(() => {
         }, "text");
     };
     populate('samples');
-    populate('lessons');
+    populate('llessons');
+    populate('clessons');
 });
 //# sourceMappingURL=demoTry.js.map
