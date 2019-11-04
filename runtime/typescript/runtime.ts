@@ -535,7 +535,6 @@ module LambadaRuntime {
                     })(content);
                 else
                     this.defs[name] = this.rodefs[name];
-                console.log(name, this.defs[name]);
                 // end parse definition
 
                 reader.readWhitespace();
