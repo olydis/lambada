@@ -82,7 +82,7 @@ filter
 
 ~~~
 Compiler
-~~~
+~~
 ' The LambAda compiler is in scope as well and can be played with.
 ' For instance, to inspect the output of every compilation stage:
 fullDebug "truth = foldl [21, 21] 0 add"

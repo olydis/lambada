@@ -1,4 +1,4 @@
-0. SKI via Iota
+SKI via Iota
 ~~
 ' Note: The first LambAda lessons might be useful to understand
 ' the behavior and syntax available in this playground.
@@ -14,7 +14,7 @@ s = u k       ' = \a \b \c a c (b c)
 s k i "Hello World"
 
 ~~~
-1. BCMY via SKI
+BCMY via SKI
 ~~
 b = s (k s) k                       ' = \a \b \c a (b c)
 c = s (s (k s) (s (k k) s)) (k k)   ' = \a \b \c a c b
@@ -25,7 +25,7 @@ y = b m (c b (s i i))               ' = \f m (\x f (x x))
 c b k y "Hello World"
 
 ~~~
-2. Booleans
+Booleans
 ~~
 ' Constructors
 true = k    ' = \a \b a
@@ -78,7 +78,7 @@ strConss [
 
 
 ~~~
-3. Natural Numbers (Church)
+Natural Numbers (Church)
 ~~
 ' Constructors
 zero = k i   ' = \f \x x
@@ -110,7 +110,7 @@ strJoin (map print [
 
 
 ~~~
-4. Natural Numbers (Scott)
+Natural Numbers (Scott)
 ~~
 ' Constructors
 zero = k          ' = \a \b a

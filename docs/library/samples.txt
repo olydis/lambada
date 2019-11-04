@@ -1,16 +1,16 @@
-arithmetic
+Arithmetic
 ~~
 strFromN $ add 42 $ pow 10 2
 
 
 ~~~
-string
+String
 ~~
 reverse $ listDistinct "Hallo Welt" isEQ
 
 
 ~~~
-fibonacci
+Fibonacci
 ~~
 fibs = ListCons 1 $ ListCons 1 $ zipWith add fibs (tail fibs)
 
@@ -20,13 +20,13 @@ strJoin (map strFromN $ take 50 fibs) ", "
 ~~~
 ASCIIart
 ~~
-gDraw 30 22 $ gCircle 10 12 9 (head "#") 
-            $ gCircle 20 7 7 (head ".") 
+gDraw 30 22 $ gCircle 10 12 9 (head "#")
+            $ gCircle 20 7 7 (head ".")
             $ gCanvas
 
-            
+
 ~~~
-divergent
+Divergent
 ~~
 strJoin [ if (i False)    "True" "False"
         , if (i True)     "True" "False"
@@ -34,9 +34,9 @@ strJoin [ if (i False)    "True" "False"
         , if (halt True)  "True" "False"  ' comment me out
         ] ", "
 
-        
-        
-        
+
+
+
 ~~~
 Brainf***
 ~~
@@ -65,9 +65,9 @@ bf2fun "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>
 
 
 ~~~
-primes
+Primes
 ~~
-_pr = Pair 
+_pr = Pair
     (\n all (\m mod n m False $ k True) $ takeWhile (\m isGTE n $ mul m m) (snd _pr))
     (ListCons 2 $ filter (fst _pr) $ drop 3 nats0)
 isPrime = fst _pr
