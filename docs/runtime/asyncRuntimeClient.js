@@ -91,8 +91,8 @@ class AsyncRuntime {
     }
     eval(binary, callback, error = this.throwException) {
         this.post([
-            "rt.define(" + JSON.stringify("__value ListEmpty.") + ")",
-            "rt.define(" + JSON.stringify(binary || "") + ")",
+            "rt.define(" + JSON.stringify("__value ListEmpty.") + ", false)",
+            "rt.define(" + JSON.stringify(binary || "") + ", false)",
             "d.__value.asString()"
         ], (result) => callback(result), ex => error(ex));
     }

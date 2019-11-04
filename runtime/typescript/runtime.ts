@@ -376,7 +376,7 @@ module LambadaRuntime {
 
         public static create(binary: string): Runtime {
             const rt = new Runtime();
-            rt.define(binary);
+            rt.define(binary, true);
             return rt;
         }
 
@@ -490,7 +490,7 @@ module LambadaRuntime {
             return Object.keys(this.defs);
         }
 
-        public define(binaryDefinition: string): void {
+        public define(binaryDefinition: string, withBuiltins: boolean): void {
             const reader = new StringReader(binaryDefinition);
 
             reader.readWhitespace();
@@ -529,7 +529,7 @@ module LambadaRuntime {
 
                 const content = expressionStack.pop();
                 //console.log(name + " = " + content.toString());
-                if (this.rodefs[name] == undefined)
+                if (this.rodefs[name] == undefined || !withBuiltins)
                     this.defs[name] = (function (content: ExpressionBase) {
                         return new AliasExpression(name, content);
                     })(content);

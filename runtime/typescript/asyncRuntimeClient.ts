@@ -3,7 +3,7 @@
     public static onOpen: (rt: AsyncRuntime) => void = rt => { console.log("opened client " + rt.toString()); };
     public static onClose: (rt: AsyncRuntime) => void = rt => { console.log("closed client " + rt.toString()); };
     public static onPerf: (rt: AsyncRuntime, perfData: { nApp: number; nAlloc: number; timeBusy: number }) => void = _ => { };
-    
+
     private _uid: string;
     public get uid(): string
     {
@@ -15,7 +15,7 @@
 
     private nextReq: number = 0;
     private nextRes: number = 0;
-    
+
     private closed: boolean = false;
 
     public get isIdle(): boolean
@@ -40,8 +40,8 @@
                     timeBusy: e.data.timeBusy,
                 });
                 return;
-            }        
-            
+            }
+
             // handle responses
             if (this.nextRes != e.data.id)
                 throw "unexpected response id (" + e.data.id + " instead of " + this.nextRes + ")";
@@ -132,8 +132,8 @@
     public eval(binary: string, callback: (result: string) => void, error: (exception: any) => void = this.throwException)
     {
         this.post([
-            "rt.define(" + JSON.stringify("__value ListEmpty.") + ")",
-            "rt.define(" + JSON.stringify(binary || "") + ")",
+            "rt.define(" + JSON.stringify("__value ListEmpty.") + ", false)",
+            "rt.define(" + JSON.stringify(binary || "") + ", false)",
             "d.__value.asString()"],
             (result: string) => callback(result),
             ex => error(ex));
@@ -191,7 +191,7 @@
 //        }
 //    });
 //    console.log(tc + " tests passed in " + dddiff + "ms");
-            
+
 //    // execution speed (1.000.000 x operation)
 //    // K
 //    var kTest = d["k"];

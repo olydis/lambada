@@ -1,76 +1,157 @@
-arithmetic
+0. SKI via Iota
 ~~
-strFromN $ add 42 $ pow 10 2
+' Note: The first LambAda lessons might be useful to understand
+' the behavior and syntax available in this playground.
+'
+' Iota is defined as \x x S K and is available as "u" in LambAda.
+' We can hence reconstruct S, K and I:
+
+i = u u       ' = \x x
+k = u (u i)   ' = \a \b a
+s = u k       ' = \a \b \c a c (b c)
+
+' Let's put them to the test:
+s k i "Hello World"
+
+~~~
+1. BCMY via SKI
+~~
+b = s (k s) k                       ' = \a \b \c a (b c)
+c = s (s (k s) (s (k k) s)) (k k)   ' = \a \b \c a c b
+m = s i i                           ' = \x x x
+y = b m (c b (s i i))               ' = \f m (\x f (x x))
+
+' Let's put them to the test:
+c b k y "Hello World"
+
+~~~
+2. Booleans
+~~
+' Constructors
+true = k    ' = \a \b a
+false = k i ' = \a \b b
+
+' Helpers
+if = i
+not = c (c i false) true   ' = \b b false true
+and = c c false            ' = \a \b a b False
+or = c i true              ' = \a \b a True b
+implies = c c true         ' = \a \b a b True
+xor = c (b s (c b not)) i  ' = \a \b a (not b) b
+eq = b (b not) xor         ' = \a \b not $ xor a b
+
+' Let's put them to the test (using predefined helpers):
+allTrue = all i
+allFalse = all not
+strConss [
+    if (allTrue [
+        true,
+        not false,
+        and true true,
+        or true true,
+        or true false,
+        or false true,
+        implies false false,
+        implies false true,
+        implies true true,
+        xor false true,
+        xor true false,
+        eq false false,
+        eq true true
+    ]) "expected" "unexpected",
+    newLine,
+    if (allFalse [
+        false,
+        not true,
+        and false false,
+        and false true,
+        and true false,
+        or false false,
+        implies true false,
+        xor false false,
+        xor true true,
+        eq false true,
+        eq true false
+    ]) "expected" "unexpected"
+  ]
+
 
 
 ~~~
-string
+3. Natural Numbers (Church)
 ~~
-reverse $ listDistinct "Hallo Welt" isEQ
+' Constructors
+zero = k i   ' = \f \x x
+succ = s b   ' = \n \f \x f (n f x)
+
+' Helpers
+pred = c (b c (b (b c) (c (b c (b (b b) (c b (b (b (c i)) (c i))))) k))) i  ' = \n \f \x n (\g \h h (g f)) (k x) i
+add = b s (b b)                                                             ' = \m \n \f \x m f (n f x)
+mul = b                                                                     ' = \m \n \f \x m (n f) x
+pow = c i                                                                   ' = \m \n n m
+
+one = succ zero
+two = succ one
+three = add two one
+four = mul two two
+five = pred (mul two three)
+six = mul two three
+seven = pred (pow two three)
+eight = pow two three
+nine = pow three two
+
+' Test by converting to predefined natural numbers
+print = \n strFromN $ n Succ Zero
+strJoin (map print [
+    zero, one, two, three, four,
+    five, six, seven, eight, nine
+  ])
+  newLine
 
 
 ~~~
-fibonacci
+4. Natural Numbers (Scott)
 ~~
-fibs = ListCons 1 $ ListCons 1 $ zipWith add fibs (tail fibs)
+' Constructors
+zero = k          ' = \a \b a
+succ = b k (c i)  ' = \n \a \b b n
 
-strJoin (map strFromN $ take 50 fibs) ", "
+pred = c (c i zero) i  ' = \n n zero i
+mul = \n \m m Zero (\dm add n (mul n dm))
 
+add = \a \b b a (\n add (succ n) n) ' \a \b b a (\n add (succ n) n)
 
-~~~
-ASCIIart
-~~
-gDraw 30 22 $ gCircle 10 12 9 (head "#") 
-            $ gCircle 20 7 7 (head ".") 
-            $ gCanvas
-
-            
-~~~
-divergent
-~~
-strJoin [ if (i False)    "True" "False"
-        , if (i True)     "True" "False"
-        , if (halt False) "True" "False"
-        , if (halt True)  "True" "False"  ' comment me out
-        ] ", "
-
-        
-        
-        
-~~~
-Brainf***
-~~
-_bfSkip = \s s "" $ \x \s (\p
-    if (p $ head "[") (_bfSkip $ _bfSkip s) $
-    if (p $ head "]") s $
-    _bfSkip s
-  ) $ isEQ x
-_bf2fun = \state \ci \re \bf \s bf "" $ \x \xs switchCond (isEQ x) [
-    Pair (head "+") $ _bf2fun (\in if (isEQ in ci) Succ i $ state in) ci re xs s,
-    Pair (head "-") $ _bf2fun (\in if (isEQ in ci) pred i $ state in) ci re xs s,
-    Pair (head ">") $ _bf2fun state (Succ ci) re xs s,
-    Pair (head "<") $ _bf2fun state (pred ci) re xs s,
-    Pair (head "[") $ isZero (state ci) (_bf2fun state ci re (_bfSkip xs) s) (_bf2fun state ci (ListCons xs re) xs s),
-    Pair (head "]") $ re "" $ \r \rex isZero (state ci) (_bf2fun state ci rex xs s) (_bf2fun state ci re r s),
-    Pair (head ".") $ ListCons (state ci) $ _bf2fun state ci re xs s,
-    Pair (head ",") $ s "" $ \c \s _bf2fun (\in if (isEQ in ci) c $ state in) ci re xs s
-    ] $ _bf2fun state ci re xs s
-bf2fun = \bf \s _bf2fun (k 0) 0 [] bf (listConcat s $ repeat 0)
-
-' echo
-bf2fun ",[.,]" "Hallo"
-' Hello World program
-bf2fun "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++." "irrelevant input"
-
-
-
-~~~
-primes
-~~
-_pr = Pair 
-    (\n all (\m mod n m False $ k True) $ takeWhile (\m isGTE n $ mul m m) (snd _pr))
-    (ListCons 2 $ filter (fst _pr) $ drop 3 nats0)
-isPrime = fst _pr
-primes  = snd _pr
-
-strFromNs $ take 50 primes
+' Let's put them to the test (using predefined helpers):
+allTrue = all i
+allFalse = all not
+strConss [
+    if (allTrue [
+        true,
+        not false,
+        and true true,
+        or true true,
+        or true false,
+        or false true,
+        implies false false,
+        implies false true,
+        implies true true,
+        xor false true,
+        xor true false,
+        eq false false,
+        eq true true
+    ]) "expected" "unexpected",
+    newLine,
+    if (allFalse [
+        false,
+        not true,
+        and false false,
+        and false true,
+        and true false,
+        or false false,
+        implies true false,
+        xor false false,
+        xor true true,
+        eq false true,
+        eq true false
+    ]) "expected" "unexpected"
+  ]

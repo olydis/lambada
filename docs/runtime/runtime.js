@@ -401,13 +401,13 @@ var LambadaRuntime;
         }
         static create(binary) {
             const rt = new Runtime();
-            rt.define(binary);
+            rt.define(binary, true);
             return rt;
         }
         getNames() {
             return Object.keys(this.defs);
         }
-        define(binaryDefinition) {
+        define(binaryDefinition, withBuiltins) {
             const reader = new StringReader(binaryDefinition);
             reader.readWhitespace();
             while (reader.charsLeft > 0) {
@@ -440,7 +440,7 @@ var LambadaRuntime;
                 }
                 const content = expressionStack.pop();
                 //console.log(name + " = " + content.toString());
-                if (this.rodefs[name] == undefined)
+                if (this.rodefs[name] == undefined || !withBuiltins)
                     this.defs[name] = (function (content) {
                         return new AliasExpression(name, content);
                     })(content);
