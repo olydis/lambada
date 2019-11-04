@@ -182,6 +182,29 @@ module LambadaRuntime {
 
             return s;
         }
+
+        private agtReflect(): { index: number, args: ExpressionBase[] } | null {
+            let result: { index: number, args: ExpressionBase[] } | null = null;
+            const createRecorderProbe = (n: number) => {
+                const probe = new BuiltinExpression(0, stack => {
+                    result = { index: n, args: stack.reverse() };
+                    stack.push(BuiltinExpression.probeSTOP);
+                });
+                return probe;
+            };
+            let expr: ExpressionBase = this;
+            for (let i = 0; i < 10; i++) {
+                expr = Expression.createApplication(expr, createRecorderProbe(i));
+                expr.fullReduce();
+                if (result !== null) break;
+            }
+            return result;
+        }
+
+        public asGuess(): string {
+            const reflect = this.agtReflect();
+            return JSON.stringify(reflect);
+        }
     }
 
     class BuiltinExpression extends ExpressionBase {

@@ -93,7 +93,7 @@ class AsyncRuntime {
         this.post([
             "rt.define(" + JSON.stringify("__value ListEmpty.") + ", false)",
             "rt.define(" + JSON.stringify(binary || "") + ", false)",
-            "d.__value.asString()"
+            "d.__value.asGuess()"
         ], (result) => callback(result), ex => error(ex));
     }
     getNames(callback) {

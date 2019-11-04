@@ -150,6 +150,28 @@ var LambadaRuntime;
             this._asString = this.asString = () => s;
             return s;
         }
+        agtReflect() {
+            let result = null;
+            const createRecorderProbe = (n) => {
+                const probe = new BuiltinExpression(0, stack => {
+                    result = { index: n, args: stack.reverse() };
+                    stack.push(BuiltinExpression.probeSTOP);
+                });
+                return probe;
+            };
+            let expr = this;
+            for (let i = 0; i < 10; i++) {
+                expr = Expression.createApplication(expr, createRecorderProbe(i));
+                expr.fullReduce();
+                if (result !== null)
+                    break;
+            }
+            return result;
+        }
+        asGuess() {
+            const reflect = this.agtReflect();
+            return JSON.stringify(reflect);
+        }
     }
     LambadaRuntime.ExpressionBase = ExpressionBase;
     class BuiltinExpression extends ExpressionBase {
