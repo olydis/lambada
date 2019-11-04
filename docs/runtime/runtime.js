@@ -170,6 +170,7 @@ var LambadaRuntime;
             if (!result)
                 return null;
             return {
+                hint: JSON.stringify(this),
                 arity,
                 index: result.index,
                 args: result.args.map(x => x.agtReflect())

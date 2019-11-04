@@ -1,6 +1,6 @@
 module LambadaRuntime {
 
-    type AgtReflect = { arity: number, index: number, args: AgtReflect[] } | null;
+    type AgtReflect = { hint: string | null, arity: number, index: number, args: AgtReflect[] } | null;
 
     const _perfAppHeartbeat: number = 1000000;
     const _perfAllocHeartbeat: number = 1000000;
@@ -204,6 +204,7 @@ module LambadaRuntime {
             }
             if (!result) return null;
             return {
+                hint: JSON.stringify(this),
                 arity,
                 index: result.index,
                 args: result.args.map(x => x.agtReflect())
