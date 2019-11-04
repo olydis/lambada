@@ -13,7 +13,8 @@ published: true
 <script src="runtime/tools/demoTry.js"></script>
 
 ## Source code
-### Lessons: <span id="lessons"></span>
+### LambAda Lessons: <span id="llessons"></span>
+### Combinatory Logic Lessons: <span id="clessons"></span>
 ### Samples: <span id="samples"></span>
 {% raw %}
 <pre id='evalSrc' style="min-height: 50px"></pre>
@@ -26,8 +27,8 @@ published: true
 {% endraw %}
 
 {% raw %}
-<!--### Binary
-<pre id='evalBin'></pre>-->
+<!--### Binary-->
+<pre id='evalBin' style='display: none;'></pre>
 {% endraw %}
 
 ## Further Information

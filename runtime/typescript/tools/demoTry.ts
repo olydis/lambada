@@ -7,7 +7,7 @@ onReady.push(() => {
     let currentRT: AsyncRuntime = null;
     let debounceHandle: number = undefined;
     const evalPad = new IntelliHTML(true, text => {
-        // $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
+        $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
         $("#evalRes").text("").append($("<i>").text("compiling..."));
 
         clearTimeout(debounceHandle);
@@ -34,8 +34,8 @@ onReady.push(() => {
                 rtTrash.compile(text,
                     binary => {
                         totalBinary += binary;
-                        // if (active(null))
-                        //     $("#evalBin").text(totalBinary);
+                        if (active(null))
+                            $("#evalBin").text(totalBinary);
                         if (active(i)) {
                             $("#evalRes").text("").append($("<i>").text("running..."));
                             rtTrash.eval(totalBinary, active(i) ? res => $("#evalRes").text(res) : _ => { }, onEx);
