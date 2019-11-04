@@ -48,30 +48,20 @@ strConss [
         true,
         not false,
         and true true,
-        or true true,
-        or true false,
-        or false true,
-        implies false false,
-        implies false true,
-        implies true true,
-        xor false true,
-        xor true false,
-        eq false false,
-        eq true true
+        or true true, or true false, or false true,
+        implies false false, implies false true, implies true true,
+        xor false true, xor true false,
+        eq false false, eq true true
     ]) "expected" "unexpected",
     newLine,
     if (allFalse [
         false,
         not true,
-        and false false,
-        and false true,
-        and true false,
+        and false false, and false true, and true false,
         or false false,
         implies true false,
-        xor false false,
-        xor true true,
-        eq false true,
-        eq true false
+        xor false false, xor true true,
+        eq false true, eq true false
     ]) "expected" "unexpected"
   ]
 
