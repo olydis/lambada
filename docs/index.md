@@ -21,7 +21,7 @@ published: true
 {% endraw %}
 
 ## Output
-### Source code must evaluate to string value
+### (Will attempt to interpret evaluation result as common AGTs)
 {% raw %}
 <pre id='evalRes'></pre>
 {% endraw %}

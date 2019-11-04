@@ -170,15 +170,56 @@ var LambadaRuntime;
             if (!result)
                 return null;
             return {
-                hint: JSON.stringify(this),
+                hint: null,
+                // hint: JSON.stringify(this),
                 arity,
                 index: result.index,
                 args: result.args.map(x => x.agtReflect())
             };
         }
+        static validate(agt, reflect) {
+            if (reflect === null)
+                return false;
+            if (agt.ctors.length !== reflect.arity)
+                return false;
+            if (agt.ctors[reflect.index].length !== reflect.args.length)
+                return false;
+            return agt.ctors[reflect.index].every((farg, i) => this.validate(farg, reflect.args[i]));
+        }
+        static agtBool() {
+            return { ctors: [[], []] };
+        }
+        // private static agtMaybe(): Agt {
+        //     return { ctors: [[], []] };
+        // }
+        static agtNat() {
+            const result = { ctors: [[], []] };
+            result.ctors[1].push(result);
+            return result;
+        }
+        static agtList(elem) {
+            const result = { ctors: [[], [elem]] };
+            result.ctors[1].push(result);
+            return result;
+        }
+        static agtString() {
+            return this.agtList(this.agtNat());
+        }
+        static agtPair(a, b) {
+            return { ctors: [[a, b]] };
+        }
         asGuess() {
             const reflect = this.agtReflect();
-            return JSON.stringify(reflect);
+            const result = [];
+            if (ExpressionBase.validate(ExpressionBase.agtBool(), reflect))
+                result.push({ type: 'Bool', value: reflect.index === 0 ? 'True' : 'False' });
+            if (ExpressionBase.validate(ExpressionBase.agtNat(), reflect))
+                result.push({ type: 'Nat', value: this.asNumber().toString() });
+            if (ExpressionBase.validate(ExpressionBase.agtString(), reflect))
+                result.push({ type: 'string', value: this.asString() });
+            if (result.length === 0)
+                return "No known interpretation for result!";
+            return result.map(x => `${x.type}:\n${x.value}`).join('\n\n');
         }
     }
     LambadaRuntime.ExpressionBase = ExpressionBase;

@@ -1,5 +1,6 @@
 module LambadaRuntime {
 
+    type Agt = { ctors: Agt[][] }
     type AgtReflect = { hint: string | null, arity: number, index: number, args: AgtReflect[] } | null;
 
     const _perfAppHeartbeat: number = 1000000;
@@ -204,16 +205,60 @@ module LambadaRuntime {
             }
             if (!result) return null;
             return {
-                hint: JSON.stringify(this),
+                hint: null,
+                // hint: JSON.stringify(this),
                 arity,
                 index: result.index,
                 args: result.args.map(x => x.agtReflect())
             };
         }
 
+        private static validate(agt: Agt, reflect: AgtReflect): boolean {
+            if (reflect === null) return false;
+            if (agt.ctors.length !== reflect.arity) return false;
+            if (agt.ctors[reflect.index].length !== reflect.args.length) return false;
+            return agt.ctors[reflect.index].every((farg, i) => this.validate(farg, reflect.args[i]));
+        }
+
+        private static agtBool(): Agt {
+            return { ctors: [[], []] };
+        }
+
+        // private static agtMaybe(): Agt {
+        //     return { ctors: [[], []] };
+        // }
+
+        private static agtNat(): Agt {
+            const result = { ctors: [[], []] };
+            result.ctors[1].push(result);
+            return result;
+        }
+
+        private static agtList(elem: Agt): Agt {
+            const result = { ctors: [[], [elem]] };
+            result.ctors[1].push(result);
+            return result;
+        }
+
+        private static agtString(): Agt {
+            return this.agtList(this.agtNat());
+        }
+
+        private static agtPair(a: Agt, b: Agt): Agt {
+            return { ctors: [[a, b]] };
+        }
+
         public asGuess(): string {
             const reflect = this.agtReflect();
-            return JSON.stringify(reflect);
+            const result: { type: string, value: string }[] = [];
+            if (ExpressionBase.validate(ExpressionBase.agtBool(), reflect))
+                result.push({ type: 'Bool', value: reflect.index === 0 ? 'True' : 'False' });
+            if (ExpressionBase.validate(ExpressionBase.agtNat(), reflect))
+                result.push({ type: 'Nat', value: this.asNumber().toString() });
+            if (ExpressionBase.validate(ExpressionBase.agtString(), reflect))
+                result.push({ type: 'string', value: this.asString() });
+            if (result.length === 0) return "No known interpretation for result!";
+            return result.map(x => `${x.type}:\n${x.value}`).join('\n\n');
         }
     }
 
