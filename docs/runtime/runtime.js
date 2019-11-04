@@ -154,8 +154,7 @@ var LambadaRuntime;
             let result = null;
             const createRecorderProbe = (n) => {
                 const probe = new BuiltinExpression(0, stack => {
-                    console.log(stack, stack.length);
-                    result = { index: n, args: stack.reverse() };
+                    result = { index: n, args: stack.slice().reverse() };
                     stack.push(BuiltinExpression.probeSTOP);
                 });
                 return probe;
