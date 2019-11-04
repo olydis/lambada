@@ -1,6 +1,6 @@
 Arithmetic
 ~~
-strFromN $ add 42 $ pow 10 2
+add 42 $ pow 10 2
 
 
 ~~~

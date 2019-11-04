@@ -5,12 +5,8 @@ Intro
 ' Beyond that, no concepts or data types are built-in, but instead desugared into CL.
 
 oneHundred = pow 10 2
-result = add 42 oneHundred
+add 42 oneHundred ' last expression => will be the output of this program
 
-strFromN result ' last expression => will be the output of this program
-
-' There is no built-in concept of types, so there is no good output for other result types;
-' always convert to string!
 
 ~~~
 Lambdas
