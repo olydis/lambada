@@ -1,4 +1,7 @@
 module LambadaRuntime {
+
+    type AgtReflect = { arity: number, index: number, args: AgtReflect[] } | null;
+
     const _perfAppHeartbeat: number = 1000000;
     const _perfAllocHeartbeat: number = 1000000;
 
@@ -183,22 +186,28 @@ module LambadaRuntime {
             return s;
         }
 
-        private agtReflect(): { index: number, args: ExpressionBase[] } | null {
+        private agtReflect(): AgtReflect {
             let result: { index: number, args: ExpressionBase[] } | null = null;
             const createRecorderProbe = (n: number) => {
                 const probe = new BuiltinExpression(0, stack => {
-                    result = { index: n, args: stack.reverse() };
+                    result = { index: n, args: stack.slice(1).reverse() };
                     stack.push(BuiltinExpression.probeSTOP);
                 });
                 return probe;
             };
             let expr: ExpressionBase = this;
-            for (let i = 0; i < 10; i++) {
-                expr = Expression.createApplication(expr, createRecorderProbe(i));
+            let arity = 0;
+            while (arity < 10) {
+                expr = Expression.createApplication(expr, createRecorderProbe(arity++));
                 expr.fullReduce();
                 if (result !== null) break;
             }
-            return result;
+            if (!result) return null;
+            return {
+                arity,
+                index: result.index,
+                args: result.args.map(x => x.agtReflect())
+            };
         }
 
         public asGuess(): string {

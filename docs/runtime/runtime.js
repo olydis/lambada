@@ -154,19 +154,26 @@ var LambadaRuntime;
             let result = null;
             const createRecorderProbe = (n) => {
                 const probe = new BuiltinExpression(0, stack => {
-                    result = { index: n, args: stack.reverse() };
+                    result = { index: n, args: stack.slice(1).reverse() };
                     stack.push(BuiltinExpression.probeSTOP);
                 });
                 return probe;
             };
             let expr = this;
-            for (let i = 0; i < 10; i++) {
-                expr = Expression.createApplication(expr, createRecorderProbe(i));
+            let arity = 0;
+            while (arity < 10) {
+                expr = Expression.createApplication(expr, createRecorderProbe(arity++));
                 expr.fullReduce();
                 if (result !== null)
                     break;
             }
-            return result;
+            if (!result)
+                return null;
+            return {
+                arity,
+                index: result.index,
+                args: result.args.map(x => x.agtReflect())
+            };
         }
         asGuess() {
             const reflect = this.agtReflect();
