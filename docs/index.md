@@ -21,7 +21,7 @@ published: true
 {% endraw %}
 
 ## Output
-### (Will attempt to interpret evaluation result as common AGTs)
+### Interpretations of result
 {% raw %}
 <pre id='evalRes'></pre>
 {% endraw %}

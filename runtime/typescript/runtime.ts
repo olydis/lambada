@@ -250,15 +250,16 @@ module LambadaRuntime {
 
         public asGuess(): string {
             const reflect = this.agtReflect();
-            const result: { type: string, value: string }[] = [];
+            const result: { type: string, value: any }[] = [];
             if (ExpressionBase.validate(ExpressionBase.agtBool(), reflect))
-                result.push({ type: 'Bool', value: reflect.index === 0 ? 'True' : 'False' });
+                result.push({ type: 'Bool', value: reflect.index === 0 });
             if (ExpressionBase.validate(ExpressionBase.agtNat(), reflect))
-                result.push({ type: 'Nat', value: this.asNumber().toString() });
+                result.push({ type: 'Nat', value: this.asNumber() });
             if (ExpressionBase.validate(ExpressionBase.agtString(), reflect))
                 result.push({ type: 'string', value: this.asString() });
             if (result.length === 0) return "No known interpretation for result!";
-            return result.map(x => `${x.type}:\n${x.value}`).join('\n\n');
+            if (result.length === 1) return result[0].value;
+            return result.map(x => `${x.value} :: ${x.type}`).join('\n');
         }
     }
 
