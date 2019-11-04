@@ -190,7 +190,7 @@ module LambadaRuntime {
             let result: { index: number, args: ExpressionBase[] } | null = null;
             const createRecorderProbe = (n: number) => {
                 const probe = new BuiltinExpression(0, stack => {
-                    console.log(stack);
+                    console.log(stack, stack.length);
                     result = { index: n, args: stack.reverse() };
                     stack.push(BuiltinExpression.probeSTOP);
                 });
