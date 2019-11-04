@@ -102,11 +102,10 @@ nine = pow three two
 
 ' Test by converting to predefined natural numbers
 print = \n strFromN $ n Succ Zero
-strJoin (map print [
+strConss (map print [
     zero, one, two, three, four,
     five, six, seven, eight, nine
   ])
-  newLine
 
 
 ~~~
@@ -116,42 +115,25 @@ Natural Numbers (Scott)
 zero = k          ' = \a \b a
 succ = b k (c i)  ' = \n \a \b b n
 
-pred = c (c i zero) i  ' = \n n zero i
-mul = \n \m m Zero (\dm add n (mul n dm))
+' Helpers
+pred = c (c i zero) i                             ' = \n n zero i
+add = s (b c (c i)) (b add succ)                  ' = \n \m m n (\dm add (succ n) dm)
+mul = b (c (c i zero)) (s (b b add) mul)          ' = \n \m m zero (\dm add n (mul n dm))
+pow = b (c (c i (succ zero))) (s (b b mul) pow)   ' = \n \m m (succ zero) (\dm mul n (pow n dm))
 
-add = \a \b b a (\n add (succ n) n) ' \a \b b a (\n add (succ n) n)
+one = succ zero
+two = succ one
+three = add two one
+four = mul two two
+five = pred (mul two three)
+six = mul two three
+seven = pred (pow two three)
+eight = pow two three
+nine = pow three two
 
-' Let's put them to the test (using predefined helpers):
-allTrue = all i
-allFalse = all not
-strConss [
-    if (allTrue [
-        true,
-        not false,
-        and true true,
-        or true true,
-        or true false,
-        or false true,
-        implies false false,
-        implies false true,
-        implies true true,
-        xor false true,
-        xor true false,
-        eq false false,
-        eq true true
-    ]) "expected" "unexpected",
-    newLine,
-    if (allFalse [
-        false,
-        not true,
-        and false false,
-        and false true,
-        and true false,
-        or false false,
-        implies true false,
-        xor false false,
-        xor true true,
-        eq false true,
-        eq true false
-    ]) "expected" "unexpected"
-  ]
+' Test by converting to predefined natural numbers
+print = strFromN    ' strFromN expects Scott-encoded numbers already
+strConss (map print [
+    zero, one, two, three, four,
+    five, six, seven, eight, nine
+  ])
