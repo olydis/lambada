@@ -12,23 +12,21 @@ published: true
 <script src="runtime/tools/demoCommon.js"></script>
 <script src="runtime/tools/demoTry.js"></script>
 
-## Source code
 ### LambAda Lessons: <span id="llessons"></span>
 ### Combinatory Logic Lessons: <span id="clessons"></span>
 ### Samples: <span id="samples"></span>
 {% raw %}
-<pre id='evalSrc' style="min-height: 50px"></pre>
+<br><pre id='evalSrc' style="min-height: 50px"></pre><br>
 {% endraw %}
 
-## Output
-### Attempting to interpret your code as a `Bool`, `Nat` or string (`List` of `Nat`):
+### Output &mdash; Attempting to interpret your code as a `Bool`, `Nat` or string (`List` of `Nat`):
 {% raw %}
-<pre id='evalRes'></pre>
+<br><pre id='evalRes'></pre>
 {% endraw %}
 
 {% raw %}
 <!--### Binary-->
-<pre id='evalBin' style='display: none;'></pre>
+<br><pre id='evalBin' style='display: none;'></pre>
 {% endraw %}
 
 ## Further Information
