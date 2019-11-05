@@ -14,6 +14,9 @@ Lambdas
 ' LambAda desugars lambdas using combinators S, K, I, B, C and Y.
 ' The syntax is very compact: There is no function arrow or period
 ' as commonly used in lambda calculus or other languages.
+
+identity = \x x   ' would be something like "x => x" or "\x -> x" in other languages
+
 repeat = \x \n n ListEmpty (\n ListCons x (repeat x n))
 ' This recursive definition will become something like
 repeat = b y (b (b (c (c i ListEmpty))) (b b ListCons))
