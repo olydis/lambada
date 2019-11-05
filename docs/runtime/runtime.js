@@ -150,7 +150,9 @@ var LambadaRuntime;
             this._asString = this.asString = () => s;
             return s;
         }
-        agtReflect() {
+        agtReflect(recursion = 8) {
+            if (recursion <= 0)
+                return undefined;
             let result = null;
             const createRecorderProbe = (n) => {
                 const probe = new BuiltinExpression(0, stack => {
@@ -174,10 +176,12 @@ var LambadaRuntime;
                 // hint: JSON.stringify(this),
                 arity,
                 index: result.index,
-                args: result.args.map(x => x.agtReflect())
+                args: result.args.map(x => x.agtReflect(recursion - 1))
             };
         }
         static validate(agt, reflect) {
+            if (reflect === undefined)
+                return true;
             if (reflect === null)
                 return false;
             if (agt.ctors.length !== reflect.arity)

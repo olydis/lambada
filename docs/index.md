@@ -21,7 +21,7 @@ published: true
 {% endraw %}
 
 ## Output
-### Interpretations of result
+### Interpretation of result
 {% raw %}
 <pre id='evalRes'></pre>
 {% endraw %}

@@ -1,7 +1,7 @@
 module LambadaRuntime {
 
     type Agt = { ctors: Agt[][] }
-    type AgtReflect = { hint: string | null, arity: number, index: number, args: AgtReflect[] } | null;
+    type AgtReflect = { hint: string | null, arity: number, index: number, args: AgtReflect[] } | null | undefined;
 
     const _perfAppHeartbeat: number = 1000000;
     const _perfAllocHeartbeat: number = 1000000;
@@ -187,7 +187,8 @@ module LambadaRuntime {
             return s;
         }
 
-        private agtReflect(): AgtReflect {
+        private agtReflect(recursion: number = 8): AgtReflect {
+            if (recursion <= 0) return undefined;
             let result: { index: number, args: ExpressionBase[] } | null = null;
             const createRecorderProbe = (n: number) => {
                 const probe = new BuiltinExpression(0, stack => {
@@ -209,11 +210,12 @@ module LambadaRuntime {
                 // hint: JSON.stringify(this),
                 arity,
                 index: result.index,
-                args: result.args.map(x => x.agtReflect())
+                args: result.args.map(x => x.agtReflect(recursion - 1))
             };
         }
 
         private static validate(agt: Agt, reflect: AgtReflect): boolean {
+            if (reflect === undefined) return true;
             if (reflect === null) return false;
             if (agt.ctors.length !== reflect.arity) return false;
             if (agt.ctors[reflect.index].length !== reflect.args.length) return false;
