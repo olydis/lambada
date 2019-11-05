@@ -19,7 +19,7 @@ AsyncRuntime.onOpen = rt =>
     debugPanel.css("overflow", "hidden");
     debugPanel.css("opacity", ".7");
     debugPanel.append($("<br>"));
-    
+
     layer.append(debugPanel);
     rtDebugMap[rt.uid] = { rt: rt, jq: debugPanel };
 };
@@ -36,7 +36,7 @@ AsyncRuntime.onPerf = (rt, data) =>
         + "\n#apps    " + (data.nApp / 1000000 | 0) + " million"
         + "\n#allocs  " + (data.nAlloc / 1000000 | 0) + " million"
         + "\nhang for " + (data.timeBusy / 1000 | 0) + " seconds";
-    
+
     jq.text("").append($("<b>").text("Runtime <" + rt.uid + ">"));
     text.split("\n").forEach(line => {
       jq.append(line.replace(/ /g, "&nbsp;"));
@@ -50,11 +50,11 @@ $(() => {
     layer2.offset({left: 0, top: 0});
     layer2.css("width", "100%");
     layer2.css("pointer-events", "none");
-    
+
     layer = $("<div>");
     layer.css("float", "right");
     layer.css("padding", "20px");
-    
+
     $("body").append(layer2);
     layer2.append(layer);
 });
@@ -69,7 +69,7 @@ var runtimePath: string;
 var rtClean: AsyncRuntime;
 var names: string[];
 
-function init(binary: string) 
+function init(binary: string)
 {
     rtClean = new AsyncRuntime(runtimePath + "asyncRuntimeServer.js", binary);
     rtClean.getNames(res => names = res);
@@ -120,7 +120,7 @@ function bsearch(x: string, xs: string[]): number
 
 var onReady: (() => void)[] = [];
 
-$(function () 
+$(function ()
 {
     $.get(libraryPath + "prelude.native.txt", (binary: string) =>
     {
