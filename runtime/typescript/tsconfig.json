@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"target": "ES2017",
+		"target": "esnext",
 		"module": "commonjs",
 		"outDir": "../../docs/runtime",
 		"sourceMap": true

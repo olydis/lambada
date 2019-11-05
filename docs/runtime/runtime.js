@@ -107,7 +107,7 @@ var LambadaRuntime;
         fullReduce() {
         }
         asNumber() {
-            let n = 0;
+            let n = 0n;
             let probeN;
             const probeSucc = new BuiltinExpression(1, stack => {
                 n++;
@@ -132,7 +132,7 @@ var LambadaRuntime;
             let s = "";
             let probeS;
             const probeCons = new BuiltinExpression(2, stack => {
-                s += String.fromCharCode(stack.pop().asNumber());
+                s += String.fromCharCode(Number(stack.pop().asNumber()));
                 stack.push(probeS);
             });
             probeS = new BuiltinExpression(1, stack => {
@@ -363,9 +363,9 @@ var LambadaRuntime;
     LambadaRuntime.Expression = Expression;
     class ShortcutExpression {
         static createNumber(n) {
-            const se = n == 0
+            const se = n === 0n
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1));
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1n));
             se._asNumber = se.asNumber = () => n;
             se.toString = () => n.toString();
             return se;
@@ -373,7 +373,7 @@ var LambadaRuntime;
         static createString2(s, offset) {
             const se = s.length == offset
                 ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(s.charCodeAt(offset)), () => ShortcutExpression.createString2(s, offset + 1));
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(BigInt(s.charCodeAt(offset))), () => ShortcutExpression.createString2(s, offset + 1));
             se._asString = se.asString = () => s.slice(offset);
             se.toString = () => "\"" + s.slice(offset) + "\"";
             return se;
@@ -458,11 +458,14 @@ var LambadaRuntime;
                 stack.push(x);
             });
             def("y", y);
-            def("Zero", ShortcutExpression.createNumber(0));
+            def("Zero", ShortcutExpression.createNumber(0n));
             def("add", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber()))));
-            def("sub", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber())))));
+            def("sub", new BuiltinExpression(2, stack => {
+                const res = stack.pop().asNumber() - stack.pop().asNumber();
+                return stack.push(ShortcutExpression.createNumber(res < 0n ? 0n : res));
+            }));
             def("mul", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber()))));
-            def("div", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber((stack.pop().asNumber() / stack.pop().asNumber()) | 0))));
+            def("div", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() / stack.pop().asNumber()))));
             //def("strCons", new BuiltinExpression(2,
             //    stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));
             def("strEquals", new BuiltinExpression(2, stack => stack.push(ShortcutExpression.createBoolean(stack.pop().asString() == stack.pop().asString()))));

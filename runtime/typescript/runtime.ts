@@ -133,9 +133,9 @@ module LambadaRuntime {
         public fullReduce(): void {
         }
 
-        public _asNumber: (() => number) = undefined;
-        public asNumber(): number {
-            let n = 0;
+        public _asNumber: (() => bigint) = undefined;
+        public asNumber(): bigint {
+            let n = 0n;
             let probeN: ExpressionBase;
             const probeSucc = new BuiltinExpression(1, stack => {
                 n++;
@@ -165,7 +165,7 @@ module LambadaRuntime {
             let s = "";
             let probeS: ExpressionBase;
             const probeCons = new BuiltinExpression(2, stack => {
-                s += String.fromCharCode(stack.pop().asNumber());
+                s += String.fromCharCode(Number(stack.pop().asNumber()));
                 stack.push(probeS);
             });
             probeS = new BuiltinExpression(1, stack => {
@@ -422,10 +422,10 @@ module LambadaRuntime {
     export class ShortcutExpression {
         private static ADTo_2_0 = Expression.createADTo(2, 0);
         private static ADTo_2_1 = Expression.createADTo(2, 1);
-        public static createNumber(n: number): ExpressionBase {
-            const se: any = n == 0
-                ? ShortcutExpression.ADTo_2_0
-                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1));
+        public static createNumber(n: bigint): ExpressionBase {
+            const se: any = n === 0n
+                ?ShortcutExpression.ADTo_2_0
+                : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1n));
             se._asNumber = se.asNumber = () => n;
             se.toString = () => n.toString();
             return se;
@@ -434,7 +434,7 @@ module LambadaRuntime {
             const se: any = s.length == offset
                 ? ShortcutExpression.ADTo_2_0
                 : Expression.createADTo(2, 1,
-                    () => ShortcutExpression.createNumber(s.charCodeAt(offset)),
+                    () => ShortcutExpression.createNumber(BigInt(s.charCodeAt(offset))),
                     () => ShortcutExpression.createString2(s, offset + 1));
             se._asString = se.asString = () => s.slice(offset);
             se.toString = () => "\"" + s.slice(offset) + "\"";
@@ -538,15 +538,19 @@ module LambadaRuntime {
             });
             def("y", y);
 
-            def("Zero", ShortcutExpression.createNumber(0));
+            def("Zero", ShortcutExpression.createNumber(0n));
             def("add", new BuiltinExpression(2,
                 stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() + stack.pop().asNumber()))));
             def("sub", new BuiltinExpression(2,
-                stack => stack.push(ShortcutExpression.createNumber(Math.max(0, stack.pop().asNumber() - stack.pop().asNumber())))));
+                stack => {
+                    const res = stack.pop().asNumber() - stack.pop().asNumber();
+                    return stack.push(ShortcutExpression.createNumber(res < 0n ? 0n : res));
+                }
+            ));
             def("mul", new BuiltinExpression(2,
                 stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() * stack.pop().asNumber()))));
             def("div", new BuiltinExpression(2,
-                stack => stack.push(ShortcutExpression.createNumber((stack.pop().asNumber() / stack.pop().asNumber()) | 0))));
+                stack => stack.push(ShortcutExpression.createNumber(stack.pop().asNumber() / stack.pop().asNumber()))));
 
             //def("strCons", new BuiltinExpression(2,
             //    stack => stack.push(ShortcutExpression.createString(stack.pop().asString() + stack.pop().asString()))));

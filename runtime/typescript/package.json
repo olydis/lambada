@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "install": "tsc -noImplicitAny -t ES5 buildRoot.ts"
+    "install": "tsc -noImplicitAny -t ES5 buildRoot.ts",
+    "build": "tsc"
   },
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^3.7.2"
   }
 }
