@@ -2,10 +2,10 @@
 /// <reference path="IntelliHTML.ts" />
 /// <reference path="../asyncRuntimeClient.ts" />
 // PERF MAPPING
-var layer;
-var rtDebugMap = {};
+let layer;
+const rtDebugMap = {};
 AsyncRuntime.onOpen = rt => {
-    var debugPanel = $("<div>");
+    const debugPanel = $("<div>");
     debugPanel.width(160);
     debugPanel.css("font-family", "monospace");
     debugPanel.css("color", "black");
@@ -20,13 +20,13 @@ AsyncRuntime.onOpen = rt => {
     rtDebugMap[rt.uid] = { rt: rt, jq: debugPanel };
 };
 AsyncRuntime.onClose = rt => {
-    var jq = rtDebugMap[rt.uid].jq;
+    const jq = rtDebugMap[rt.uid].jq;
     jq.fadeOut(3000, () => jq.remove());
     delete rtDebugMap[rt.toString()];
 };
 AsyncRuntime.onPerf = (rt, data) => {
-    var jq = rtDebugMap[rt.uid].jq;
-    var text = "\n"
+    const jq = rtDebugMap[rt.uid].jq;
+    const text = "\n"
         + "\n#apps    " + (data.nApp / 1000000 | 0) + " million"
         + "\n#allocs  " + (data.nAlloc / 1000000 | 0) + " million"
         + "\nhang for " + (data.timeBusy / 1000 | 0) + " seconds";
@@ -37,7 +37,7 @@ AsyncRuntime.onPerf = (rt, data) => {
     });
 };
 $(() => {
-    var layer2 = $("<p>");
+    const layer2 = $("<p>");
     layer2.css("position", "absolute");
     layer2.offset({ left: 0, top: 0 });
     layer2.css("width", "100%");
@@ -51,8 +51,8 @@ $(() => {
 // END PERF MAPPING
 var libraryPath;
 var runtimePath;
-var rtClean;
-var names;
+let rtClean;
+let names;
 function init(binary) {
     rtClean = new AsyncRuntime(runtimePath + "asyncRuntimeServer.js", binary);
     rtClean.getNames(res => names = res);
@@ -90,7 +90,7 @@ function bsearch(x, xs) {
     return s + 1;
 }
 var onReady = [];
-$(function () {
+$(() => {
     $.get(libraryPath + "prelude.native.txt", (binary) => {
         init(binary);
         onReady.forEach(f => f());

@@ -21,7 +21,7 @@ published: true
 {% endraw %}
 
 ## Output
-### Interpretation of result
+### Attempting to interpret your code as a `Bool`, `Nat` or string (`List` of `Nat`):
 {% raw %}
 <pre id='evalRes'></pre>
 {% endraw %}
