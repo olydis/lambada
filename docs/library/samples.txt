@@ -6,7 +6,7 @@ add 42 $ pow 10 2
 ~~~
 String
 ~~
-reverse $ listDistinct "Hallo Welt" isEQ
+reverse $ listDistinct "Hello World" isEQ
 
 
 ~~~
@@ -58,7 +58,7 @@ _bf2fun = \state \ci \re \bf \s bf "" $ \x \xs switchCond (isEQ x) [
 bf2fun = \bf \s _bf2fun (k 0) 0 [] bf (listConcat s $ repeat 0)
 
 ' echo
-bf2fun ",[.,]" "Hallo"
+bf2fun ",[.,]" "Hello"
 ' Hello World program
 bf2fun "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++." "irrelevant input"
 

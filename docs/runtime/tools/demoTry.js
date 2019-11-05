@@ -40,7 +40,16 @@ onReady.push(() => {
             rtTrash.autoClose();
         }, 500);
     }, () => names, $("#evalSrc").css("min-height", "15px"));
-    evalPad.text = localStorage.getItem("fun") || "reverse $ listDistinct \"Hallo Welt\" isEQ";
+    evalPad.text = localStorage.getItem("fun") || `
+' LambAda is a lightweight language based entirely on Combinatory Logic
+' (the single combinator "Iota" to be precise).
+' Beyond that, no concepts or data types are built-in, but instead desugared into CL.
+
+oneHundred = pow 10 2
+add 42 oneHundred ' last expression => will be the output of this program
+
+' Check out the lessons and samples above!
+`;
     evalPad.focus();
     const populate = (lib) => {
         $.get(libraryPath + lib + ".txt", (data) => {
