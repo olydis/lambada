@@ -49,7 +49,7 @@ oneHundred = pow 10 2
 add 42 oneHundred ' last expression => will be the output of this program
 
 ' Check out the lessons and samples above!
-`;
+`.trim();
     evalPad.focus();
     const populate = (lib) => {
         $.get(libraryPath + lib + ".txt", (data) => {
