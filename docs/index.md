@@ -16,17 +16,17 @@ published: true
 ### Combinatory Logic Lessons: <span id="clessons"></span>
 ### Samples: <span id="samples"></span>
 {% raw %}
-<br><pre id='evalSrc' style="min-height: 50px"></pre><br>
+<pre id='evalSrc' style="min-height: 50px"></pre>
 {% endraw %}
 
 ### Output &mdash; Attempting to interpret your code as a `Bool`, `Nat` or string (`List` of `Nat`):
 {% raw %}
-<br><pre id='evalRes'></pre>
+<pre id='evalRes'></pre>
 {% endraw %}
 
 {% raw %}
 <!--### Binary-->
-<br><pre id='evalBin' style='display: none;'></pre>
+<pre id='evalBin' style='display: none;'></pre>
 {% endraw %}
 
 ## Further Information
