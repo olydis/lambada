@@ -131,9 +131,9 @@ strConss (map print [
 ~~~
 Lambdas
 ~~
-' In previous lessons we showed of how some data types can be encoded using combinators.
-' Where useful we showed the corresponding lambda expressions in comments,
-' but there is a general way to turn lambdas into combinators:
+' In previous lessons we showed how some data types can be encoded using combinators.
+' Where useful we also commented with the corresponding lambda expressions,
+' but there is a general process to turn lambdas into combinators:
 '
 ' Lambdas can be desugared using combinators S, K, I, B and C.
 ' Given that S and K are a basis (I = S K K, also see second lesson), they would suffice (or so would Iota),
