@@ -39,50 +39,7 @@ class StringReader {
 }
 
 console.log(`
-const _k = () => a => b => a();
-const _s = () => a => b => c => a()(c)(() => b()(c));
-const u = () => x => x()(_s)(_k);
-
-const lazy = f => {
-  let result = null;
-  return () => result || (result = f());
-};
-
-let env = { u };
-`);
-
-// type Expression = string | [Expression, Expression];
-const printExpr = (strict, e) => typeof e === 'string'
-  ? (strict ? `${printExpr(false, e)}()` : `env[${JSON.stringify(e)}]`)
-  : (strict ? `${printExpr(true, e[0])}(${printExpr(false, e[1])})` : `lazy(() => ${printExpr(true, e)})`);
-const reader = new StringReader(prelude);
-reader.readWhitespace();
-while (reader.charsLeft > 0) {
-  // begin parse definition
-  const name = reader.readToken();
-  const expressionStack = [];
-  while (true) {
-    reader.readWhitespace();
-
-    // apply
-    if (reader.readChar(".")) {
-      if (expressionStack.length < 2)
-        break;
-      const b = expressionStack.pop();
-      const a = expressionStack.pop();
-      expressionStack.push([a, b]);
-      continue;
-    }
-
-    expressionStack.push(reader.readToken());
-  }
-  console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(false, expressionStack.pop())})(env) }, env);`);
-  // end parse definition
-
-  reader.readWhitespace();
-}
-
-console.log(`
+// Marshalling
 const swallow = (swallow, x) => {
   let result = x;
   while (swallow--) result = (result => _ => result)(result);
@@ -93,7 +50,11 @@ const adt = (arity, index, ...args) => () => swallow(index, x => swallow(arity -
 const fromBool = x => x ? adt(2, 0) : adt(2, 1);
 const fromNat = x => {
   let result = adt(2, 0);
-  while (x--) result = adt(2, 1, result);
+  result.Nat = 0n;
+  for (let i = 1n; i <= x; i++) {
+    result = adt(2, 1, result);
+    result.Nat = i;
+  }
   return result;
 };
 const fromList = x => {
@@ -123,11 +84,74 @@ const toList = f => {
 };
 const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
 
+// Singularity
+const _k = () => a => b => a();
+const _s = () => a => b => c => a()(c)(() => b()(c));
+const u = () => x => x()(_s)(_k);
+
+const lazy = f => {
+  let result = null;
+  return () => result || (result = f());
+};
+
+let env = { u };
+
+// Code gen start
+`);
+
+const hacks = {
+  'Zero': `env['Zero']().Nat = 0n;`,
+  'Succ': `
+const oldSucc = env['Succ'];
+env['Succ'] = () => n => {
+  const res = oldSucc()(n);
+  if ('Nat' in n) res.Nat = n.Nat + 1;
+  return res;
+}
+`,
+};
+
+// type Expression = string | [Expression, Expression];
+const printExpr = (strict, e) => typeof e === 'string'
+  ? (strict ? `${printExpr(false, e)}()` : `env[${JSON.stringify(e)}]`)
+  : (strict ? `${printExpr(true, e[0])}(${printExpr(false, e[1])})` : `lazy(() => ${printExpr(true, e)})`);
+const reader = new StringReader(prelude);
+reader.readWhitespace();
+while (reader.charsLeft > 0) {
+  // begin parse definition
+  const name = reader.readToken();
+  const expressionStack = [];
+  while (true) {
+    reader.readWhitespace();
+
+    // apply
+    if (reader.readChar(".")) {
+      if (expressionStack.length < 2)
+        break;
+      const b = expressionStack.pop();
+      const a = expressionStack.pop();
+      expressionStack.push([a, b]);
+      continue;
+    }
+
+    expressionStack.push(reader.readToken());
+  }
+  console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(false, expressionStack.pop())})(env) }, env);`);
+  // end parse definition
+  if (name in hacks) console.log(hacks[name]);
+
+  reader.readWhitespace();
+}
+
+console.log(`
+// Code gen end
+
 console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
 
 console.log(toNat(fromNat(42)));
 console.log(toList(env['ListEmpty']));
 console.log(JSON.stringify(toString(env['newLine'])));
 console.log(toString(fromString("Hello World")));
+console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 `)

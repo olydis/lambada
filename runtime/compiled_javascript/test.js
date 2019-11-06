@@ -1,4 +1,46 @@
 
+// Marshalling
+const swallow = (swallow, x) => {
+  let result = x;
+  while (swallow--) result = (result => _ => result)(result);
+  return result;
+};
+const adt = (arity, index, ...args) => () => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x())));
+
+const fromBool = x => x ? adt(2, 0) : adt(2, 1);
+const fromNat = x => {
+  let result = adt(2, 0);
+  while (x--) result = adt(2, 1, result);
+  return result;
+};
+const fromList = x => {
+  let result = adt(2, 0);
+  while (x.length) result = adt(2, 1, x.pop(), result);
+  return result;
+};
+const fromString = x => fromList(x.split('').map(s => fromNat(s.charCodeAt(0))));
+
+const toBool = f => f()(() => true)(() => false);
+const toNat = f => {
+  let n = 0n;
+  while (true) {
+    f = f()(() => null)(() => x => x);
+    if (f === null) return n;
+    n++;
+  }
+};
+const toList = f => {
+  const l = [];
+  while (true) {
+    f = f()(() => null)(() => h => t => [h, t]);
+    if (f === null) return l;
+    l.push(f[0]);
+    f = f[1];
+  }
+};
+const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
+
+// Singularity
 const _k = () => a => b => a();
 const _s = () => a => b => c => a()(c)(() => b()(c));
 const u = () => x => x()(_s)(_k);
@@ -9,6 +51,8 @@ const lazy = f => {
 };
 
 let env = { u };
+
+// Code gen start
 
 env = Object.assign({ "i": (env => lazy(() => env["u"]()(env["u"])))(env) }, env);
 env = Object.assign({ "k": (env => lazy(() => env["u"]()(lazy(() => env["u"]()(env["i"])))))(env) }, env);
@@ -36,8 +80,17 @@ env = Object.assign({ "implies": (env => lazy(() => env["c"]()(env["c"])(env["Tr
 env = Object.assign({ "xor": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["s"])(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["if"])))(env["not"])))))(env["i"])))(env) }, env);
 env = Object.assign({ "eq": (env => lazy(() => env["b"]()(lazy(() => env["b"]()(env["not"])))(env["xor"])))(env) }, env);
 env = Object.assign({ "Zero": (env => env["k"])(env) }, env);
+env['Zero']().Nat = 0n;
 env = Object.assign({ "Zero_Dispatch": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(env["k"])))(env) }, env);
 env = Object.assign({ "Succ": (env => lazy(() => env["b"]()(env["k"])(lazy(() => env["c"]()(env["i"])))))(env) }, env);
+
+const oldSucc = env['Succ'];
+env['Succ'] = () => n => {
+  const res = oldSucc()(n);
+  if ('Nat' in n) res.Nat = n.Nat + 1;
+  return res;
+}
+
 env = Object.assign({ "Succ_Dispatch": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(env) }, env);
 env = Object.assign({ "one": (env => lazy(() => env["Succ"]()(env["Zero"])))(env) }, env);
 env = Object.assign({ "two": (env => lazy(() => env["Succ"]()(env["one"])))(env) }, env);
@@ -435,45 +488,7 @@ env = Object.assign({ "pipe": (env => lazy(() => env["c"]()(lazy(() => env["b"](
 env = Object.assign({ "fullDebug": (env => lazy(() => env["b"]()(env["strConss"])(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["s"]()(lazy(() => env["b"]()(env["ListCons"])(env["token_Run"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["s"]()(lazy(() => env["b"]()(env["ListCons"])(env["syntax_Run"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["ListCons"])(env["native_Run"])))(env["ListEmpty"])))))))))))))))))))))))(env) }, env);
 env = Object.assign({ "run2": (env => lazy(() => env["b"]()(lazy(() => env["c"]()(lazy(() => env["b"]()(env["maybeMap"])(lazy(() => env["c"]()(lazy(() => env["b"]()(env["maybeBind"])(env["token_Process"])))(env["syntax_Process"])))))))(lazy(() => env["b"]()(lazy(() => env["b"]()(env["fst"])))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["nativeToObj"])))(lazy(() => env["b"]()(env["_syntaxToNative"])(env["head"])))))))))(env) }, env);
 
-const swallow = (swallow, x) => {
-  let result = x;
-  while (swallow--) result = (result => _ => result)(result);
-  return result;
-};
-const adt = (arity, index, ...args) => () => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x())));
-
-const fromBool = x => x ? adt(2, 0) : adt(2, 1);
-const fromNat = x => {
-  let result = adt(2, 0);
-  while (x--) result = adt(2, 1, result);
-  return result;
-};
-const fromList = x => {
-  let result = adt(2, 0);
-  while (x.length) result = adt(2, 1, x.pop(), result);
-  return result;
-};
-const fromString = x => fromList(x.split('').map(s => fromNat(s.charCodeAt(0))));
-
-const toBool = f => f()(() => true)(() => false);
-const toNat = f => {
-  let n = 0n;
-  while (true) {
-    f = f()(() => null)(() => x => x);
-    if (f === null) return n;
-    n++;
-  }
-};
-const toList = f => {
-  const l = [];
-  while (true) {
-    f = f()(() => null)(() => h => t => [h, t]);
-    if (f === null) return l;
-    l.push(f[0]);
-    f = f[1];
-  }
-};
-const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
+// Code gen end
 
 console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
 
@@ -481,5 +496,6 @@ console.log(toNat(fromNat(42)));
 console.log(toList(env['ListEmpty']));
 console.log(JSON.stringify(toString(env['newLine'])));
 console.log(toString(fromString("Hello World")));
+console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 
