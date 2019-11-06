@@ -83,6 +83,26 @@ while (reader.charsLeft > 0) {
 }
 
 console.log(`
+const swallow = (swallow, x) => {
+  let result = x;
+  while (swallow--) result = (result => _ => result)(result);
+  return result;
+};
+const adt = (arity, index, ...args) => () => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x())));
+
+const fromBool = x => x ? adt(2, 0) : adt(2, 1);
+const fromNat = x => {
+  let result = adt(2, 0);
+  while (x--) result = adt(2, 1, result);
+  return result;
+};
+const fromList = x => {
+  let result = adt(2, 0);
+  while (x.length) result = adt(2, 1, x.pop(), result);
+  return result;
+};
+const fromString = x => fromList(x.split('').map(s => fromNat(s.charCodeAt(0))));
+
 const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
@@ -95,7 +115,7 @@ const toNat = f => {
 const toList = f => {
   const l = [];
   while (true) {
-    f = f()(() => null)(() => h => t => [h(), t()]);
+    f = f()(() => null)(() => h => t => [h, t]);
     if (f === null) return l;
     l.push(f[0]);
     f = f[1];
@@ -103,8 +123,11 @@ const toList = f => {
 };
 const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
 
-for (let i = 0; i < 100; i++)
-  console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
 
-console.log(env);
+console.log(toNat(fromNat(42)));
+console.log(toList(env['ListEmpty']));
+console.log(JSON.stringify(toString(env['newLine'])));
+console.log(toString(fromString("Hello World")));
+console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 `)

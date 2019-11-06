@@ -435,6 +435,26 @@ env = Object.assign({ "pipe": (env => lazy(() => env["c"]()(lazy(() => env["b"](
 env = Object.assign({ "fullDebug": (env => lazy(() => env["b"]()(env["strConss"])(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["s"]()(lazy(() => env["b"]()(env["ListCons"])(env["token_Run"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["s"]()(lazy(() => env["b"]()(env["ListCons"])(env["syntax_Run"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["ListCons"])(env["native_Run"])))(env["ListEmpty"])))))))))))))))))))))))(env) }, env);
 env = Object.assign({ "run2": (env => lazy(() => env["b"]()(lazy(() => env["c"]()(lazy(() => env["b"]()(env["maybeMap"])(lazy(() => env["c"]()(lazy(() => env["b"]()(env["maybeBind"])(env["token_Process"])))(env["syntax_Process"])))))))(lazy(() => env["b"]()(lazy(() => env["b"]()(env["fst"])))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["nativeToObj"])))(lazy(() => env["b"]()(env["_syntaxToNative"])(env["head"])))))))))(env) }, env);
 
+const swallow = (swallow, x) => {
+  let result = x;
+  while (swallow--) result = (result => _ => result)(result);
+  return result;
+};
+const adt = (arity, index, ...args) => () => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x())));
+
+const fromBool = x => x ? adt(2, 0) : adt(2, 1);
+const fromNat = x => {
+  let result = adt(2, 0);
+  while (x--) result = adt(2, 1, result);
+  return result;
+};
+const fromList = x => {
+  let result = adt(2, 0);
+  while (x.length) result = adt(2, 1, x.pop(), result);
+  return result;
+};
+const fromString = x => fromList(x.split('').map(s => fromNat(s.charCodeAt(0))));
+
 const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
@@ -447,7 +467,7 @@ const toNat = f => {
 const toList = f => {
   const l = [];
   while (true) {
-    f = f()(() => null)(() => h => t => [h(), t()]);
+    f = f()(() => null)(() => h => t => [h, t]);
     if (f === null) return l;
     l.push(f[0]);
     f = f[1];
@@ -455,8 +475,11 @@ const toList = f => {
 };
 const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
 
-for (let i = 0; i < 100; i++)
-  console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
 
-console.log(env);
+console.log(toNat(fromNat(42)));
+console.log(toList(env['ListEmpty']));
+console.log(JSON.stringify(toString(env['newLine'])));
+console.log(toString(fromString("Hello World")));
+console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 
