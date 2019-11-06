@@ -127,3 +127,85 @@ strConss (map print [
     zero, one, two, three, four,
     five, six, seven, eight, nine
   ])
+
+~~~
+Lambdas
+~~
+' In previous lessons we showed of how some data types can be encoded using combinators.
+' Where useful we showed the corresponding lambda expressions in comments,
+' but there is a general way to turn lambdas into combinators:
+'
+' Lambdas can be desugared using combinators S, K, I, B and C.
+' Given that S and K are a basis (I = S K K, also see second lesson), they would suffice (or so would Iota),
+' but each one of these 5 combinators nicely corresponds to a case when destructing lambdas.
+
+' To demonstrate the translation that the LambAda compiler performs,
+' we re-implement a subset of it. The first part is a DSL for lambdas:
+Expr = Var name | Val display_name value | App expr1 expr2 | Abs name expr
+' Note that "Val"ues have both a display name and an actual value:
+' The former is used when printing, the latter when compiling. Example usage: Val "3" 3
+' This is the bridge to using LambAda "built-ins" from this mini language.
+
+' We're not building a parser for our DSL here,
+' but having the opposite, printing, can't hurt:
+printExpr = \expr expr
+    i
+    k
+    (\a \b strConss ["(",printExpr a," ",printExpr b,")"])
+    (\n \e strConss ["(\",n," ",printExpr e,")"])
+
+' To give meaning to our DSL, we compile it into LambAda:
+compileExpr = \env \expr expr
+  env
+  (k i)
+  (\a \b (compileExpr env a) (compileExpr env b))
+  (\n \e \x compileExpr (\m if (strEquals m n) x (env m)) e)
+
+' We now have the tools to demonstrate and test desugaring of lambda abstraction:
+' Our goal is to translate any Expr into an equivalent Expr without Abs.
+' We'll be able to test this equivalence using compileExpr.
+
+' Helper function: Does an expression contain a certain variable?
+containsVar = \name \expr expr
+  (strEquals name)
+  (b k k False)
+  (\a \b lOr (containsVar name a) (containsVar name b))
+  (\n \e lAnd (not (strEquals n name)) (containsVar name e))
+' Elimination of a certain variable from some expression:
+eliminate = \name \expr if (containsVar name expr)
+  (expr
+    ' Case: \x x == i
+    (k $ Val "i" i)
+    Val ' unreachable
+    (\ea \eb if (containsVar name ea)
+            (if (containsVar name eb)
+              ' Case: \x A[x] B[x] == S (\x A[x]) (\x B[x])
+              (App (App (Val "s" s) (eliminate name ea)) (eliminate name eb))
+              ' Case: \x A[x] CONST == B (\x A[x]) CONST
+              (App (App (Val "c" c) (eliminate name ea)) eb))
+              ' Case: \x CONST B[x] == C CONST (\x B[x])
+              (App (App (Val "b" b) ea) (eliminate name eb))
+    )
+    Abs ' unreachable
+  )
+  ' Case: \x CONST == K CONST
+  (App (Val "k" k) expr)
+' Abstraction elimination, bottom to top:
+desugarExpr = \expr expr Var Val
+  (\a \b App (desugarExpr a) (desugarExpr b))
+  (\n \e eliminate n $ desugarExpr e)
+
+' Test: Let's define Iota and then an identity combinator
+expr_s = Abs "a" $ Abs "b" $ Abs "c" $ App (App (Var "a") (Var "c")) (App (Var "b") (Var "c"))
+expr_k = Abs "a" $ Abs "b" $ Var "a"
+expr_u = Abs "x" $ App (App (Var "x") expr_s) expr_k
+expr_i = App expr_u expr_u
+
+strJoin [
+    strCons "i_abs   = " $ printExpr expr_i,
+    strCons "i_noabs = " $ printExpr $ desugarExpr expr_i,
+    strCons "[[i_abs]]   42 = " $ strFromN $ (compileExpr i expr_i) 42,
+    strCons "[[i_noabs]] 42 = " $ strFromN $ (compileExpr i $ desugarExpr expr_i) 42
+  ]
+  newLine
+
