@@ -39,9 +39,9 @@ class StringReader {
 }
 
 console.log(`
-const _s = a => b => c => a(c)(b(c));
-const _k = a => b => a;
-const u = x => x(_s)(_k);
+const _k = () => a => b => a();
+const _s = () => a => b => c => a()(c)(() => b()(c));
+const u = () => x => x()(_s)(_k);
 
 const lazy = f => {
   let result = null;
@@ -52,9 +52,9 @@ let env = { u };
 `);
 
 // type Expression = string | [Expression, Expression];
-const printExpr = e => typeof e === 'string'
-  ? `env[${JSON.stringify(e)}]`
-  : `${printExpr(e[0])}(${printExpr(e[1])})`;
+const printExpr = (strict, e) => typeof e === 'string'
+  ? (strict ? `${printExpr(false, e)}()` : `env[${JSON.stringify(e)}]`)
+  : (strict ? `${printExpr(true, e[0])}(${printExpr(false, e[1])})` : `lazy(() => ${printExpr(true, e)})`);
 const reader = new StringReader(prelude);
 reader.readWhitespace();
 while (reader.charsLeft > 0) {
@@ -76,27 +76,18 @@ while (reader.charsLeft > 0) {
 
     expressionStack.push(reader.readToken());
   }
-  console.log(`env = Object.assign(
-    (
-      f => ({ ${JSON.stringify(name)}: x => f()(x) })
-    )
-      (
-      (env => lazy(() => ${printExpr(expressionStack.pop())}))
-        (env)
-      ),
-    env);
-`);
+  console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(false, expressionStack.pop())})(env) }, env);`);
   // end parse definition
 
   reader.readWhitespace();
 }
 
-console.lop(`
-const toBool = f => f(true)(false);
+console.log(`
+const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
   while (true) {
-    f = f(null)(x => x);
+    f = f()(() => null)(() => x => x);
     if (f === null) return n;
     n++;
   }
@@ -104,10 +95,16 @@ const toNat = f => {
 const toList = f => {
   const l = [];
   while (true) {
-    f = f(null)(h => t => [h, t]);
+    f = f()(() => null)(() => h => t => [h(), t()]);
     if (f === null) return l;
     l.push(f[0]);
     f = f[1];
   }
 };
+const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
+
+for (let i = 0; i < 100; i++)
+  console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+
+console.log(env);
 `)
