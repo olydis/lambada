@@ -1,16 +1,25 @@
 
+const lazy = f => {
+  let result = null;
+  return () => result || (result = f());
+};
+
 // Marshalling
 const swallow = (swallow, x) => {
   let result = x;
   while (swallow--) result = (result => _ => result)(result);
   return result;
 };
-const adt = (arity, index, ...args) => () => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x())));
+const adt = (arity, index, ...args) => lazy(() => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x()))));
 
 const fromBool = x => x ? adt(2, 0) : adt(2, 1);
 const fromNat = x => {
   let result = adt(2, 0);
-  while (x--) result = adt(2, 1, result);
+  result().Nat = 0n;
+  for (let i = 1n; i <= x; i++) {
+    result = adt(2, 1, result);
+    result().Nat = i;
+  }
   return result;
 };
 const fromList = x => {
@@ -24,6 +33,11 @@ const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
   while (true) {
+    const hack = f().Nat;
+    if (hack !== undefined) {
+      console.log("HIT", hack, n);
+      return hack + n;
+    }
     f = f()(() => null)(() => x => x);
     if (f === null) return n;
     n++;
@@ -44,11 +58,6 @@ const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).
 const _k = () => a => b => a();
 const _s = () => a => b => c => a()(c)(() => b()(c));
 const u = () => x => x()(_s)(_k);
-
-const lazy = f => {
-  let result = null;
-  return () => result || (result = f());
-};
 
 let env = { u };
 
@@ -80,17 +89,15 @@ env = Object.assign({ "implies": (env => lazy(() => env["c"]()(env["c"])(env["Tr
 env = Object.assign({ "xor": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["s"])(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["if"])))(env["not"])))))(env["i"])))(env) }, env);
 env = Object.assign({ "eq": (env => lazy(() => env["b"]()(lazy(() => env["b"]()(env["not"])))(env["xor"])))(env) }, env);
 env = Object.assign({ "Zero": (env => env["k"])(env) }, env);
-env['Zero']().Nat = 0n;
+env["Zero"] = fromNat(0n);
 env = Object.assign({ "Zero_Dispatch": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(env["k"])))(env) }, env);
 env = Object.assign({ "Succ": (env => lazy(() => env["b"]()(env["k"])(lazy(() => env["c"]()(env["i"])))))(env) }, env);
+env["Succ"] = (Succ => () => n => {
 
-const oldSucc = env['Succ'];
-env['Succ'] = () => n => {
-  const res = oldSucc()(n);
-  if ('Nat' in n) res.Nat = n.Nat + 1;
-  return res;
-}
-
+    const res = Succ()(n);
+    if ('Nat' in n) return fromNat(n.Nat + 1n)();
+    return res;
+  })(env['Succ']);
 env = Object.assign({ "Succ_Dispatch": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(env) }, env);
 env = Object.assign({ "one": (env => lazy(() => env["Succ"]()(env["Zero"])))(env) }, env);
 env = Object.assign({ "two": (env => lazy(() => env["Succ"]()(env["one"])))(env) }, env);
@@ -490,12 +497,19 @@ env = Object.assign({ "run2": (env => lazy(() => env["b"]()(lazy(() => env["c"](
 
 // Code gen end
 
-console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+env['inf'] = () => env['y']()(env['Succ'])
 
 console.log(toNat(fromNat(42)));
-console.log(toList(env['ListEmpty']));
-console.log(JSON.stringify(toString(env['newLine'])));
-console.log(toString(fromString("Hello World")));
-console.log(toString(() => env['fullDebug']()(fromString("u u"))));
-console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+console.log(toNat(() => env['add']()(env['three'])(env['three'])));
+console.log(toNat(() => env['mul']()(env['three'])(env['three'])));
+console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+
+// console.log(toBool(() => env['isLT']()(env['inf'])(env['three'])));
+console.log(toBool(() => env['isLT']()(env['three'])(env['inf'])));
+
+// console.log(toList(env['ListEmpty']));
+// console.log(JSON.stringify(toString(env['newLine'])));
+// console.log(toString(fromString("Hello World")));
+// console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+// console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 

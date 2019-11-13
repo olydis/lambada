@@ -39,21 +39,26 @@ class StringReader {
 }
 
 console.log(`
+const lazy = f => {
+  let result = null;
+  return () => result || (result = f());
+};
+
 // Marshalling
 const swallow = (swallow, x) => {
   let result = x;
   while (swallow--) result = (result => _ => result)(result);
   return result;
 };
-const adt = (arity, index, ...args) => () => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x())));
+const adt = (arity, index, ...args) => lazy(() => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x()))));
 
 const fromBool = x => x ? adt(2, 0) : adt(2, 1);
 const fromNat = x => {
   let result = adt(2, 0);
-  result.Nat = 0n;
+  result().Nat = 0n;
   for (let i = 1n; i <= x; i++) {
     result = adt(2, 1, result);
-    result.Nat = i;
+    result().Nat = i;
   }
   return result;
 };
@@ -68,6 +73,11 @@ const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
   while (true) {
+    const hack = f().Nat;
+    if (hack !== undefined) {
+      console.log("HIT", hack, n);
+      return hack + n;
+    }
     f = f()(() => null)(() => x => x);
     if (f === null) return n;
     n++;
@@ -89,27 +99,33 @@ const _k = () => a => b => a();
 const _s = () => a => b => c => a()(c)(() => b()(c));
 const u = () => x => x()(_s)(_k);
 
-const lazy = f => {
-  let result = null;
-  return () => result || (result = f());
-};
-
 let env = { u };
 
 // Code gen start
 `);
 
 const hacks = {
-  'Zero': `env['Zero']().Nat = 0n;`,
-  'Succ': `
-const oldSucc = env['Succ'];
-env['Succ'] = () => n => {
-  const res = oldSucc()(n);
-  if ('Nat' in n) res.Nat = n.Nat + 1;
-  return res;
-}
-`,
+  'Zero': `fromNat(0n)`,
+  // 'one': `fromNat(1n)`,
+  // 'two': `fromNat(2n)`,
+  // 'three': `fromNat(3n)`,
+  'Succ': `(Succ => () => n => {
+
+    const res = Succ()(n);
+    if ('Nat' in n) return fromNat(n.Nat + 1n)();
+    return res;
+  })(env['Succ'])`,
 };
+
+// when to populate .Nat within Succ?
+//
+// Succ (omega Zero)
+// Succ (i Zero)
+// Succ Zero
+// Succ (i Inf)
+// Succ Inf
+
+
 
 // type Expression = string | [Expression, Expression];
 const printExpr = (strict, e) => typeof e === 'string'
@@ -138,7 +154,7 @@ while (reader.charsLeft > 0) {
   }
   console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(false, expressionStack.pop())})(env) }, env);`);
   // end parse definition
-  if (name in hacks) console.log(hacks[name]);
+  if (name in hacks) console.log(`env[${JSON.stringify(name)}] = ${hacks[name]};`);
 
   reader.readWhitespace();
 }
@@ -146,12 +162,41 @@ while (reader.charsLeft > 0) {
 console.log(`
 // Code gen end
 
-console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+env['inf'] = () => env['y']()(env['Succ'])
 
 console.log(toNat(fromNat(42)));
-console.log(toList(env['ListEmpty']));
-console.log(JSON.stringify(toString(env['newLine'])));
-console.log(toString(fromString("Hello World")));
-console.log(toString(() => env['fullDebug']()(fromString("u u"))));
-console.log(toString(() => env['fullDebug']()(fromString("u u"))));
-`)
+console.log(toNat(() => env['add']()(env['three'])(env['three'])));
+console.log(toNat(() => env['mul']()(env['three'])(env['three'])));
+console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+
+// console.log(toBool(() => env['isLT']()(env['inf'])(env['three'])));
+console.log(toBool(() => env['isLT']()(env['three'])(env['inf'])));
+
+// console.log(toList(env['ListEmpty']));
+// console.log(JSON.stringify(toString(env['newLine'])));
+// console.log(toString(fromString("Hello World")));
+// console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+// console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+`);
+
+
+applyList = \f \l l f (\h \t applyList (f h) t)
+swallow = \f \arity arity f (b k (swallow f))
+agt = \arity \index \args (swallow (\f swallow (applyList f args) (sub arity $ Succ index)) index)
+
+
+
+agt 2 1 [65, "qwe"]
+(swallow (\f swallow (applyList f [65, "qwe"]) Zero) 1)
+(swallow (\f applyList f [65, "qwe"]) 1)
+(swallow (\f f 65 "qwe") 1)
+
+'applyList f [65, "qwe"] =
+'applyList (f 65) ["qwe"]
+
+strEquals (swallow (\f applyList f [65, "qwe"]) 1) "Aqwe"
+
+' BUG IN AGT DETECTION IN JS!
+
+\a \b b 65 "qwe"
+\a \b i (b 65) "qwe"
