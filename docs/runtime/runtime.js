@@ -213,8 +213,8 @@ var LambadaRuntime;
         }
         asGuess() {
             const reflect = this.agtReflect();
-            console.log(JSON.stringify(reflect, null, 2));
-            debugger;
+            // console.log(JSON.stringify(reflect, null, 2));
+            // debugger;
             const result = [];
             if (ExpressionBase.validate(ExpressionBase.agtBool(), reflect))
                 result.push({ type: 'Bool', value: reflect.index === 0 });

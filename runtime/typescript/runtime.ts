@@ -252,8 +252,8 @@ module LambadaRuntime {
 
         public asGuess(): string {
             const reflect = this.agtReflect();
-            console.log(JSON.stringify(reflect, null, 2));
-            debugger;
+            // console.log(JSON.stringify(reflect, null, 2));
+            // debugger;
             const result: { type: string, value: any }[] = [];
             if (ExpressionBase.validate(ExpressionBase.agtBool(), reflect))
                 result.push({ type: 'Bool', value: reflect.index === 0 });
