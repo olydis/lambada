@@ -192,8 +192,9 @@ module LambadaRuntime {
             let result: { index: number, args: ExpressionBase[] } | null = null;
             const createRecorderProbe = (n: number) => {
                 const probe = new BuiltinExpression(0, stack => {
-                    result = { index: n, args: stack.slice().reverse() };
-                    stack.push(BuiltinExpression.probeSTOP);
+                    result = result || { index: n, args: [] };
+                    result.args.push(stack.pop());
+                    stack.push(probe);
                 });
                 return probe;
             };
@@ -424,7 +425,7 @@ module LambadaRuntime {
         private static ADTo_2_1 = Expression.createADTo(2, 1);
         public static createNumber(n: bigint): ExpressionBase {
             const se: any = n === 0n
-                ?ShortcutExpression.ADTo_2_0
+                ? ShortcutExpression.ADTo_2_0
                 : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1n));
             se._asNumber = se.asNumber = () => n;
             se.toString = () => n.toString();
