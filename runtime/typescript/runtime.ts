@@ -190,19 +190,17 @@ module LambadaRuntime {
         private agtReflect(recursion: number = 8): AgtReflect {
             if (recursion <= 0) return undefined;
             let result: { index: number, args: ExpressionBase[] } | null = null;
-            const createRecorderProbe = (n: number) => {
-                const probe = new BuiltinExpression(1, stack => {
+            const createRecorderProbe = (n: number, first: boolean) =>
+                new BuiltinExpression(first ? 0 : 1, stack => {
                     result = result || { index: n, args: [] };
                     result.args.push(...stack.slice().reverse());
                     stack.length = 0;
-                    stack.push(probe);
+                    stack.push(createRecorderProbe(n, false));
                 });
-                return probe;
-            };
             let expr: ExpressionBase = this;
             let arity = 0;
             while (arity < 10) {
-                expr = Expression.createApplication(expr, createRecorderProbe(arity++));
+                expr = Expression.createApplication(expr, createRecorderProbe(arity++, true));
                 expr.fullReduce();
                 if (result !== null) break;
             }
@@ -428,7 +426,7 @@ module LambadaRuntime {
         private static ADTo_2_1 = Expression.createADTo(2, 1);
         public static createNumber(n: bigint): ExpressionBase {
             const se: any = n === 0n
-                ? ShortcutExpression.ADTo_2_0
+                ?ShortcutExpression.ADTo_2_0
                 : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1n));
             se._asNumber = se.asNumber = () => n;
             se.toString = () => n.toString();

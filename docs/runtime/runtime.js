@@ -154,19 +154,16 @@ var LambadaRuntime;
             if (recursion <= 0)
                 return undefined;
             let result = null;
-            const createRecorderProbe = (n) => {
-                const probe = new BuiltinExpression(1, stack => {
-                    result = result || { index: n, args: [] };
-                    result.args.push(...stack.slice().reverse());
-                    stack.length = 0;
-                    stack.push(probe);
-                });
-                return probe;
-            };
+            const createRecorderProbe = (n, first) => new BuiltinExpression(first ? 0 : 1, stack => {
+                result = result || { index: n, args: [] };
+                result.args.push(...stack.slice().reverse());
+                stack.length = 0;
+                stack.push(createRecorderProbe(n, false));
+            });
             let expr = this;
             let arity = 0;
             while (arity < 10) {
-                expr = Expression.createApplication(expr, createRecorderProbe(arity++));
+                expr = Expression.createApplication(expr, createRecorderProbe(arity++, true));
                 expr.fullReduce();
                 if (result !== null)
                     break;
