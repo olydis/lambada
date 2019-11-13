@@ -192,6 +192,7 @@ module LambadaRuntime {
             let result: { index: number, args: ExpressionBase[] } | null = null;
             const createRecorderProbe = (n: number) => {
                 const probe = new BuiltinExpression(0, stack => {
+                    debugger;
                     result = result || { index: n, args: [] };
                     if (stack.length > 0) {
                         result.args.push(stack.pop());
