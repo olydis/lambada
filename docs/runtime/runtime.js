@@ -168,7 +168,6 @@ var LambadaRuntime;
             while (arity < 10) {
                 expr = Expression.createApplication(expr, createRecorderProbe(arity++));
                 expr.fullReduce();
-                debugger;
                 if (result !== null)
                     break;
             }
@@ -217,6 +216,8 @@ var LambadaRuntime;
         }
         asGuess() {
             const reflect = this.agtReflect();
+            console.log(JSON.stringify(reflect, null, 2));
+            debugger;
             const result = [];
             if (ExpressionBase.validate(ExpressionBase.agtBool(), reflect))
                 result.push({ type: 'Bool', value: reflect.index === 0 });

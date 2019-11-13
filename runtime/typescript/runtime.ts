@@ -204,7 +204,6 @@ module LambadaRuntime {
             while (arity < 10) {
                 expr = Expression.createApplication(expr, createRecorderProbe(arity++));
                 expr.fullReduce();
-                debugger;
                 if (result !== null) break;
             }
             if (!result) return null;
@@ -255,6 +254,8 @@ module LambadaRuntime {
 
         public asGuess(): string {
             const reflect = this.agtReflect();
+            console.log(JSON.stringify(reflect, null, 2));
+            debugger;
             const result: { type: string, value: any }[] = [];
             if (ExpressionBase.validate(ExpressionBase.agtBool(), reflect))
                 result.push({ type: 'Bool', value: reflect.index === 0 });
