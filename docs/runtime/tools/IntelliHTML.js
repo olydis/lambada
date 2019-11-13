@@ -334,4 +334,3 @@ class IntelliHTML {
         this.triggerOnTextChanged();
     }
 }
-//# sourceMappingURL=IntelliHTML.js.map

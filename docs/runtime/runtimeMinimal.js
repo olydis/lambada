@@ -298,4 +298,3 @@ var LambadaRuntimeMinimal;
     Runtime.maybeNothing = Expression.createADTo(2, 1);
     LambadaRuntimeMinimal.Runtime = Runtime;
 })(LambadaRuntimeMinimal || (LambadaRuntimeMinimal = {}));
-//# sourceMappingURL=runtimeMinimal.js.map

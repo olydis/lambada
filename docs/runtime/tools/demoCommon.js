@@ -96,4 +96,3 @@ $(() => {
         onReady.forEach(f => f());
     }, "text");
 });
-//# sourceMappingURL=demoCommon.js.map

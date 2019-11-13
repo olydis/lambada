@@ -69,4 +69,3 @@ add 42 oneHundred ' last expression => will be the output of this program
     populate('llessons');
     populate('clessons');
 });
-//# sourceMappingURL=demoTry.js.map

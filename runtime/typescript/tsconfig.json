@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"target": "esnext",
 		"module": "commonjs",
-		"outDir": "../../docs/runtime",
-		"sourceMap": true
+		"outDir": "../../docs/runtime"
 	}
 }
