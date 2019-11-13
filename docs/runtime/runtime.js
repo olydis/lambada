@@ -159,6 +159,7 @@ var LambadaRuntime;
                     result = result || { index: n, args: [] };
                     result.args.push(...stack.slice().reverse());
                     stack.push(probe);
+                    debugger;
                 });
                 return probe;
             };
