@@ -158,8 +158,8 @@ var LambadaRuntime;
                 const probe = new BuiltinExpression(1, stack => {
                     result = result || { index: n, args: [] };
                     result.args.push(...stack.slice().reverse());
+                    stack.length = 0;
                     stack.push(probe);
-                    debugger;
                 });
                 return probe;
             };
