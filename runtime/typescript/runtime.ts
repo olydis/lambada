@@ -204,6 +204,7 @@ module LambadaRuntime {
             while (arity < 10) {
                 expr = Expression.createApplication(expr, createRecorderProbe(arity++));
                 expr.fullReduce();
+                debugger;
                 if (result !== null) break;
             }
             if (!result) return null;
