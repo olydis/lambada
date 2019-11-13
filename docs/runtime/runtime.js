@@ -155,16 +155,10 @@ var LambadaRuntime;
                 return undefined;
             let result = null;
             const createRecorderProbe = (n) => {
-                const probe = new BuiltinExpression(0, stack => {
-                    debugger;
+                const probe = new BuiltinExpression(1, stack => {
                     result = result || { index: n, args: [] };
-                    if (stack.length > 0) {
-                        result.args.push(stack.pop());
-                        stack.push(probe);
-                    }
-                    else {
-                        stack.push(Expression.probeSTOP);
-                    }
+                    result.args.push(...stack.slice().reverse());
+                    stack.push(probe);
                 });
                 return probe;
             };

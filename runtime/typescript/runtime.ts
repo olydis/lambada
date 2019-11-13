@@ -191,15 +191,10 @@ module LambadaRuntime {
             if (recursion <= 0) return undefined;
             let result: { index: number, args: ExpressionBase[] } | null = null;
             const createRecorderProbe = (n: number) => {
-                const probe = new BuiltinExpression(0, stack => {
-                    debugger;
+                const probe = new BuiltinExpression(1, stack => {
                     result = result || { index: n, args: [] };
-                    if (stack.length > 0) {
-                        result.args.push(stack.pop());
-                        stack.push(probe);
-                    } else {
-                        stack.push(Expression.probeSTOP);
-                    }
+                    result.args.push(...stack.slice().reverse());
+                    stack.push(probe);
                 });
                 return probe;
             };
