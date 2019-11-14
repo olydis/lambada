@@ -1,0 +1,35 @@
+applyList = \f \l l f (\h \t applyList (f h) t)
+swallow = \f \arity arity f (b k (swallow f))
+adt = \arity \index \args (swallow (\ctor swallow (applyList ctor args) (sub arity $ Succ index)) index)
+
+' adt 2 1 [65, "qwe"]
+
+inf = y Succ
+
+Type = TUnknown | TAdt ctors_args
+tNat = TAdt [[],[tNat]]
+tListT = \t TAdt [[],[t,tListT t]]
+tList = tListT TUnknown
+tString = tListT tNat
+
+_strict = \t \x t i (\ctors_args applyList x $ map (\ctor_args foldr ctor_args i (\f \targ \x b (_strict targ x) f)) ctors_args)
+strict = \t \x _strict t x x
+
+strictList = strict tList
+strictString = strict tString
+strictNat = strict tNat
+
+'_strictString =
+
+'sLTE = \a \b a True (\a b False (\b isLTE a b))
+
+'inf2 = strictNat inf
+
+'strJoin [strFromB $ isLTE (strictNat 10) 6, strFromB $ isLTE 6 10] newLine
+'strJoin [strFromB $ isLTE inf (strictNat 10), strFromB $ isLTE 6 inf] newLine
+'strJoin [strFromB $ isLTE inf 6, strFromB $ isLTE 6 inf2] newLine
+
+' strictString $ take 10 $ repeat 65
+'take 10 $ strictString $ repeat 65
+'foldl [1,2,3] i (\a \b add a b)
+
