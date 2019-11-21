@@ -73,11 +73,11 @@ const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
   while (true) {
-    const hack = f().Nat;
-    if (hack !== undefined) {
-      console.log("HIT", hack, n);
-      return hack + n;
-    }
+    // const hack = f().Nat;
+    // if (hack !== undefined) {
+    //   console.log("HIT", hack, n);
+    //   return hack + n;
+    // }
     f = f()(() => null)(() => x => x);
     if (f === null) return n;
     n++;
@@ -110,7 +110,6 @@ const hacks = {
   // 'two': `fromNat(2n)`,
   // 'three': `fromNat(3n)`,
   'Succ': `(Succ => () => n => {
-
     const res = Succ()(n);
     if ('Nat' in n) return fromNat(n.Nat + 1n)();
     return res;
@@ -124,6 +123,35 @@ const hacks = {
 // Succ Zero
 // Succ (i Inf)
 // Succ Inf
+
+// const types = { u: (((d -> (c -> b)) -> ((g -> c) -> (d^g -> b))) -> ((e -> (f -> e)) -> a)) -> a };
+I = A -> A
+K = A -> B -> A
+S = (C -> B -> A) -> (C -> B) -> C -> A
+U = (((C -> B -> A) -> (C -> B) -> C -> A) -> (D -> E -> D) -> X) -> X
+
+((C -> B -> A) -> (K -> B) -> C&K -> A) -> (D -> _ -> D) -> X <= (((H -> G -> F) -> (M -> G) -> H&M -> F) -> (J -> _ -> J) -> L) -> L
+
+X <= D -> D
+
+
+
+F <= C2
+C1 <= H -> G
+A <= H -> F
+G <= B2
+L2 <= A
+C2 <= L12
+L11 <= C1
+B2 <= J
+_ <= H
+J <= C1 -> C2
+X <= L2
+L12 <= _ -> D
+D <= L11
+
+X <= L2 <= A <= H -> F <=
+
 
 
 
@@ -153,6 +181,7 @@ while (reader.charsLeft > 0) {
     expressionStack.push(reader.readToken());
   }
   console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(false, expressionStack.pop())})(env) }, env);`);
+  console.log(`env = Object.assign({ ${JSON.stringify(name)}: emit(env, ${JSON.stringify(expressionStack.pop())}) }, env);`);
   // end parse definition
   if (name in hacks) console.log(`env[${JSON.stringify(name)}] = ${hacks[name]};`);
 
@@ -176,27 +205,5 @@ console.log(toBool(() => env['isLT']()(env['three'])(env['inf'])));
 // console.log(JSON.stringify(toString(env['newLine'])));
 // console.log(toString(fromString("Hello World")));
 // console.log(toString(() => env['fullDebug']()(fromString("u u"))));
-// console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 `);
-
-
-applyList = \f \l l f (\h \t applyList (f h) t)
-swallow = \f \arity arity f (b k (swallow f))
-agt = \arity \index \args (swallow (\f swallow (applyList f args) (sub arity $ Succ index)) index)
-
-
-
-agt 2 1 [65, "qwe"]
-(swallow (\f swallow (applyList f [65, "qwe"]) Zero) 1)
-(swallow (\f applyList f [65, "qwe"]) 1)
-(swallow (\f f 65 "qwe") 1)
-
-'applyList f [65, "qwe"] =
-'applyList (f 65) ["qwe"]
-
-strEquals (swallow (\f applyList f [65, "qwe"]) 1) "Aqwe"
-
-' BUG IN AGT DETECTION IN JS!
-
-\a \b b 65 "qwe"
-\a \b i (b 65) "qwe"

@@ -33,11 +33,11 @@ const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
   while (true) {
-    const hack = f().Nat;
-    if (hack !== undefined) {
-      console.log("HIT", hack, n);
-      return hack + n;
-    }
+    // const hack = f().Nat;
+    // if (hack !== undefined) {
+    //   console.log("HIT", hack, n);
+    //   return hack + n;
+    // }
     f = f()(() => null)(() => x => x);
     if (f === null) return n;
     n++;
@@ -93,7 +93,6 @@ env["Zero"] = fromNat(0n);
 env = Object.assign({ "Zero_Dispatch": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(env["k"])))(env) }, env);
 env = Object.assign({ "Succ": (env => lazy(() => env["b"]()(env["k"])(lazy(() => env["c"]()(env["i"])))))(env) }, env);
 env["Succ"] = (Succ => () => n => {
-
     const res = Succ()(n);
     if ('Nat' in n) return fromNat(n.Nat + 1n)();
     return res;
@@ -511,5 +510,5 @@ console.log(toBool(() => env['isLT']()(env['three'])(env['inf'])));
 // console.log(JSON.stringify(toString(env['newLine'])));
 // console.log(toString(fromString("Hello World")));
 // console.log(toString(() => env['fullDebug']()(fromString("u u"))));
-// console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 
