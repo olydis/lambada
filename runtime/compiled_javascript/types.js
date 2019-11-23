@@ -30,15 +30,27 @@ const pad = (s, l) => {
     return s;
 }
 
-const i = (a => arrow(a, a))(prim());
-const k = ((a, b) => arrow(a, arrow(b, a)))(prim(), prim());
-const s = ((a, b, c) => arrow(arrow(c, arrow(b, a)), arrow(arrow(c, b), arrow(c, a))))(prim(), prim(), prim());
-const u = (x => arrow(arrow(clone(s), arrow(clone(k), x)), x))(prim());
+const i = [prim(), (a => arrow(a, a))(prim())];
+const k = [prim(), ((a, b) => arrow(a, arrow(b, a)))(prim(), prim())];
+// const s = ((a, b, c1, c2, c3) => [prim(), arrow(arrow(c1, arrow(b, a)), arrow(arrow(c2, b), arrow(c3, a))), c1, c3, c2, c3])(prim(), prim(), prim(), prim(), prim());
+const s = ((a, b, c) => [prim(), arrow(arrow(c, arrow(b, a)), arrow(arrow(c, b), arrow(c, a)))])(prim(), prim(), prim());
+const u = clone([prim(), (x => arrow(arrow(s[1], arrow(k[1], x)), x))(prim())]);
 
-function app(a, b) {
-    const { from: formalParam, to: result } = clone(a);
-    const actualParam = clone(b);
-    let constraints = [prim(), result, formalParam, actualParam];
+const mirrorConstraints = cs => {
+    cs = cs.slice();
+    for (let i = 0; i < cs.length; i += 2) {
+        const t = cs[i];
+        cs[i] = cs[i + 1];
+        cs[i + 1] = t;
+    }
+    return cs;
+};
+function app(a, b, print = null) {
+    a = clone(a);
+    b = clone(b);
+    const { from: formalParam, to: result } = a[1];
+    const actualParam = b[1];
+    let constraints = [prim(), result, formalParam, actualParam, ...a.slice(2), ...b.slice(2)];
 
     function* enumConstraints(a, b) {
         if (isArrow(a) && isArrow(b)) {
@@ -65,7 +77,7 @@ function app(a, b) {
         return xr && yr && (flip ? arrow(yr, xr) : arrow(xr, yr));
     };
     // a := b    in cs
-    const assignAll = (a, b, cs, force=false) => {
+    const assignAll = (a, b, cs, force = false) => {
         for (let i = 0; i < cs.length; i += 2) {
             const res = assign(a, b, cs[i], cs[i + 1], false, force);
             if (res === null) return null;
@@ -79,7 +91,23 @@ function app(a, b) {
         const assgn = cs.slice(i, i + 2);
         cs[i] = cs[i + 1];
         // if (contains(assgn[1], assgn[0]))
-        const res = assignAll(assgn[0], assgn[1], cs);
+        let res = assignAll(assgn[0], assgn[1], cs);
+        if (!res) {
+            // maybe prune?
+            // check if assgn[0] only appears in same polarization => no recursion
+            // and also not anywhere else
+            const pos = cs.slice();
+            const neg = mirrorConstraints(cs.slice());
+            pos[i] = assgn[1];
+            pos[i + 1] = prim();
+            neg[i] = prim();
+            neg[i + 1] = prim();
+            res = assignAll(assgn[0], assgn[1], pos.concat(neg));
+            if (res) {
+                res = cs;
+
+            }
+        }
         if (res) res.splice(i, 2);
         return res;
     };
@@ -87,15 +115,6 @@ function app(a, b) {
         for (let i = cs.length - 2; i >= 2; i -= 2) {
             const csnew = assignFlat(cs, i);
             if (csnew !== null) cs = csnew;
-        }
-        return cs;
-    };
-    const mirrorConstraints = cs => {
-        cs = cs.slice();
-        for (let i = 0; i < cs.length; i += 2) {
-            const t = cs[i];
-            cs[i] = cs[i + 1];
-            cs[i + 1] = t;
         }
         return cs;
     };
@@ -112,6 +131,7 @@ function app(a, b) {
 
     const step = () => {
         constraints = explodeConstraints(constraints);
+
         constraints = assignFlatAll(constraints);
         constraints = mirrorConstraints(constraints);
         constraints = assignFlatAll(constraints);
@@ -125,21 +145,13 @@ function app(a, b) {
     // constraints = assignFlatAll(constraints);
     // printConstraints(constraints);
 
-    printConstraints(constraints);
-    step();
-    printConstraints(constraints);
-    step();
-    printConstraints(constraints);
-    step();
-    printConstraints(constraints);
-    step();
-    printConstraints(constraints);
-    step();
-    printConstraints(constraints);
-    step();
-    printConstraints(constraints);
-    step();
-    printConstraints(constraints);
+    for (let i = 0; i < 10; i++) {
+        // if (print) printConstraints(constraints, print);
+        step();
+    }
+    if (print) printConstraints(constraints, print);
+
+    return constraints;
 }
 
 // Goal: (1 -> 1)
@@ -147,60 +159,42 @@ function app(a, b) {
 // 1  :=   2
 
 
-const printConstraints = cs => {
+const printConstraints = (cs, name) => {
     cs = print(...cs);
     console.log();
-    console.log("Goal: " + cs[1]);
+    console.log(name + " :: " + cs[1]);
     for (let i = 2; i < cs.length; i += 2)
         console.log(pad(cs[i], 25) + "   :=   " + cs[i + 1]);
 };
 
-const si = ((a, b) => arrow(arrow(arrow(a, b), a), arrow(arrow(a, b), b)))(prim(), prim());
-app(u, u);
-// app(s, k);
-// app(si, i);
-// app(s, i);
-// app(i, i);
+const sk = app(s, k, 'S K');
+const ii = app(sk, k, 'I');
+const si = app(s, i, 'S I');
+// const m = ((a, b) => [prim(), arrow(a, b), a, arrow(a, b)])(prim(), prim());
+const m = app(si, i, 'M');
+const ks = app(k, s, 'K S');
+const kk = app(k, k, 'K K');
+const siks = app(si, ks, '(S I) (K S)');
+const ssiks = app(s, siks, 'S ((S I) (K S))');
+const ssikskk = app(ssiks, kk, 'U'); // u
+const is = app(i, s, 'S');
+const uu = app(u, u, 'I');
+const sks = app(s, ks, 'S (K S)');
+const b = app(sks, k, 'B');
+const skk = app(s, kk, 'S (K K)');
+const skks = app(skk, s, 'S (K K) S');
+const sksskks = app(sks, skks, 'S (K S) (S (K K) S)');
+const ssksskks = app(s, sksskks, 'S (S (K S) (S (K K) S))');
+const c = ((a, b, c) => [prim(), arrow(arrow(c, arrow(b, a)), arrow(b, arrow(c, a)))])(prim(), prim(), prim());
+// const c = app(ssksskks, kk, 'C');
 
+const cb = app(c, b, 'C B');
+const cbm = app(cb, m, 'C B M');
+const bm = app(b, m, 'B M');
+const y = app(bm, cbm, 'Y');
 
+// c = s (s (k s) (s (k k) s)) (k k)
+// m = s i i
 
-// ((1 -> 2) -> 1) -> ((1 -> 2) -> 2)
-// (0 -> 1) -> 1     with     0 := (0 -> 1)
+// y = b m (c b m)
 
-// ((0 -> 1) -> 1) ((2 -> 3) -> 3)
-// with     0 := (0 -> 1)
-// with     2 := (2 -> 3)
-
-// 1
-// 3
-// 0.b
-// BOTTOM
-
-// 1 := 3
-// 3 := 0.b
-// 0.a := 2
-// 0.a := 1
-// 0 := 0.b
-
-
-
-// 0
-// 3.a
-// 5
-// 9 -> 10
-// 9 -> 4.a.a
-// 6.b && 4.b  -> 4.a.a
-// 7.b && 4.b  -> 4.a.a
-// 4.b  -> 4.a.a
-// 3.b.b  -> 4.a.a
-// 1  -> 4.a.a
-// 3.b.a.a  -> 4.a.a
-// 4.a.a -> 4.a.a
-
-// ((1 -> (2 -> 1)) -> 0)      :=   3
-// 3                           :=   (4 -> 5)
-// 6                           :=   (7 -> 8)
-// 8                           :=   4
-// 5                           :=   (9 -> 10)
-// (9 -> 11)                   :=   6
-// (9 -> (11 -> 10))           :=   4

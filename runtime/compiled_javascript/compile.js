@@ -54,31 +54,37 @@ const adt = (arity, index, ...args) => lazy(() => swallow(index, x => swallow(ar
 
 const fromBool = x => x ? adt(2, 0) : adt(2, 1);
 const fromNat = x => {
-  let result = adt(2, 0);
-  result().Nat = 0n;
-  for (let i = 1n; i <= x; i++) {
-    result = adt(2, 1, result);
-    result().Nat = i;
+  let result;
+  if (x === 0n) {
+    result = adt(2, 0);
+  } else {
+    result = adt(2, 1, () => fromNat(x - 1n)());
   }
+  result().Nat = x;
   return result;
 };
 const fromList = x => {
-  let result = adt(2, 0);
-  while (x.length) result = adt(2, 1, x.pop(), result);
+  let result;
+  if (x.length === 0) {
+    result = adt(2, 0);
+  } else {
+    result = adt(2, 1, x.shift(), () => fromList(x)());
+  }
   return result;
 };
-const fromString = x => fromList(x.split('').map(s => fromNat(s.charCodeAt(0))));
+const fromString = x => fromList(x.split('').map(s => fromNat(BigInt(s.charCodeAt(0)))));
 
 const toBool = f => f()(() => true)(() => false);
 const toNat = f => {
   let n = 0n;
   while (true) {
-    // const hack = f().Nat;
-    // if (hack !== undefined) {
-    //   console.log("HIT", hack, n);
-    //   return hack + n;
-    // }
-    f = f()(() => null)(() => x => x);
+    f = f();
+    const hack = f.Nat;
+    if (hack !== undefined) {
+      // console.log("HIT", hack, n);
+      return hack + n;
+    }
+    f = f(() => null)(() => x => x);
     if (f === null) return n;
     n++;
   }
@@ -95,8 +101,8 @@ const toList = f => {
 const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
 
 // Singularity
-const _k = () => a => b => a();
-const _s = () => a => b => c => a()(c)(() => b()(c));
+const _k = () => (a) => (b) => a();
+const _s = () => (a) => (b) => (c) => a()(c)(() => b()(c));
 const u = () => x => x()(_s)(_k);
 
 let env = { u };
@@ -104,16 +110,55 @@ let env = { u };
 // Code gen start
 `);
 
+// Note: Admittedly, some of those hacks are strict,
+// i.e. they change semantics in that they can result in non-termination
+// when the un-hacked terms would not. E.g. reducing `Succ inf` would not hang, while now it does.
+// This can be fixed however: By defining the original terms to be strict as well.
+// See reflect.txt for sketch, and APPLY IT when you get the chance.
 const hacks = {
   'Zero': `fromNat(0n)`,
-  // 'one': `fromNat(1n)`,
-  // 'two': `fromNat(2n)`,
-  // 'three': `fromNat(3n)`,
   'Succ': `(Succ => () => n => {
-    const res = Succ()(n);
-    if ('Nat' in n) return fromNat(n.Nat + 1n)();
-    return res;
+    const nStrict = n();
+    if ('Nat' in nStrict) return fromNat(nStrict.Nat + 1n)()
+    return Succ()(n);
   })(env['Succ'])`,
+  // 'add': `(add => () => a => b => {
+  //   const aStrict = a();
+  //   const bStrict = b();
+  //   const res = add()(a)(b);
+  //   if ('Nat' in aStrict && 'Nat' in bStrict) res.Nat = aStrict.Nat + bStrict.Nat;
+  //   return res;
+  // })(env['add'])`,
+  'add': `(add => () => a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat + bStrict.Nat)()
+    return add()(a)(b);
+  })(env['add'])`,
+  'sub': `(sub => () => a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat((aStrict.Nat - bStrict.Nat < 0n) ? 0n : (aStrict.Nat - bStrict.Nat))()
+    return sub()(a)(b);
+  })(env['sub'])`,
+  'mul': `(mul => () => a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat * bStrict.Nat)()
+    return mul()(a)(b);
+  })(env['mul'])`,
+  'pow': `(pow => () => a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat ** bStrict.Nat)()
+    return pow()(a)(b);
+  })(env['pow'])`,
+  '_qadd': `(_qadd => () => a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat + 4n * bStrict.Nat)()
+    return _qadd()(a)(b);
+  })(env['_qadd'])`,
 };
 
 // when to populate .Nat within Succ?
@@ -125,33 +170,6 @@ const hacks = {
 // Succ Inf
 
 // const types = { u: (((d -> (c -> b)) -> ((g -> c) -> (d^g -> b))) -> ((e -> (f -> e)) -> a)) -> a };
-I = A -> A
-K = A -> B -> A
-S = (C -> B -> A) -> (C -> B) -> C -> A
-U = (((C -> B -> A) -> (C -> B) -> C -> A) -> (D -> E -> D) -> X) -> X
-
-((C -> B -> A) -> (K -> B) -> C&K -> A) -> (D -> _ -> D) -> X <= (((H -> G -> F) -> (M -> G) -> H&M -> F) -> (J -> _ -> J) -> L) -> L
-
-X <= D -> D
-
-
-
-F <= C2
-C1 <= H -> G
-A <= H -> F
-G <= B2
-L2 <= A
-C2 <= L12
-L11 <= C1
-B2 <= J
-_ <= H
-J <= C1 -> C2
-X <= L2
-L12 <= _ -> D
-D <= L11
-
-X <= L2 <= A <= H -> F <=
-
 
 
 
@@ -181,7 +199,7 @@ while (reader.charsLeft > 0) {
     expressionStack.push(reader.readToken());
   }
   console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(false, expressionStack.pop())})(env) }, env);`);
-  console.log(`env = Object.assign({ ${JSON.stringify(name)}: emit(env, ${JSON.stringify(expressionStack.pop())}) }, env);`);
+  // console.log(`env = Object.assign({ ${JSON.stringify(name)}: emit(env, ${JSON.stringify(expressionStack.pop())}) }, env);`);
   // end parse definition
   if (name in hacks) console.log(`env[${JSON.stringify(name)}] = ${hacks[name]};`);
 
@@ -193,17 +211,24 @@ console.log(`
 
 env['inf'] = () => env['y']()(env['Succ'])
 
-console.log(toNat(fromNat(42)));
+console.log(toNat(fromNat(42n)));
 console.log(toNat(() => env['add']()(env['three'])(env['three'])));
 console.log(toNat(() => env['mul']()(env['three'])(env['three'])));
 console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+console.log(toString(() => env['strCons']()(env['newLine'])(env['empty'])));
+console.log(toString(fromString("u u")));
 
 // console.log(toBool(() => env['isLT']()(env['inf'])(env['three'])));
-console.log(toBool(() => env['isLT']()(env['three'])(env['inf'])));
+// console.log(toBool(() => env['isLT']()(env['three'])(env['inf'])));
 
 // console.log(toList(env['ListEmpty']));
 // console.log(JSON.stringify(toString(env['newLine'])));
 // console.log(toString(fromString("Hello World")));
 // console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+
+
+// token_Run = \s strFromMaybe token_String_list (token_Process s)
+
+// console.log(toString(() => env['token_Run']()(fromString("u u"))));
 console.log(toString(() => env['fullDebug']()(fromString("u u"))));
 `);

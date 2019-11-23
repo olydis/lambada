@@ -1,2 +1,2 @@
 #!/bin/sh
-time node compile.js > test.js && time node test.js
+time node compile.js > test.js && time node --inspect test.js
