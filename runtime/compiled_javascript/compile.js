@@ -38,10 +38,12 @@ class StringReader {
   }
 }
 
+const DEBUG = true;
+
 console.log(`
-const lazy = f => {
+const lazy = ${DEBUG ? 'name => ' : ''}f => {
   let result = null;
-  return () => result || (result = f());
+  return () => result || (result = (${DEBUG ? 'console.count(name), ' : ''}f()));
 };
 
 // Marshalling
@@ -50,26 +52,27 @@ const swallow = (swallow, x) => {
   while (swallow--) result = (result => _ => result)(result);
   return result;
 };
-const adt = (arity, index, ...args) => lazy(() => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x()))));
+const adt = (${DEBUG ? 'name, ' : ''}arity, index, ...args) => lazy${DEBUG ? '(``)' : ''}(() => swallow(index, x => swallow(arity - index - 1, args.reduce((f, arg) => f(arg), x()))));
 
-const fromBool = x => x ? adt(2, 0) : adt(2, 1);
+const fromBool = x => x ? adt(${DEBUG ? 'true, ' : ''}2, 0) : adt(${DEBUG ? 'false, ' : ''}2, 1);
 const fromNat = x => {
   let result;
   if (x === 0n) {
-    result = adt(2, 0);
+    result = adt(${DEBUG ? 'x, ' : ''}2, 0);
   } else {
-    result = adt(2, 1, () => fromNat(x - 1n)());
+    result = adt(${DEBUG ? 'x, ' : ''}2, 1, () => fromNat(x - 1n)());
   }
   result().Nat = x;
   return result;
 };
-const fromList = x => {
+const fromList = (x) => {
   let result;
   if (x.length === 0) {
-    result = adt(2, 0);
+    result = adt(${DEBUG ? '`list(${x.length})`, ' : ''}2, 0);
   } else {
-    result = adt(2, 1, x.shift(), () => fromList(x)());
+    result = adt(${DEBUG ? '`list(${x.length})`, ' : ''}2, 1, x[0], () => fromList(x.slice(1))());
   }
+  result().List = x;
   return result;
 };
 const fromString = x => fromList(x.split('').map(s => fromNat(BigInt(s.charCodeAt(0)))));
@@ -82,7 +85,7 @@ const toNat = f => {
     const hack = f.Nat;
     if (hack !== undefined) {
       // console.log("HIT", hack, n);
-      return hack + n;
+      return n + hack;
     }
     f = f(() => null)(() => x => x);
     if (f === null) return n;
@@ -92,7 +95,13 @@ const toNat = f => {
 const toList = f => {
   const l = [];
   while (true) {
-    f = f()(() => null)(() => h => t => [h, t]);
+    f = f();
+    const hack = f.List;
+    if (hack !== undefined) {
+      // console.log("HIT", hack, n);
+      return l.concat(hack);
+    }
+    f = f(() => null)(() => h => t => [h, t]);
     if (f === null) return l;
     l.push(f[0]);
     f = f[1];
@@ -101,8 +110,8 @@ const toList = f => {
 const toString = f => toList(f).map(c => String.fromCharCode(Number(toNat(c)))).join('');
 
 // Singularity
-const _k = () => (a) => (b) => a();
-const _s = () => (a) => (b) => (c) => a()(c)(() => b()(c));
+const _k = () => a => b => a();
+const _s = () => a => b => c => a()(c)(() => b()(c));
 const u = () => x => x()(_s)(_k);
 
 let env = { u };
@@ -115,68 +124,80 @@ let env = { u };
 // when the un-hacked terms would not. E.g. reducing `Succ inf` would not hang, while now it does.
 // This can be fixed however: By defining the original terms to be strict as well.
 // See reflect.txt for sketch, and APPLY IT when you get the chance.
-const hacks = {
-  'Zero': `fromNat(0n)`,
-  'Succ': `(Succ => () => n => {
-    const nStrict = n();
-    if ('Nat' in nStrict) return fromNat(nStrict.Nat + 1n)()
-    return Succ()(n);
-  })(env['Succ'])`,
-  // 'add': `(add => () => a => b => {
-  //   const aStrict = a();
-  //   const bStrict = b();
-  //   const res = add()(a)(b);
-  //   if ('Nat' in aStrict && 'Nat' in bStrict) res.Nat = aStrict.Nat + bStrict.Nat;
-  //   return res;
-  // })(env['add'])`,
-  'add': `(add => () => a => b => {
-    const aStrict = a();
-    const bStrict = b();
-    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat + bStrict.Nat)()
-    return add()(a)(b);
-  })(env['add'])`,
-  'sub': `(sub => () => a => b => {
-    const aStrict = a();
-    const bStrict = b();
-    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat((aStrict.Nat - bStrict.Nat < 0n) ? 0n : (aStrict.Nat - bStrict.Nat))()
-    return sub()(a)(b);
-  })(env['sub'])`,
-  'mul': `(mul => () => a => b => {
-    const aStrict = a();
-    const bStrict = b();
-    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat * bStrict.Nat)()
-    return mul()(a)(b);
-  })(env['mul'])`,
-  'pow': `(pow => () => a => b => {
-    const aStrict = a();
-    const bStrict = b();
-    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat ** bStrict.Nat)()
-    return pow()(a)(b);
-  })(env['pow'])`,
-  '_qadd': `(_qadd => () => a => b => {
-    const aStrict = a();
-    const bStrict = b();
-    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat + 4n * bStrict.Nat)()
-    return _qadd()(a)(b);
-  })(env['_qadd'])`,
-};
-
-// when to populate .Nat within Succ?
 //
-// Succ (omega Zero)
-// Succ (i Zero)
+// Another example: when to populate .Nat within Succ, if Succ is not strict?
+//
+// Succ (omega Zero)      => evaluating param to HNF would mean non-term here
+// Succ (i Zero)          => but not evaluating would not detect this as 0
 // Succ Zero
 // Succ (i Inf)
 // Succ Inf
+const hacks = {
+  // List
+  'ListEmpty': `fromList([])()`,
+  'ListCons': `h => t => {
+    const tStrict = t();
+    if ('List' in tStrict) return fromList([h].concat(tStrict.List))()
+    return self()(h)(t);
+  }`,
+  'reverse': `l => {
+    const lStrict = l();
+    if ('List' in lStrict) return fromList(lStrict.List.slice().reverse())()
+    return self()(l);
+  }`,
 
-// const types = { u: (((d -> (c -> b)) -> ((g -> c) -> (d^g -> b))) -> ((e -> (f -> e)) -> a)) -> a };
-
+  // Nat
+  'Zero': `fromNat(0n)()`,
+  'Succ': `n => {
+    const nStrict = n();
+    if ('Nat' in nStrict) return fromNat(nStrict.Nat + 1n)()
+    return self()(n);
+  }`,
+  // 'add': `a => b => {
+  //   // oddly, this formulation results in non-termination of fullDebug
+  //   const aStrict = a();
+  //   const bStrict = b();
+  //   const res = self()(a)(b);
+  //   if ('Nat' in aStrict && 'Nat' in bStrict) res.Nat = aStrict.Nat + bStrict.Nat;
+  //   return res;
+  // }`,
+  'add': `a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat + bStrict.Nat)()
+    return self()(a)(b);
+  }`,
+  'sub': `a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat((aStrict.Nat - bStrict.Nat < 0n) ? 0n : (aStrict.Nat - bStrict.Nat))()
+    return self()(a)(b);
+  }`,
+  'mul': `a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat * bStrict.Nat)()
+    return self()(a)(b);
+  }`,
+  'pow': `a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat ** bStrict.Nat)()
+    return self()(a)(b);
+  }`,
+  '_qadd': `a => b => {
+    const aStrict = a();
+    const bStrict = b();
+    if ('Nat' in aStrict && 'Nat' in bStrict) return fromNat(aStrict.Nat + 4n * bStrict.Nat)()
+    return self()(a)(b);
+  }`,
+};
 
 
 // type Expression = string | [Expression, Expression];
-const printExpr = (strict, e) => typeof e === 'string'
-  ? (strict ? `${printExpr(false, e)}()` : `env[${JSON.stringify(e)}]`)
-  : (strict ? `${printExpr(true, e[0])}(${printExpr(false, e[1])})` : `lazy(() => ${printExpr(true, e)})`);
+const printExpr = (name, strict, e) => typeof e === 'string'
+  ? (strict ? `${printExpr(name, false, e)}()` : `env[${JSON.stringify(e)}]`)
+  : (strict ? `${printExpr(name + '0', true, e[0])}(${printExpr(name + '1', false, e[1])})` : `lazy${DEBUG ? `(${JSON.stringify(name)})` : ''}(() => ${printExpr(name, true, e)})`);
 const reader = new StringReader(prelude);
 reader.readWhitespace();
 while (reader.charsLeft > 0) {
@@ -198,10 +219,10 @@ while (reader.charsLeft > 0) {
 
     expressionStack.push(reader.readToken());
   }
-  console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(false, expressionStack.pop())})(env) }, env);`);
+  console.log(`env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(name, false, expressionStack.pop())})(env) }, env);`);
   // console.log(`env = Object.assign({ ${JSON.stringify(name)}: emit(env, ${JSON.stringify(expressionStack.pop())}) }, env);`);
   // end parse definition
-  if (name in hacks) console.log(`env[${JSON.stringify(name)}] = ${hacks[name]};`);
+  if (name in hacks) console.log(`env[${JSON.stringify(name)}] = (self => lazy${DEBUG ? `(${JSON.stringify(name)})` : ''}(() => (${hacks[name]})))(env[${JSON.stringify(name)}]);`);
 
   reader.readWhitespace();
 }
@@ -215,8 +236,8 @@ console.log(toNat(fromNat(42n)));
 console.log(toNat(() => env['add']()(env['three'])(env['three'])));
 console.log(toNat(() => env['mul']()(env['three'])(env['three'])));
 console.log(toNat(() => env['pow']()(env['three'])(env['three'])));
+console.log(toNat(() => env['pow']()(env['Zero'])(env['Zero'])));
 console.log(toString(() => env['strCons']()(env['newLine'])(env['empty'])));
-console.log(toString(fromString("u u")));
 
 // console.log(toBool(() => env['isLT']()(env['inf'])(env['three'])));
 // console.log(toBool(() => env['isLT']()(env['three'])(env['inf'])));
@@ -229,6 +250,9 @@ console.log(toString(fromString("u u")));
 
 // token_Run = \s strFromMaybe token_String_list (token_Process s)
 
-// console.log(toString(() => env['token_Run']()(fromString("u u"))));
+console.log(toString(fromString("pow = \\\\n \\\\m m one (\\\\dm mul n (pow n dm))")));
 console.log(toString(() => env['fullDebug']()(fromString("u u"))));
+console.log(toString(() => env['fullDebug']()(fromString("\\\\n \\\\m m"))));
+// console.log(toString(() => env['token_Run']()(fromString("pow = \\\\n \\\\m m one (\\\\dm mul n (pow n dm))"))));
+console.log(toString(() => env['fullDebug']()(fromString("\\\\n \\\\m m one (\\\\dm mul n (pow n dm))"))));
 `);
