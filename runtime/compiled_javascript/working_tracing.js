@@ -24,8 +24,11 @@ const lazy = name => f => {
 // const k = lazy(["k", ["u", ["u", "i"]]])(() => u("k0")(lazy("k1")(() => u("k10")(i))));
 // const s = lazy(["s", ["u", "k"]])(() => u("s0")(k));
 
-const tag = (tag, f) => ((f.tag = tag), f);
 const norm = e => (Array.isArray(e[0]) ? e[0].concat(e.slice(1)) : e);
+const hasNull = msg =>
+  msg === null || (Array.isArray(msg) && msg.some(hasNull));
+const trace = msg =>
+  (msg => (hasNull(msg) || console.error(msg), msg))(norm(msg));
 
 // const i = (trace, e) => a => a(trace, trace(e.slice(1)));
 const _k = (trace, e) => a => b => a(trace, trace([e[1]].concat(e.slice(3))));
@@ -38,6 +41,7 @@ const u = (trace, e) => x =>
 
 // Note: it's okay for `u` to strictly evaluate its argument "x" (e.g. to see what it is),
 //       since it becomes the head of "x S K" anyways!
+// const tag = (tag, f) => ((f.tag = tag), f);
 // const u = (trace, e) => x =>
 //   x === u
 //     ? tag("i", y => y(trace, trace(e.slice(2))))
@@ -69,10 +73,6 @@ const m = (trace, e) =>
 
 // Code gen end
 
-const hasNull = msg =>
-  msg === null || (Array.isArray(msg) && msg.some(hasNull));
-const trace = msg =>
-  (msg => (hasNull(msg) || console.error(msg), msg))(norm(msg));
 s(trace, trace(["s", "k", "k", "k"]))(k)(k)(k);
 console.log();
 s(trace, trace(["s", "i", "k", "i", "i"]))(i)(k)(i)(i);
