@@ -1,29 +1,3 @@
-const DEBUG_STACK = [];
-
-const lazy = name => f => {
-  let result = null;
-  return name => {
-    if (name === undefined) throw new Error("Pass callsite name");
-    DEBUG_STACK.push(name);
-    name && console.error(DEBUG_STACK);
-    // name && console.count(name);
-    const r = result || (result = f(name));
-    DEBUG_STACK.pop();
-    // console.error(new Error().stack);
-    return r;
-  };
-};
-
-// Singularity
-// const _k = name => a => b => a(name);
-// const _s = name => a => b => c => a(name)(c)(name2 => b(name + "~" + name2)(c));
-// const u = name => x => x(name)(_s)(_k);
-// u.trace = ['u'];
-
-// const i = lazy(["i", ["u", "u"]])(() => u(i)(u));
-// const k = lazy(["k", ["u", ["u", "i"]]])(() => u("k0")(lazy("k1")(() => u("k10")(i))));
-// const s = lazy(["s", ["u", "k"]])(() => u("s0")(k));
-
 const norm = e => (Array.isArray(e[0]) ? norm(e[0].concat(e.slice(1))) : e);
 const hasNull = msg =>
   msg === null || (Array.isArray(msg) && msg.some(hasNull));
@@ -33,12 +7,23 @@ const trace = msg =>
   (msg => (hasNull(msg) || console.error(print(msg, false)), msg))(norm(msg));
 const trace2 = (subst, e) => trace(subst.concat(e.slice(1)));
 
+const lazy = f => {
+  let result = null;
+  return e => {
+    const r = false && result || (result = f(e));
+    return r;
+  };
+};
+
 // const i = (e) => a => a(trace(e.slice(1)));
-const _k = e => a => b => a(trace([e[1]].concat(e.slice(3))));
-const _s = e => a => b => c =>
-  a(trace([e[1], e[3], [e[2], e[3]]].concat(e.slice(4))))(c)(e => b(e)(c));
-const u = e => x =>
-  x(trace([e[1], /*S*/ null, /*K*/ null].concat(e.slice(2))))(_s)(_k);
+const _k = lazy(e => a => b => a(trace([e[1]].concat(e.slice(3)))));
+const _s = lazy(e => a => b => c =>
+  a(trace([e[1], e[3], [e[2], e[3]]].concat(e.slice(4))))(c)(lazy(e => b(e)(c)))
+);
+const u = lazy(e => x =>
+  x(trace([e[1], /*S*/ null, /*K*/ null].concat(e.slice(2))))(_s)(_k)
+);
+u.symbol = { name: 'u' };
 
 // Note: it's okay for `u` to strictly evaluate its argument "x" (e.g. to see what it is),
 //       since it becomes the head of "x S K" anyways!
@@ -63,20 +48,38 @@ const u = e => x =>
 //       );
 // Note: The above is bad since a) it results in funky traces due to out of order eval, b) can never be complete that way
 
-const i = e => u(trace2(["u", "u"], e))(u);
-const k = e => u(trace2(["u", ["u", "i"]], e))(e => u(e)(i));
-const s = e => u(trace2(["u", "k"], e))(k);
-const m = e => s(trace2(["s", "i", "i"], e))(i)(i);
+// const i = e => u(trace2(["u", "u"], e))(u);
+// u.symbol = { name: 'i' };
+// const k = e => u(trace2(["u", ["u", "i"]], e))(e => u(e)(i));
+// const s = e => u(trace2(["u", "k"], e))(k);
+// const m = e => s(trace2(["s", "i", "i"], e))(i)(i);
+
+// // Code gen end
+
+// s(trace(["s", "k", "k", "k"]))(k)(k)(k);
+// console.log();
+// s(trace(["s", "i", "k", "i", "i"]))(i)(k)(i)(i);
+// console.log();
+// i(trace(["i", "i", "s"]))(i)(s);
+// console.log();
+// k(trace(["k", "i", "k", "s"]))(i)(k)(s);
+// console.log();
+// m(trace(["m", "k"]))(k);
+// process.exit(0);
+
+const share = x => x;
+
+const i = share(() => u()(u))
+const k = share(() => u()(share(() => u()(i))))
+const s = share(() => u()(k))
+const m = share(() => s()(i)(i))
+const y = share(() => b()(m)(share(() => c()(b)(m))))
+
+const i = share(() => x => x())
+const k = share(() => a => b => a())
+const s = share(() => a => b => c => a()(c)(share(() => b()(c))))
+const m = share(() => x => x()(x))
+const y = share(() => f => m()(share(() => x => f()(x)(x))))
 
 // Code gen end
-
-s(trace(["s", "k", "k", "k"]))(k)(k)(k);
-console.log();
-s(trace(["s", "i", "k", "i", "i"]))(i)(k)(i)(i);
-console.log();
-i(trace(["i", "i", "s"]))(i)(s);
-console.log();
-k(trace(["k", "i", "k", "s"]))(i)(k)(s);
-console.log();
-m(trace(["m", "k"]))(k);
 process.exit(0);
