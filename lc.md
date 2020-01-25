@@ -1,6 +1,10 @@
 # Lambada
 
+A turing complete language based solely on minimalism.
+
 ## Abstract Syntax
+
+Lambada's only syntactic category is "expressions" `Expr`, defined as follows:
 
 ```
 Expr ::= 'u'            # "Iota"
@@ -9,44 +13,75 @@ Expr ::= 'u'            # "Iota"
 
 > Possible extensions: non-determinism
 
+We write expressions using parentheses where necessary (assuming left-associativity).
+For example, `u u (u u)` corresponds to the following AST:
+```
+    /\
+   /  \
+  /    \
+ /\    /\
+u  u  u  u
+```
+
 ## Abstract Semantics
 
-An expression is assigned meaning through the *value* it *reduces to*.
-We want to leave the details of this reduction process to implementations so we expect no ability to reflect on intermediate results.
+An expressions may be *reducible* into another expression, otherwise (if irreduible) we also call it a *value*.
+We give several equivalent definitions of expression reduction below.
+Expressions are *equal* (`=`) exactly if they reduce to the same value or reduction does not terminate for either expression.
 
+### Observability
 
-Specifically, we do not expect the ability to *reflect* on expressions (to retrieve their abstract syntax in any form), beyond what is possible by
-
-> What about non-termination? Decidability?
-
-
-
-reduced to *values*
-
+Reduction alone does not give *meaning* to expressions, especially since the language at its core is free of side-effect that one could observe.
+Instead we give meaning to an expression by observing how it *acts* on parameters, i.e. expressions it is applied to.
+For instance, if booleans `true` and `false` are defined as expressions such that
 ```
-Atom ::= arbitrary set
-Expr ::= 'u'
-       | Expr Expr
-       | Atom
+true  α β = α
+false α β = β
+```
+holds for all expressions `α` and `β`, then we may identify them through exactly this property.
+`true` and `false` may otherwise be treated as black boxes, i.e. which parameter they "select" shall be their only distinguishing feature.
+
+Generally, given an expression `■` and arity `n`, an implementation must be able to compute `⟦■⟧ₙ`, which is the `i` such that
+```
+∀ α₀, ..., αₙ :  ■ α₀ ... αₙ = αᵢ
+```
+It may assume *that* `i` exists, i.e. that only valid queries are made and `⟦■⟧ₙ` is defined.
+Examples:
+```
+⟦true⟧₂ = 0
+⟦false⟧₂ = 1
 ```
 
-### Variant A
+This limited form of observability gives implementations *maximal* freedom in both representing expressions internally and realizing reduction.
+It is up to implementations how to find `⟦■⟧ₙ`, but the following observations help:
+- asd
 
-> Here, observability should correspond to WHNF spitting out an atom
+### Reduction
+
+We give two equivalent variants of defining expression reduction, either of which may be useful reference points for implementations.
+
+#### Variant A - via Lambda Calculus
 
 Translate expressons to (untyped) lambda calculus terms such that
 - Iota `u` becomes `\x -> x (\a -> \b -> \c -> a c (b c)) (\a -> \b -> a)`
 - Application becomes function application
-- Atoms remain atomic
 
-> ^ can we say `<Atom> ...` is undefined as in "doesn't matter" or as in "stop"?
+Reduction means finding the WHNF of the lambda calculus term through beta-reduction (no eta-reduction).
 
-Reduction means finding WHNF of the lambda calculus term.
+Computing `⟦■⟧ₙ` (observability) could be achieved by applying `■` to `n` special values. The resulting WHNF will be one of these values. Note that since we may assume that `⟦■⟧ₙ` is defined, these special values will never end up as the "head" (function part) of a function application.
 
+#### Variant B - via Term Rewriting
 
-### Variant B
+Extend `Expr` with two new abstract expressions `s` and `k`.
+Apply the following rewrite rules to `Expr` as long as possible.
 
->
+```
+u α = α s k
+k α β = α
+s α β γ = α γ (β γ)
+```
+
+Computing `⟦■⟧ₙ` (observability) could be achieved by applying `■` to `n` special expressions. Since we may assume that `⟦■⟧ₙ`, we can expect exactly one of these special expressions to remain once no more rewrite rules apply.
 
 
 ```
@@ -56,7 +91,6 @@ tt 🟢 🔴 = 🟢
 ff 🟢 🔴 = 🔴
 tt 🟩 🟥 = 🟩
 ff 🟩 🟥 = 🟥
-```
 
 55357 56628 🔴
 55357 56629 🔵
@@ -96,3 +130,4 @@ ff 🟩 🟥 = 🟥
 9660 ▼
 9734 ☆
 9651 ★
+```
