@@ -167,8 +167,8 @@ const hacks = {
   // Core
   i: DEBUG_ARG => `x => x(${DEBUG_ARG})`,
   k: DEBUG_ARG => `x => y => x(${DEBUG_ARG})`,
-  s: DEBUG_ARG => `a => b => c => a(${DEBUG_ARG})(c)((${DEBUG ? 'name2' : ''}) => b(${DEBUG ? DEBUG_ARG + ' + "~" + name2' : ''})(c))`,
-  b: DEBUG_ARG => `a => b => c => a(${DEBUG_ARG})((${DEBUG ? 'name2' : ''}) => b(${DEBUG ? DEBUG_ARG + ' + "~" + name2' : ''})(c))`,
+  s: DEBUG_ARG => `a => b => c => a(${DEBUG_ARG})(c)(lazy((${DEBUG ? 'name2' : ''}) => b(${DEBUG ? DEBUG_ARG + ' + "~" + name2' : ''})(c)))`,
+  b: DEBUG_ARG => `a => b => c => a(${DEBUG_ARG})(lazy((${DEBUG ? 'name2' : ''}) => b(${DEBUG ? DEBUG_ARG + ' + "~" + name2' : ''})(c)))`,
   c: DEBUG_ARG => `a => b => c => a(${DEBUG_ARG})(c)(b)`,
 
   // List

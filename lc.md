@@ -53,36 +53,151 @@ Examples:
 ```
 
 This limited form of observability gives implementations *maximal* freedom in both representing expressions internally and realizing reduction.
-It is up to implementations how to find `⟦■⟧ₙ`, but the following observations help:
-- asd
+It is up to implementations how to find `⟦■⟧ₙ`, but the following observation may help:
+- Recall that an implementation may assume that `⟦■⟧ₙ` it is supposed to answer is defined.
+- So the parameter selection property of `■` holds for *all* possible parameter expressions, so the specifics of these expressions cannot matter.
+- It should hence be possible to instead use `n` atomic dummy expressions/tokens that are outside of the defined abstract syntax.
+- These should be largely "unaffected" by the reduction process, which will terminate with one of them remaining.
 
 ### Reduction
 
-We give two equivalent variants of defining expression reduction, either of which may be useful reference points for implementations.
+We give two equivalent strategies of defining expression reduction, either of which may be useful reference points for implementations.
 
-#### Variant A - via Lambda Calculus
+#### Strategy A - via Lambda Calculus
 
 Translate expressons to (untyped) lambda calculus terms such that
 - Iota `u` becomes `\x -> x (\a -> \b -> \c -> a c (b c)) (\a -> \b -> a)`
 - Application becomes function application
 
 Reduction means finding the WHNF of the lambda calculus term through beta-reduction (no eta-reduction).
+Note that this translation and hence also reduction will only ever produce closed terms.
 
 Computing `⟦■⟧ₙ` (observability) could be achieved by applying `■` to `n` special values. The resulting WHNF will be one of these values. Note that since we may assume that `⟦■⟧ₙ` is defined, these special values will never end up as the "head" (function part) of a function application.
 
-#### Variant B - via Term Rewriting
+#### Strategy B - via Term Rewriting
 
 Extend `Expr` with two new abstract expressions `s` and `k`.
 Apply the following rewrite rules to `Expr` as long as possible.
 
 ```
-u α = α s k
-k α β = α
-s α β γ = α γ (β γ)
+u α     ⟶ α s k
+k α β   ⟶ α
+s α β γ ⟶ α γ (β γ)
 ```
 
 Computing `⟦■⟧ₙ` (observability) could be achieved by applying `■` to `n` special expressions. Since we may assume that `⟦■⟧ₙ`, we can expect exactly one of these special expressions to remain once no more rewrite rules apply.
 
+#### Strategies A and B are equivalent
+
+We give a translation scheme between terms of both strategies and show that a reduction in either strategy implies an equivalent reduction in the other strategy.
+
+##### Translation of Strategy A terms to Strategy B terms
+
+Assume that the following cases are matched top to bottom.
+Intermediate terms of the translation are `Expr`, but with variables `α` from lambda terms, before they are eliminated.
+To distinguish them from `u`, `k` and `s` we will embed writing `<α>`.
+
+```
+elim(α, β) = k β   if β does not contain <α>
+elim(α, <α>) = u u
+elim(α, β γ) = s elim(α, β) elim(α, γ)
+
+a2b(α β) = a2b(α) a2b(β)
+a2b(\α -> β) = elim(α, a2b(β))
+a2b(α) = <α>
+```
+
+Since lambda terms occuring in Strategy A are closed, no embedded variables `<α>` remain.
+
+##### Translation of Strategy B terms to Strategy A terms
+
+```
+b2a(u) = \x -> x b2a(s) b2a(k)
+b2a(k) = \a -> \b -> a
+b2a(s) = \a -> \b -> \c -> a c (b c)
+b2a(α β) = b2a(α) b2a(β)
+```
+
+##### Recudction in Strategy A implies reduction in Strategy B
+
+Structural induction on beta-reduction `(\α -> γ) β ⟶ γ[β/α]`:
+
+```
+Case: γ does not contain <α>
+
+a2b((\α -> γ) β) =
+a2b(\α -> γ) a2b(β) =
+elim(α, a2b(γ)) a2b(β) =
+k a2b(γ) a2b(β) ⟶
+a2b(γ) =
+a2b(γ[β/α])
+
+
+Case: γ = α
+
+a2b((\α -> α) β) =
+a2b(\α -> α) a2b(β) =
+elim(α, a2b(α)) a2b(β) =
+elim(α, <α>) a2b(β) =
+u u a2b(β) ⟶
+u s k a2b(β) ⟶
+s s k k a2b(β) ⟶
+s k (k k) a2b(β) ⟶
+k a2b(β) (k k a2b(β)) ⟶
+a2b(β) =
+a2b(α[β/α])
+
+
+Case: γ = κ δ
+
+a2b((\α -> κ δ) β) =
+a2b(\α -> κ δ) a2b(β) =
+elim(α, a2b(κ δ)) a2b(β) =
+elim(α, a2b(κ) a2b(δ)) a2b(β) =
+s elim(α, a2b(κ)) elim(α, a2b(δ)) a2b(β) ⟶
+elim(α, a2b(κ)) a2b(β) (elim(α, a2b(δ)) a2b(β)) =
+a2b(\α -> κ) a2b(β) (a2b(\α -> δ) a2b(β)) =
+a2b((\α -> κ) β) a2b((\α -> δ) β) ⟶      // induction hypothesis
+a2b(κ[β/α]) a2b(δ[β/α]) =
+a2b(κ[β/α] δ[β/α])
+```
+
+##### Recudction in Strategy B implies reduction in Strategy A
+
+Structural induction on rewrite rules:
+
+```
+Case: u α ⟶ α s k
+
+b2a(u α)   = (\x -> x b2a(s) b2a(k)) b2a(α)
+             ⟶
+b2a(α s k) = b2a(α) b2a(s) b2a(k))
+
+
+Case: k α β ⟶ α
+
+b2a(k α β) = (\a -> \b -> a) b2a(α) b2a(β)
+             ⟶
+             b2a(α)
+
+
+Case: s α β γ ⟶ α γ (β γ)
+
+b2a(s α β γ)   = (\a -> \b -> \c -> a c (b c)) b2a(α) b2a(β) b2a(γ)
+                 ⟶
+b2a(α γ (β γ)) = b2a(α) b2a(γ) (b2a(β) b2a(γ))
+
+
+```
+
+
+
+# Derived properties of Lambada
+
+- Build SKI => turing completeness
+- Build lambda-calculus
+- ADTs
+- One can observe any ADTs
 
 ```
 tt = \a \b a
