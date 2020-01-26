@@ -6,22 +6,27 @@ A turing complete language based solely on minimalism.
 
 Lambada's only syntactic category is "expressions" `Expr`, defined as follows:
 
+``` Haskell
+Expr ::= 'u'            -- "Iota"
+       | Expr Expr      -- "Application"
 ```
-Expr ::= 'u'            # "Iota"
-       | Expr Expr      # "Application"
-```
-
-> Possible extensions: non-determinism
 
 We write expressions using parentheses where necessary (assuming left-associativity).
-For example, `u u (u u)` corresponds to the following AST:
+For example, `u u (u u u)` corresponds to the following AST:
 ```
     /\
    /  \
   /    \
  /\    /\
-u  u  u  u
+u  u  /\ u
+     u  u
 ```
+
+We say a subexpression of an expression is in *head position* if it is rooted along the left-most "spine" of the expression.
+The above example has three subexpressions in head position:
+- `u`, the left-most leaf
+- `u u`, rooted at the parent of said leaf
+- The entire expression
 
 ## Abstract Semantics
 
@@ -29,35 +34,9 @@ An expressions may be *reducible* into another expression, otherwise (if irredui
 We give several equivalent definitions of expression reduction below.
 Expressions are *equal* (`=`) exactly if they reduce to the same value or reduction does not terminate for either expression.
 
-### Observability
-
-Reduction alone does not give *meaning* to expressions, especially since the language at its core is free of side-effect that one could observe.
-Instead we give meaning to an expression by observing how it *acts* on parameters, i.e. expressions it is applied to.
-For instance, if booleans `true` and `false` are defined as expressions such that
-```
-true  α β = α
-false α β = β
-```
-holds for all expressions `α` and `β`, then we may identify them through exactly this property.
-`true` and `false` may otherwise be treated as black boxes, i.e. which parameter they "select" shall be their only distinguishing feature.
-
-Generally, given an expression `■` and arity `n`, an implementation must be able to compute `⟦■⟧ₙ`, which is the `i` such that
-```
-∀ α₀, ..., αₙ :  ■ α₀ ... αₙ = αᵢ
-```
-It may assume *that* `i` exists, i.e. that only valid queries are made and `⟦■⟧ₙ` is defined.
-Examples:
-```
-⟦true⟧₂ = 0
-⟦false⟧₂ = 1
-```
-
-This limited form of observability gives implementations *maximal* freedom in both representing expressions internally and realizing reduction.
-It is up to implementations how to find `⟦■⟧ₙ`, but the following observation may help:
-- Recall that an implementation may assume that `⟦■⟧ₙ` it is supposed to answer is defined.
-- So the parameter selection property of `■` holds for *all* possible parameter expressions, so the specifics of these expressions cannot matter.
-- It should hence be possible to instead use `n` atomic dummy expressions/tokens that are outside of the defined abstract syntax.
-- These should be largely "unaffected" by the reduction process, which will terminate with one of them remaining.
+Lambada does not require implementations to report the abstract syntax of an expression ("reflection").
+We limit the degree of observability of expressions, giving implementations freedom in both representing expressions internally and realizing reduction.
+We formalize expected observability after reduction.
 
 ### Reduction
 
@@ -72,33 +51,68 @@ Translate expressons to (untyped) lambda calculus terms such that
 Reduction means finding the WHNF of the lambda calculus term through beta-reduction (no eta-reduction).
 Note that this translation and hence also reduction will only ever produce closed terms.
 
-Computing `⟦■⟧ₙ` (observability) could be achieved by applying `■` to `n` special values. The resulting WHNF will be one of these values. Note that since we may assume that `⟦■⟧ₙ` is defined, these special values will never end up as the "head" (function part) of a function application.
-
 #### Strategy B - via Term Rewriting
 
 Extend `Expr` with two new abstract expressions `s` and `k`.
 Apply the following rewrite rules to `Expr` as long as possible.
 
-```
+``` Haskell
 u α     ⟶ α s k
 k α β   ⟶ α
 s α β γ ⟶ α γ (β γ)
 ```
 
-Computing `⟦■⟧ₙ` (observability) could be achieved by applying `■` to `n` special expressions. Since we may assume that `⟦■⟧ₙ`, we can expect exactly one of these special expressions to remain once no more rewrite rules apply.
+### Observability
 
-#### Strategies A and B are equivalent
+Reduction alone does not give *meaning* to expressions, especially since the language at its core is free of side-effect that one could observe.
+Instead we give meaning to an expression by observing how it *acts* on parameters, i.e. expressions it is applied to.
+For instance, if booleans `true` and `false` are defined as expressions such that
+``` Haskell
+true  α β = α
+false α β = β
+```
+holds for all expressions `α` and `β`, then we may identify them through exactly this property.
+`true` and `false` may otherwise be treated as black boxes, i.e. which parameter they forward to head position shall be their only distinguishing feature.
+
+Generally, given an expression `■`, an implementation must be able to compute
+``` Haskell
+⟦■⟧ = argmin n
+    (i, n) ∈ S
+
+where S = { (i, n) ∈ ℕ₀ × ℕ | ∀ α₀, ..., αₙ :  ■ α₀ ... αₙ = αᵢ ... }
+```
+In other words, `⟦■⟧` determines which argument (index `i`) ends up in head position after applying at least `n` arguments.
+Note that `i` is fixed for given `■` and does not depend on `n` (more parameters will not be consumed and end up as parameters of `αᵢ`), so `min` is only relevant for `n`.
+If no such `i` and `n` exist, the imlplementation may not terminate, i.e. it is not the responsibility of an implementation to detect whether `⟦■⟧` is defined.
+Examples:
+``` Haskell
+⟦true⟧  = (0, 2)
+⟦false⟧ = (1, 2)
+```
+
+It is up to implementations how to find `⟦■⟧`, but the following observations may help:
+- Due to the universal quantification in the definition of `⟦■⟧`, the specifics of parameter expressions cannot matter.
+- Note also that due to the reduction rules, expressions cannot be "introspected" without apearing in head position; at which point `⟦■⟧` can terminate.
+- It is hence possible to instead use as arguments atomic dummy expressions/tokens that are outside of the abstract syntax defined here.
+- These should be unaffected by the reduction process, until one ends up in head position, i.e. as the left-most leaf.
+
+
+# Proofs
+
+## Strategies A and B are equivalent
 
 We give a translation scheme between terms of both strategies and show that a reduction in either strategy implies an equivalent reduction in the other strategy.
+We only focus on reduction rules at the root of expressions.
+Both reduction strategies are compositional in that they can operate on arbitrary subexressions in isolation.
 
-##### Translation of Strategy A terms to Strategy B terms
+### Translation of Strategy A terms to Strategy B terms
 
 Assume that the following cases are matched top to bottom.
 Intermediate terms of the translation are `Expr`, but with variables `α` from lambda terms, before they are eliminated.
 To distinguish them from `u`, `k` and `s` we will embed writing `<α>`.
 
-```
-elim(α, β) = k β   if β does not contain <α>
+``` Haskell
+elim(α, β) = k β    -- if β does not contain <α>
 elim(α, <α>) = u u
 elim(α, β γ) = s elim(α, β) elim(α, γ)
 
@@ -109,20 +123,20 @@ a2b(α) = <α>
 
 Since lambda terms occuring in Strategy A are closed, no embedded variables `<α>` remain.
 
-##### Translation of Strategy B terms to Strategy A terms
+### Translation of Strategy B terms to Strategy A terms
 
-```
+``` Haskell
 b2a(u) = \x -> x b2a(s) b2a(k)
 b2a(k) = \a -> \b -> a
 b2a(s) = \a -> \b -> \c -> a c (b c)
 b2a(α β) = b2a(α) b2a(β)
 ```
 
-##### Recudction in Strategy A implies reduction in Strategy B
+### Recudction in Strategy A implies reduction in Strategy B
 
 Structural induction on beta-reduction `(\α -> γ) β ⟶ γ[β/α]`:
 
-```
+``` Haskell
 Case: γ does not contain <α>
 
 a2b((\α -> γ) β) =
@@ -162,11 +176,11 @@ a2b(κ[β/α]) a2b(δ[β/α]) =
 a2b(κ[β/α] δ[β/α])
 ```
 
-##### Recudction in Strategy B implies reduction in Strategy A
+### Recudction in Strategy B implies reduction in Strategy A
 
 Structural induction on rewrite rules:
 
-```
+``` Haskell
 Case: u α ⟶ α s k
 
 b2a(u α)   = (\x -> x b2a(s) b2a(k)) b2a(α)
