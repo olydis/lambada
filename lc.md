@@ -82,7 +82,7 @@ Generally, given an expression `■`, an implementation must be able to compute
 where S = { (i, n) ∈ ℕ₀ × ℕ | ∀ α₀, ..., αₙ :  ■ α₀ ... αₙ = αᵢ ... }
 ```
 In other words, `⟦■⟧` determines which argument (index `i`) ends up in head position after applying at least `n` arguments.
-Note that `i` is fixed for given `■` and does not depend on `n` (more parameters will not be consumed and end up as parameters of `αᵢ`), so `min` is only relevant for `n`.
+Note that `i` is fixed for given `■` and does not depend on `n` (more parameters will not be consumed and end up as parameters of `αᵢ`), so `argmin` only minimizes `n`.
 If no such `i` and `n` exist, the imlplementation may not terminate, i.e. it is not the responsibility of an implementation to detect whether `⟦■⟧` is defined.
 Examples:
 ``` Haskell
@@ -171,7 +171,7 @@ elim(α, a2b(κ) a2b(δ)) a2b(β) =
 s elim(α, a2b(κ)) elim(α, a2b(δ)) a2b(β) ⟶
 elim(α, a2b(κ)) a2b(β) (elim(α, a2b(δ)) a2b(β)) =
 a2b(\α -> κ) a2b(β) (a2b(\α -> δ) a2b(β)) =
-a2b((\α -> κ) β) a2b((\α -> δ) β) ⟶      // induction hypothesis
+a2b((\α -> κ) β) a2b((\α -> δ) β) ⟶      -- induction hypothesis
 a2b(κ[β/α]) a2b(δ[β/α]) =
 a2b(κ[β/α] δ[β/α])
 ```
