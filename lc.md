@@ -125,12 +125,67 @@ In this section we summarize observations about the system defined above.
 
 The notation introduced earlier (example: `u u (u u u)`) is an obvious candidate of a human-readable syntax of expressions.
 However, it is not very succinct since multiple copies of identical subexpressions need to be written out.
-To prevent this, we extend this notation with a "let" syntax that allows binding expressions to names, like in Haskell or OCaml.
+To prevent this, we extend this notation with a "let" syntax that allows binding names to expressions, like in Haskell or OCaml.
+In case of name collisions, inner definitions hide outer ones.
 The example expression could be written as
 ``` Haskell
 let i = u u in
 i (i u)
 ```
+
+We will use this notation from now on.
+
+
+However, since Lambada is aimed towards ease of implementation, simplicity and minimalism, it will not be our concrete syntax (which will need to be consumed by an implementation).
+Parsing the notation would require a somewhat sophisticated tokenizer, raises subtle questions about legality of names (are `let` and `in` allowed?) and requires a parser and grammar that is not quite as trivial as we would like (e.g. due to parentheses).
+
+Instead, we linearize the notation (allowing for a parser with minimal state) and allow any *non-empty* sequences of *non-whitespace* Unicode characters as names.
+The only predefined name is "u", which represents expression `u`.
+
+### Grammar
+
+```
+Terminator ::= ' '          -- space   0x20
+Define ::= '\n'             -- newline 0x10
+Discard ::= [^\S \n]*       -- all other whitespace
+Name ::= \S+
+Expression ::= Name Terminator
+             | Expression Expression Terminator
+             | Expression Name Define Expression
+```
+
+The example expression then becomes:
+```
+u u  i
+i i u
+```
+Note the trailing whitespace in the second line, which however can be inferred to have length three given that `u`, `i u` and the entire expression need to be terminated.
+
+### Unparsing
+
+We'll use our notation to represent ASTs.
+If one truly has a plain AST (i.e. with no aliases for subexpressions) as input, one can assign arbitrary aliases to subexpressions that appear in the expression multiple times.
+We use `+` for string concatenation in the following definition.
+
+``` Haskell
+unparse(name) = name + ' '
+unparse(expr expr) = unparse(expr) + unparse(expr) + ' '
+unparse(let n = e in expr) = unparse(e) unparse(n) + '\n' + unparse(expr)
+```
+
+### Parsing
+
+Parsing into an AST can be implemented using a stack of expressions as well as a stack of mappings from names to expressions.
+The latter is required (rather than being a single mapping) since let bindings are scoped.
+The stack of expressions starts out empty, the stack of mappings starts out mapping "u" to expression `u`.
+
+The parser can now greedily consume tokens and react as follows:
+- Name Terminator: Lookup the name using the current mapping (top of stack). Push the resulting expression onto the stack of expressions and push the current mapping onto the stack of mappings (i.e. duplicate).
+- Terminator: Pop the two top-most expressions from the stack of expressions and push back their application. Also pop one element off the stack of mappings.
+- Name Define: Pop one element off the stack of mappings. Pop one element off the stack of expressions, and update the current mapping (top of stack) to *also* map the name (just consumed) to the expression (just popped off).
+
+For a valid stream of tokens, all name lookups will succeed and after consuming all tokens, the stack of expressions will contain exactly one expression.
+This expression is the result.
 
 # Proofs
 
