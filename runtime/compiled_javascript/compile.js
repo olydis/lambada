@@ -327,15 +327,21 @@ function splitSources(sources) {
 // `);
 // process.exit(0);
 
+console.log(`let native = '';`);
 
 for (const file of preludeFiles) {
   for (const part of splitSources(file)) {
     console.log(`
-console.log(toString((name) => env['pipe'](name)(fromString(${JSON.stringify(part)}))));
-`);
+native += toString((name) => env['pipe'](name)(fromString(${JSON.stringify(part)})));
+process.stderr.write('.');
+`.trim() + '\n');
     // console.error(part);
   }
 }
+
+console.log(`require('fs').writeFileSync(
+  __dirname + "/../../www/library/prelude.native.txt",
+  native + '\\n');`);
 
 process.exit(0);
 
