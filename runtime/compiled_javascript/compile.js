@@ -28,12 +28,8 @@ class StringReader {
     return this.str.slice(start, this.index);
   }
 
-  readWhitespace() {
-    return this.readWhile(ch => /^\s$/.test(ch));
-  }
-
   readToken() {
-    return this.readWhile(ch => /^[a-zA-Z0-9_]$/.test(ch));
+    return this.readWhile(ch => /^[^ \n]$/.test(ch));
   }
 
   readChar(expected) {
@@ -259,44 +255,40 @@ const printExpr = (name, strict, e) =>
         e
       )})`;
 const reader = new StringReader(prelude);
-reader.readWhitespace();
+const expressionStack = [];
 while (reader.charsLeft > 0) {
   // begin parse definition
   const name = reader.readToken();
-  const expressionStack = [];
-  while (true) {
-    reader.readWhitespace();
-
-    // apply
-    if (reader.readChar(".")) {
-      if (expressionStack.length < 2) break;
-      const b = expressionStack.pop();
-      const a = expressionStack.pop();
-      expressionStack.push([a, b]);
-      continue;
-    }
-
-    expressionStack.push(reader.readToken());
+  const term = reader.readChar(' ');
+  const def = reader.readChar('\n');
+  if (name === '') {
+    const b = expressionStack.pop();
+    const a = expressionStack.pop();
+    expressionStack.push([a, b]);
   }
-  console.log(
-    `env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(
-      name,
-      false,
-      expressionStack.pop()
-    )})(env) }, env);`
-  );
-  // console.log(`env = Object.assign({ ${JSON.stringify(name)}: emit(env, ${JSON.stringify(expressionStack.pop())}) }, env);`);
-  // end parse definition
-  if (name in hacks)
-    console.log(
-      `env[${JSON.stringify(name)}] = (self => lazy${
-        DEBUG ? `(${JSON.stringify(name)})` : ""
-      }(() => (${hacks[name](
-        DEBUG ? JSON.stringify("H-" + name) : ""
-      )})))(env[${JSON.stringify(name)}]);`
-    );
-
-  reader.readWhitespace();
+  else {
+    if (term) {
+      expressionStack.push(name);
+    } else {
+      console.log(
+        `env = Object.assign({ ${JSON.stringify(name)}: (env => ${printExpr(
+          name,
+          false,
+          expressionStack.pop()
+        )})(env) }, env);`
+      );
+      // console.log(`env = Object.assign({ ${JSON.stringify(name)}: emit(env, ${JSON.stringify(expressionStack.pop())}) }, env);`);
+      // end parse definition
+      if (name in hacks)
+        console.log(
+          `env[${JSON.stringify(name)}] = (self => lazy${
+            DEBUG ? `(${JSON.stringify(name)})` : ""
+          }(() => (${hacks[name](
+            DEBUG ? JSON.stringify("H-" + name) : ""
+          )})))(env[${JSON.stringify(name)}]);`
+        );
+    }
+  }
 }
 
 function splitSources(sources) {

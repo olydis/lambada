@@ -128,8 +128,7 @@ The only predefined name is "u", which represents expression `u`.
 
 ``` Haskell
 Terminator ::= ' '          -- space   0x20
-Define ::= '\n'             -- newline 0x10
-Discard ::= [^\S \n]*       -- all other whitespace
+Define ::= '\n'             -- newline 0x0A
 Name ::= \S+
 Expression ::= Name Terminator
              | Expression Expression Terminator

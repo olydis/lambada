@@ -65,8 +65,7 @@ The only predefined (but not reserved!) name is "u", which represents expression
 
 ``` Haskell
 Terminator ::= ' '          -- space   0x20
-Define ::= '\n'             -- newline 0x10
-Discard ::= [^\S \n]*       -- all other whitespace
+Define ::= '\n'             -- newline 0x0A
 Name ::= \S+
 Expression ::= α:Name Terminator                       -- Case: α (name)
              | β:Expression γ:Expression Terminator    -- Case: β γ (application)
