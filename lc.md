@@ -82,44 +82,25 @@ holds for all expressions `α` and `β`, then we may identify them through exact
 Generally, given an expression `■`, an implementation must be able to compute
 ``` Haskell
 ⟦■⟧ = argmin n
-    (i, n) ∈ S
+    (n, i, a) ∈ S
 
-where S = { (i, n) ∈ ℕ₀ × ℕ | ∀ α₀, ..., αₙ :  ■ α₀ ... αₙ = αᵢ ... }
+where S = { (n, i, a) ∈ ℕ × ℕ₀ × ℕ₀
+          | ∀ α₀, ..., αₙ :
+            ∃ β₁, ..., βₐ :
+            ■ α₀ ... αₙ = αᵢ β₁ ... βₐ }
 ```
-In other words, `⟦■⟧` determines which argument (index `i`) ends up in head position after applying at least `n` arguments.
-Note that `i` is fixed for given `■` and does not depend on `n` (more parameters will not be consumed and end up as parameters of `αᵢ`), so `argmin` only minimizes `n`.
-If no such `i` and `n` exist, the imlplementation may not terminate, i.e. it is not the responsibility of an implementation to detect whether `⟦■⟧` is defined.
+In other words, `⟦■⟧` determines which argument (index `i`) ends up in head position with `a` arguments after applying at least `n` arguments.
+Note that `i` is fixed for given `■` and does not depend on `n`:
+More parameters will not be consumed and end up as parameters of `αᵢ`, increasing `a`.
+Therefore `argmin` only minimizes `n`.
+If no such triple exists, the imlplementation may not terminate, i.e. it is not the responsibility of an implementation to detect whether `⟦■⟧` is defined.
 Examples:
 ``` Haskell
-⟦true⟧  = (0, 2)
-⟦false⟧ = (1, 2)
+⟦true⟧  = (2, 0, 0)
+⟦false⟧ = (2, 1, 0)
+⟦u⟧ = (1, 0, 2)
+⟦u u⟧ = (1, 0, 0)
 ```
-
-
-# Implementation Hints
-
-In this section we summarize observations about the system defined above.
-
-## Implementing `⟦ ⟧`
-
-- Due to the universal quantification in the definition of `⟦■⟧`, the specifics of parameter expressions cannot matter.
-- Note also that due to the reduction rules, expressions cannot be "introspected" without apearing in head position; at which point `⟦■⟧` can terminate.
-- It is hence possible to instead use as arguments atomic dummy expressions/tokens that are outside of the abstract syntax defined here.
-- These should be unaffected by the reduction process, until one ends up in head position, i.e. as the left-most leaf.
-
-## Reduction
-
-### Sharing
-
-- Structurally identical expressions will have the same reduction behavior, i.e. are also observably identical (referential transparency).
-- It is hence valid to let structurally identical expressions *share* the same internal represenation, effectively reducing them simultaneously.
-
-### WHNF
-
-- Regardless of strategy, reduction can lead to expressions being discarded or duplicated.
-- In the former case, it would have been a waste to perform reduction on the discarded expression. In the latter case, no additional work is induced thanks to sharing.
-- Therefore, the most efficient reduction strategy is to always reduce expressions that are in head position (rather than expressions in "argument position").
-
 
 ## Concrete Syntax
 
@@ -144,7 +125,7 @@ The only predefined name is "u", which represents expression `u`.
 
 ### Grammar
 
-```
+``` Haskell
 Terminator ::= ' '          -- space   0x20
 Define ::= '\n'             -- newline 0x10
 Discard ::= [^\S \n]*       -- all other whitespace
@@ -186,6 +167,33 @@ The parser can now greedily consume tokens and react as follows:
 
 For a valid stream of tokens, all name lookups will succeed and after consuming all tokens, the stack of expressions will contain exactly one expression.
 This expression is the result.
+
+
+
+# Implementation Hints
+
+In this section we summarize observations about the system defined above.
+
+## Implementing `⟦ ⟧`
+
+- Due to the universal quantification in the definition of `⟦■⟧`, the specifics of parameter expressions cannot matter.
+- Note also that due to the reduction rules, expressions cannot be "introspected" without apearing in head position; at which point `⟦■⟧` can terminate.
+- It is hence possible to instead use as arguments atomic dummy expressions/tokens that are outside of the abstract syntax defined here.
+- These should be unaffected by the reduction process, until one ends up in head position, i.e. as the left-most leaf.
+
+## Reduction
+
+### Sharing
+
+- Structurally identical expressions will have the same reduction behavior, i.e. are also observably identical (referential transparency).
+- It is hence valid to let structurally identical expressions *share* the same internal represenation, effectively reducing them simultaneously.
+
+### WHNF
+
+- Regardless of strategy, reduction can lead to expressions being discarded or duplicated.
+- In the former case, it would have been a waste to perform reduction on the discarded expression. In the latter case, no additional work is induced thanks to sharing.
+- Therefore, the most efficient reduction strategy is to always reduce expressions that are in head position (rather than expressions in "argument position").
+
 
 # Proofs
 
@@ -294,7 +302,23 @@ b2a(α γ (β γ)) = b2a(α) b2a(γ) (b2a(β) b2a(γ))
 
 ```
 
+## Lambada is Turing Complete
 
+One can recover combinators S, K and I as follows:
+``` Haskell
+let i = u u in
+let k = u (u i) in
+let s = u k in
+...
+```
+Further common combinators as follows:
+``` Haskell
+let b = s (k s) k in
+let c = s (b b s) (k k) in
+let m = s i i in
+let y = b m (c b m) in
+...
+```
 
 # Derived properties of Lambada
 
