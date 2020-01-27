@@ -180,14 +180,8 @@ env = Object.assign({ "snd": (env => lazy(() => env["c"]()(env["i"])(lazy(() => 
 env = Object.assign({ "changeFst": (env => lazy(() => env["c"]()(env["b"])(lazy(() => env["b"]()(env["Pair"])))))(env) }, env);
 env = Object.assign({ "changeSnd": (env => lazy(() => env["c"]()(env["b"])(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["Pair"])))))))(env) }, env);
 env = Object.assign({ "ListEmpty": (env => env["k"])(env) }, env);
-env["ListEmpty"] = (self => lazy(() => (fromList([])())))(env["ListEmpty"]);
 env = Object.assign({ "ListEmpty_Dispatch": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(lazy(() => env["b"]()(env["k"])(env["k"])))))(env) }, env);
 env = Object.assign({ "ListCons": (env => lazy(() => env["b"]()(lazy(() => env["b"]()(env["k"])))(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(env) }, env);
-env["ListCons"] = (self => lazy(() => (h => t => {
-    const tStrict = t();
-    if ('List' in tStrict) return fromList([h].concat(tStrict.List))()
-    return self()(h)(t);
-  })))(env["ListCons"]);
 env = Object.assign({ "ListCons_Dispatch": (env => lazy(() => env["c"]()(lazy(() => env["b"]()(env["c"])(lazy(() => env["c"]()(env["i"])))))))(env) }, env);
 env = Object.assign({ "listIsEmpty": (env => lazy(() => env["c"]()(lazy(() => env["c"]()(env["i"])(env["True"])))(lazy(() => env["k"]()(lazy(() => env["k"]()(env["False"])))))))(env) }, env);
 env = Object.assign({ "listIsNotEmpty": (env => lazy(() => env["b"]()(env["not"])(env["listIsEmpty"])))(env) }, env);
@@ -197,11 +191,6 @@ env = Object.assign({ "foldl": (env => lazy(() => env["y"]()(lazy(() => env["b"]
 env = Object.assign({ "foldr": (env => lazy(() => env["y"]()(lazy(() => env["b"]()(lazy(() => env["c"]()(lazy(() => env["b"]()(env["s"])(lazy(() => env["b"]()(env["b"])))))))(lazy(() => env["b"]()(lazy(() => env["b"]()(lazy(() => env["b"]()(env["c"])))))(lazy(() => env["b"]()(lazy(() => env["b"]()(lazy(() => env["s"]()(env["b"])))))(lazy(() => env["b"]()(lazy(() => env["b"]()(env["c"])))(env["c"])))))))))))(env) }, env);
 env = Object.assign({ "reverseBag": (env => lazy(() => env["y"]()(lazy(() => env["b"]()(lazy(() => env["c"]()(env["s"])))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(lazy(() => env["b"]()(env["b"])(env["c"])))))(lazy(() => env["c"]()(env["ListCons"])))))))))(env) }, env);
 env = Object.assign({ "reverse": (env => lazy(() => env["c"]()(env["reverseBag"])(env["ListEmpty"])))(env) }, env);
-env["reverse"] = (self => lazy(() => (l => {
-    const lStrict = l();
-    if ('List' in lStrict) return fromList(lStrict.List.slice().reverse())()
-    return self()(l);
-  })))(env["reverse"]);
 env = Object.assign({ "unfold": (env => lazy(() => env["y"]()(lazy(() => env["b"]()(lazy(() => env["s"]()(lazy(() => env["b"]()(env["b"])(env["ListCons"])))))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["c"])(lazy(() => env["b"]()(lazy(() => env["b"]()(env["s"])))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["b"])))(lazy(() => env["c"]()(env["i"])))))))))(env["i"])))))))(env) }, env);
 env = Object.assign({ "repeat": (env => lazy(() => env["c"]()(env["unfold"])(env["i"])))(env) }, env);
 env = Object.assign({ "listConcat": (env => lazy(() => env["y"]()(lazy(() => env["b"]()(lazy(() => env["c"]()(env["s"])))(lazy(() => env["b"]()(lazy(() => env["b"]()(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["ListCons"])))))))(env["c"])))))))(env) }, env);
@@ -560,34 +549,1046 @@ env = Object.assign({ "pipe": (env => lazy(() => env["c"]()(lazy(() => env["b"](
 env = Object.assign({ "fullDebug": (env => lazy(() => env["b"]()(env["strConss"])(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["s"]()(lazy(() => env["b"]()(env["ListCons"])(env["token_Run"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["s"]()(lazy(() => env["b"]()(env["ListCons"])(env["syntax_Run"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(env["newLine"])))(lazy(() => env["b"]()(lazy(() => env["ListCons"]()(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["one"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["three"])(lazy(() => env["_qadd"]()(env["Zero"])(env["one"])))))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["two"])(lazy(() => env["_qadd"]()(env["two"])(env["three"])))))(lazy(() => env["ListCons"]()(lazy(() => env["_qadd"]()(env["Zero"])(lazy(() => env["_qadd"]()(env["Zero"])(env["two"])))))(env["ListEmpty"])))))))))))))))))))))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["ListCons"])(env["native_Run"])))(env["ListEmpty"])))))))))))))))))))))))(env) }, env);
 env = Object.assign({ "run2": (env => lazy(() => env["b"]()(lazy(() => env["c"]()(lazy(() => env["b"]()(env["maybeMap"])(lazy(() => env["c"]()(lazy(() => env["b"]()(env["maybeBind"])(env["token_Process"])))(env["syntax_Process"])))))))(lazy(() => env["b"]()(lazy(() => env["b"]()(env["fst"])))(lazy(() => env["c"]()(lazy(() => env["b"]()(env["b"])(env["nativeToObj"])))(lazy(() => env["b"]()(env["_syntaxToNative"])(env["head"])))))))))(env) }, env);
 
-// Code gen end
-
-env['inf'] = (name) => env['y'](name)(env['Succ']);
-
-env['s']('TOP')(env['k'])(env['k'])(env['k'])
-// process.exit(0);
-
-console.log(toNat(fromNat(42n)));
-console.log(toNat((name) => env['add'](name)(env['three'])(env['three'])));
-console.log(toNat((name) => env['mul'](name)(env['three'])(env['three'])));
-console.log(toNat((name) => env['pow'](name)(env['three'])(env['three'])));
-console.log(toNat((name) => env['pow'](name)(env['Zero'])(env['Zero'])));
-console.log(toString((name) => env['strCons'](name)(env['newLine'])(env['empty'])));
-
-// console.log(toBool((name) => env['isLT'](name)(env['inf'])(env['three'])));
-// console.log(toBool((name) => env['isLT'](name)(env['three'])(env['inf'])));
-
-// console.log(toList(env['ListEmpty']));
-// console.log(JSON.stringify(toString(env['newLine'])));
-// console.log(toString(fromString("Hello World")));
-// console.log(toString((name) => env['fullDebug'](name)(fromString("u u"))));
+console.log(toString((name) => env['pipe'](name)(fromString("i = u u"))));
 
 
-// token_Run = s strFromMaybe token_String_list (token_Process s)
+console.log(toString((name) => env['pipe'](name)(fromString("k = u (u i)     "))));
 
-console.log(toString(fromString("pow = \\n \\m m one (\\dm mul n (pow n dm))")));
-console.log(toString((name) => env['fullDebug'](name)(fromString("u u"))));
-console.log(toString((name) => env['fullDebug'](name)(fromString("\\n \\m m"))));
-// console.log(toString((name) => env['token_Run'](name)(fromString("pow = \\n \\m m one (\\dm mul n (pow n dm))"))));
-console.log(toString((name) => env['fullDebug'](name)(fromString("\\n \\m m one (\\dm mul n (pow n dm))"))));
+
+console.log(toString((name) => env['pipe'](name)(fromString("s = u k"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("b = s (k s) k"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("c = s (s (k s) (s (k k) s)) (k k)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("m = s i i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("y = b m (c b (s i i))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("i = \\x x"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("k = \\a \\b a"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("s = \\a \\b \\c a c (b c)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("b = \\a \\b \\c a (b c)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("c = \\a \\b \\c a c b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("m = \\x x x"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("y = \\f m (\\x f (x x))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("Bool = True | False"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("if = i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("not = \\b b False True"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("lAnd = \\a \\b a b False"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("lOr = \\a \\b a True b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("implies = \\a \\b a b True"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("xor = \\a \\b if a (not b) b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eq = \\a \\b not $ xor a b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("Nat = Zero | Succ n"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("one = Succ Zero"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("two = Succ one"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("three = Succ two"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("pred = \\n n Zero i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isZero = \\n n True (k False)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("add = \\n \\m m n (\\dm add (Succ n) dm)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("sub = \\a \\b b a (\\db sub (pred a) db)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mul = \\n \\m m Zero (\\dm add n (mul n dm))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("pow = \\n \\m m one (\\dm mul n (pow n dm))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_qadd = \\a \\n add a (mul (Succ three) n)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isEQ = \\a \\b lAnd (isZero $ sub a b) (isZero $ sub b a)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isLTE = \\a \\b isZero $ sub a b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isGTE = \\a \\b isLTE b a"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isLT = \\a \\b not $ isGTE a b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isGT = \\a \\b not $ isLTE a b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("min = \\a \\b if(isLT a b) a b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("max = \\a \\b if(isGT a b) a b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("diff = \\a \\b if (isLT a b) (sub b a) (sub a b)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mod = \\a \\b if(isLT a b) a (mod (sub a b) b)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("div = \\a \\b if(isLT a b) Zero (Succ (div (sub a b) b))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("Pair = Pair a b"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("fst = \\pair pair (\\a \\b a)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("snd = \\pair pair (\\a \\b b)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("changeFst = \\pair \\f pair (\\a \\b Pair (f a) b)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("changeSnd = \\pair \\f pair (\\a \\b Pair a (f b))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("List = ListEmpty | ListCons head tail"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listIsEmpty = \\list list True (\\head \\tail False)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listIsNotEmpty = b not listIsEmpty"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("head = \\list list i (\\head \\tail head)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("tail = \\list list i (\\head \\tail tail)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("foldl = \\l \\x \\f l\n            x\n            (\\head \\tail foldl tail (f x head) f)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("foldr = \\l \\x \\f l\n            x\n            (\\head \\tail f (foldr tail x f) head)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("reverseBag = \\a \\b a\n            b\n            (\\head \\tail reverseBag tail (ListCons head b))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("reverse = \\l reverseBag l ListEmpty"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("unfold = \\x \\f ListCons x (unfold (f x) f)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("repeat = \\elem unfold elem i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listConcat = \\l \\k l k $ \\h \\t ListCons h $ listConcat t k\n    "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listReturn = \\x [x]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listAddBack = \\l \\x listConcat l [x]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cfold = \\l \\x \\f ListCons x (l ListEmpty (\\head \\tail cfold tail (f x head) f))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("take = \\n \\l\n    l\n        []\n        (\\head \\tail n \n            []\n            (\\dn ListCons head (take dn tail))\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("takeWhile = \\p \\l \n    l\n        []\n        (\\head \\tail\n            if(not (p head))\n                []\n                (ListCons head $ takeWhile p tail)\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("replicate = \\n \\x take n $ repeat x"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listBind = \\f \\l foldl l [] (\\a \\b listConcat a (f b))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("map = \\f \\l l [] $ \\h \\t ListCons (f h) $ map f t"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("filter = \\f \\l l [] $ \\head \\tail if (f head) (ListCons head) i $ filter f tail"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("drop = \\n \\l l [] $ \\head \\tail n l (\\n drop n tail)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("dropWhile = \\p \\l\n    l\n        []\n        (\\head \\tail \n            if(not (p head))\n                l\n                (dropWhile p tail)\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("any = \\f \\l not $ listIsEmpty $ filter f l"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("all = \\f \\l not $ any (b not f) l"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("or = any i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("and = all i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("length = \\l foldl l Zero (b k Succ)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("zipWith = \\op \\l1 \\l2 \n    l1\n        ListEmpty\n        (\\h1 \\t1\n            l2\n                ListEmpty\n                (\\h2 \\t2\n                    ListCons \n                        (op h1 h2)\n                        (zipWith op t1 t2) \n                )\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("zip = zipWith Pair"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listZipLonger = \\l1 \\l2 \\pad \\op \n    l1\n        (map (\\item2 op pad item2) l2)\n        (\\h1 \\t1\n            l2\n                (map (\\item1 op item1 pad) l1)\n                (\\h2 \\t2\n                    ListCons \n                        (op h1 h2)\n                        (listZipLonger t1 t2 pad op) \n                )\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listEquals = \\eq \\l1 \\l2 lAnd (isEQ (length l1) (length l2)) (and $ zipWith eq l1 l2)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listMerge = \\lt \\l1 \\l2\n    l1\n        l2\n        (\\h1 \\t1\n            l2\n                l1\n                (\\h2 \\t2\n                    if (l1 h1 h2)\n                        (ListCons h1 $ listMerge lt t1 l2)\n                        (ListCons h2 $ listMerge lt l1 h2)\n                )\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listSort = y(\\sort \\lt \\l if(isGT (length l) one) ((\\mid listMerge lt (sort lt (take mid l))  (sort lt (drop mid l))) (div (length l) two)) l)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("intSort = listSort isLT"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listElementAt = \\l \\n head $ drop n l"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listStartsWith = \\eq \\l1 \\l2 listEquals eq (take (length l2) l1) l2"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listJoin = \\lists \\sepa lists\n    ListEmpty \n    (\\head \\tail foldl tail head (\\cur \\new listConcat (listConcat cur sepa) new))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strIsEmpty = i listIsEmpty"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strIsNotEmpty = i b not strIsEmpty"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strEmpty = i ListEmpty"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strCons = i listConcat"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strStartsWith = i listStartsWith isEQ"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strJoin = \\strs \\sepa strs \"\" $ \\head \\tail foldl tail head (\\cur \\new strCons (strCons cur sepa) new)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strConss = \\strs strs \"\" $ \\head \\tail foldl tail head strCons"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strEquals = listEquals isEQ"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("Maybe = Just x | Nothing"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeReturn = Just"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeNothing = Nothing"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeHasValue = Just_Dispatch (k True) False"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeGetValue = Just_Dispatch i i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeBind = \\m \\f m f Nothing"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeMap = \\m \\f m (b Just f) Nothing"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeAlternative = \\m \\a m (k m) a"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("maybeTryGetValue = \\m \\a m i a"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_listIndexOfPred = \\l \\f \\offset l Nothing (\\head \\tail if(f head) (Just offset) (_listIndexOfPred tail f (Succ offset)))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listIndexOfPred = \\l \\f _listIndexOfPred l f 0"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listIndexOf = \\l \\eq \\x listIndexOfPred l (eq x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_4 = Succ three"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_16 = mul _4 _4"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_32 = mul two _16"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_48 = mul three _16"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_10 = add two (add _4 _4)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("xstrFromNat = y(\\temp \\acc \\n if(isZero n) acc (temp (ListCons (add _48 (mod n _10)) acc) (div n _10)))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strFromN = \\n if(isZero n) [_48] (xstrFromNat strEmpty n)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strFromNs = listBind (\\n strCons (strFromN n) [_32])"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strToN = \\str foldl str Zero (\\i \\c add (mul i _10) (sub c _48))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strFromB = \\b if(b) \"True\" \"False\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strFromS = \\s strConss [[96], s, [96]]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strFromPair = \\fa \\fb \\p strConss [\"(\", fa (fst p), \" ; \", fb (snd p), \")\"]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("LabeledTree = LabeledVertex label children"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("LabeledBinTree = LabeledBinLeaf label | LabeledBinVertex label left right"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("LabeledOrderedBinTree = LabeledOrderedBinLeaf label | LabeledOrderedBinVertex label left right lt"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("RBTree = RBTreeLeaf | RBTreeNodeRed label left right lt | RBTreeNodeBlack label left right lt"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nats0 = unfold Zero Succ"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nats = unfold one Succ"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("byteVals = take 256 nats0"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("toBinSeq = \\n map (c mod 2) $ takeWhile (b not isZero) (unfold n (c div 2))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("fromBinSeq = \\l foldl (zipWith (\\a \\b mul a (pow 2 b)) l nats0) 0 add"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nxor = \\a \\b fromBinSeq (listZipLonger (toBinSeq a) (toBinSeq b) 0 (\\x \\y mod (add x y) 2))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isUpperCaseLetter = \\c lAnd (isGT c 64) (isLT c 91)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isLowerCaseLetter = \\c lOr (lAnd (isGT c 96) (isLT c 123)) (isEQ c 95)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isAlpha = \\c lOr (isUpperCaseLetter c) (isLowerCaseLetter c)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("alpha = filter isAlpha byteVals"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isNum = \\c lAnd (isGT c 47) (isLT c 58)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("num = filter isNum byteVals"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isAlphaNum = \\c lOr (isAlpha c) (isNum c)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isWhiteSpace = \\c isLT c 34"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("whiteSpace = filter isWhiteSpace byteVals"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("toUpperCaseLetter = \\c if(isLowerCaseLetter c) (add c 32) c"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("toLowerCaseLetter = \\c if(isUpperCaseLetter c) (sub c 32) c"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("toUpperCaseString = map toUpperCaseLetter"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("toLowerCaseString = map toLowerCaseLetter"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("halt = \\x (if x halt i) x"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("fak = \\n foldl (take n nats) 1 mul"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_nextCandids = \\prime \\candids (filter (\\n (not (isZero (mod n prime)))) candids)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_primes = \\candids (\\newPrime ListCons newPrime (_primes (_nextCandids newPrime candids))) (head candids)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("primes = _primes (tail nats)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("fibs = ListCons 1 $ ListCons 1 $ zipWith add fibs (tail fibs)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listCutAt = \\l \\f l (Pair [] l) $ \\h \\t if(f h) (Pair [] l) (changeFst (listCutAt t f) (ListCons h))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strFromSS = \\ss foldl ss strEmpty (\\s \\x strCons s (strCons x [10]))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("xlistSplitAt = \\l \\f unfold (listCutAt l (k True)) (\\p changeSnd (listCutAt (snd p) f) tail)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listSplitAt = \\l \\f listBind (\\x [snd x]) (listCutAt (tail (xlistSplitAt l f)) (\\x listIsEmpty (snd x)))\n "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listContains = \\list \\elem \\eq any (\\x eq elem x) list"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strContains = \\list \\elem listContains list elem isEQ"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listRepeat = \\n \\list listBind i (take n (repeat list))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strBurst = map (\\c [c])"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strTrim = \\str reverse $ dropWhile isWhiteSpace $ reverse $ dropWhile isWhiteSpace str"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("strFromMaybe = \\formatter \\m m (\\x strCons \"Just \" (formatter x)) \"Nothing\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("ParseResult = ParseResultFail | ParseResult remaining item"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseReturn = \\x (\\input ParseResult input x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseFail = \\input ParseResultFail"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseOperation = \\conv \\res res ParseResultFail (\\remaining \\item ParseResult remaining (conv item))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseBindOperation = \\p \\conv (\\string parseOperation conv (p string))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parsePipe = \\p1 \\cp2 (\\input (p1 input) ParseResultFail (\\remaining \\item cp2 item remaining))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseBind = \\compose \\p1 \\p2 (\\input (p1 input) ParseResultFail (\\remaining \\item parseOperation (compose item) (p2 remaining)))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseBindDiscard = parseBind k"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseBindOverride = parseBind (k i)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseBindPair = parseBind Pair"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseCharIf = \\cond (\\string if (lAnd (not (listIsEmpty string)) (cond (head string))) (parseReturn (head string) (tail string)) (parseFail string))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseCharIf = \\cond (\\string string (parseFail string) $ \\head \\tail if (cond head) (parseReturn head tail) (parseFail string))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseCharX = \\set parseCharIf (\\c listContains set c isEQ)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseChar = \\c parseCharIf (isEQ c)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseSingle = parseCharIf (k True)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseString = \\str foldl (map parseChar str) (parseReturn strEmpty) (parseBind listAddBack)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseUntil = \\cond \\str (\\p parseReturn (fst p) (snd p)) (listCutAt str cond)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseWhile = \\cond parseUntil (b not cond)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseWhileMinOne = \\cond \\str (\\res if(listIsEmpty (ParseResult_Dispatch (\\remaining \\item item) \"\" res)) (parseFail str) res) (parseWhile cond str)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseOption = \\p1 \\p2 (\\string (p1 string) (p2 string) ParseResult)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseOptions = \\ps (\\string ps ParseResultFail (\\head \\tail (head string) (parseOptions tail string) ParseResult))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseWhitespace = parseWhile isWhiteSpace"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseWithWhitespace = \\p parseBindDiscard (parseBindOverride parseWhitespace p) parseWhitespace"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseToken = parseBind ListCons (parseCharIf isAlpha) (parseWhile isAlphaNum) "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parsenumber = parseBindOperation (parseWhileMinOne isNum) strToN"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseAccept = \\restFilter \\res res Nothing (\\remaining \\item if(restFilter remaining) (Just item) Nothing)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseAcceptAll = parseAccept (k True)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseAcceptFullyConsumed = parseAccept listIsEmpty"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("parseWhilesuccessful = \n    \\parser \\s \n        (parser s)\n            (ParseResult s ListEmpty)\n            (\\remaining \\item \n                (parseWhilesuccessful parser remaining)\n                ParseResultFail \n                (\\rremaining \\ritems ParseResult rremaining (ListCons item ritems))\n            ) "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapCreate = \\eq Pair eq ListEmpty"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapGetAll = \\map \\key filter (\\x fst map key (fst x)) (snd map)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapHasKey = \\map \\key any (k True) (mapGetAll map key)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapCount = b length snd"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapadd = \\map \\key \\value changeSnd map (ListCons (Pair key value))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapRemove = \\map \\key changeSnd map (filter (\\elem not (fst map key (fst elem))))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapSet = \\map \\key \\value mapadd (mapRemove map key) key value"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("mapGet = \\map \\key snd (head (mapGetAll map key))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("idfCreate = mapCreate"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("idfHandle = \\idf \\x if(mapHasKey idf x) (Pair idf (mapGet idf x)) ((\\id Pair (mapadd idf x id) id) (mapCount idf))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("idfHandleX = \\idf \\xs foldl xs (Pair idf ListEmpty) (\\pair \\x (\\res Pair (fst res) (listAddBack (snd pair) (snd res))) (idfHandle (fst pair) x))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("idfCount = mapCount"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listDistinct = \\l \\eq snd (foldl \n    l \n    (Pair (idfCreate eq) ListEmpty) \n    (\\pair \\x pair (\\pf \\ps \\res Pair (fst res) (if(isEQ (snd res) (idfCount pf)) (listAddBack ps x) ps)) (idfHandle (fst pair) x)))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("newLine = [10]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("empty = [32]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("gDrawL = \\w \\y \\f listBind (\\x (f x y)) (take w nats0)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("gDraw = \\w \\h \\f listBind (\\y listConcat (gDrawL w y f) newLine) (take h nats0)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("gCanvas = k (k empty)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("gOverlay = \\sel \\col \\canvas \\x \\y if (sel x y) [col] (canvas x y)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("gPixel = \\x \\y \\col gOverlay (\\xx \\yy lAnd (isEQ xx x) (isEQ yy y)) col"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("gCircle = \\x \\y \\s \\col gOverlay (\\xx \\yy isGT (pow s 2) (add (pow (diff xx x) 2) (pow (diff yy y) 2))) col    "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("beanEmpty = k Nothing"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("beanSet = \\mapping \\s \\x (\\query if(strEquals s query) (Just x) (mapping query))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("beanTryGet = \\mapping \\query mapping query"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("beanGet = \\mapping \\query maybeGetValue (mapping query)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("beanHas = \\mapping \\query maybeHasValue (mapping query)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqEmpty = Pair 0 i"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqLength = fst"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqGet = snd"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqSet = \\seq \\i \\x changeSnd seq (\\f \\ii if(isEQ i ii) x (f ii))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqaddFront = \\seq \\x Pair (Succ (seqLength seq)) (\\i if(isZero i) x (seqGet seq (pred i)))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqaddBack =  \\seq \\x Pair (Succ (seqLength seq)) (\\i if(isEQ i (seqLength seq)) x (seqGet seq i))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqConcat = \\s1 \\s2 Pair (add (seqLength s1) (seqLength s2)) (\\i if(isLT i (seqLength s1)) (seqGet s1 i) (seqGet s2 (sub i (seqLength s1))))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqRangeUnsafe = \\seq \\offset \\count Pair count (\\i seqGet seq (sub i offset))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqRange = \\seq \\offset \\count seqRangeUnsafe seq offset (min count (sub (seqLength seq) offset))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("seqToList = \\seq map (seqGet seq) $ take (seqLength seq) nats0"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("listToSeq = \\list foldr list seqEmpty (\\seq \\x seqaddFront seq x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_switchCond = \\listpairxres \\alt \\cond foldr listpairxres alt (\\inner \\pair if(cond (fst pair)) (snd pair) inner)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("switchCond = \\cond \\listpairxres \\alt _switchCond listpairxres alt cond"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("switch = \\obj \\listpairxres \\cond \\alt switchCond (cond obj) listpairxres alt"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("switchN = \\obj \\listpairnumres \\alt switch obj listpairnumres isEQ alt"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("getFirstConsumeMoreDeferred = \\mf \\v v \n                 (\\a \n                    y(\\self \\n if(isZero n) a (k (self (pred n)))) (mf a)\n                 )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("getFirstConsumeMore = \\m getFirstConsumeMoreDeferred (k m)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharBrOpen = head \"(\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharBrClose = head \")\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharSqBrOpen = head \"[\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharSqBrClose = head \"]\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharComma = head \",\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharAbstr = head \"\\\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharOr = head \"|\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharAnd = head \"&\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharDollar = head \"$\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharAssign = 61"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eCharComment = 39"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eStrColon = [58]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eIsQuot = \\x lOr (isEQ x 34) (isEQ x 96)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_eIsNewLine = \\x lOr (isEQ x 10) (isEQ x 13)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("Schar = ScharParenOpen\n      | ScharParenClose\n      | ScharAbstraction\n      | ScharAssign\n      | ScharSqBracketOpen\n      | ScharSqBracketClose\n      | ScharComma\n      | ScharSingleOr\n      | ScharDollar"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("scharID = \\s s 0 1 2 3 4 5 6 7 8"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("scharEQ = \\a \\b isEQ (scharID a) (scharID b)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("schar_String = \\x x\n        \"<PAR_OPEN>\"\n        \"<PAR_CLOSE>\"\n        \"<ABSTRACT>\"\n        \"<ASSIGN>\"\n        \"<SQBR_OPEN>\"\n        \"<SQBR_CLOSE>\"\n        \"<COMMA>\"\n        \"<SINGLE_OR>\"\n        \"<DOLLAR>\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("Token = TokenSpecialChar schar      \n      | TokenLiteralLower literal   \n      | TokenLiteralUpper literal   \n      | TokenConstS value           \n      | TokenConstN value           \n      | TokenComment value          "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("tokenLiteral = \\literal if(isLowerCaseLetter (head literal)) (TokenLiteralLower literal) (TokenLiteralUpper literal) "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("token_String = \\x x\n        schar_String\n        (\\literal strConss [\"<LITERALL(\", literal, \")>\"])\n        (\\literal strConss [\"<LITERALU(\", literal, \")>\"])\n        (\\value strConss [\"<CONSTS(\", value, \")>\"])\n        (\\value strConss [\"<CONSTN(\", strFromN value, \")>\"])\n        (k \"<COMMENT>\")"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("token_String_list = \\xs strJoin (map token_String xs) \" \""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatParenOpen        = parseBindOperation (parseChar _eCharBrOpen)    $ k $ TokenSpecialChar ScharParenOpen"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatParenClose       = parseBindOperation (parseChar _eCharBrClose)   $ k $ TokenSpecialChar ScharParenClose"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatSqBracketOpen    = parseBindOperation (parseChar _eCharSqBrOpen)  $ k $ TokenSpecialChar ScharSqBracketOpen"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatSqBracketClose   = parseBindOperation (parseChar _eCharSqBrClose) $ k $ TokenSpecialChar ScharSqBracketClose"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatComma            = parseBindOperation (parseChar _eCharComma)     $ k $ TokenSpecialChar ScharComma"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatAbstraction      = parseBindOperation (parseChar _eCharAbstr)     $ k $ TokenSpecialChar ScharAbstraction"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatAssign           = parseBindOperation (parseChar _eCharAssign)    $ k $ TokenSpecialChar ScharAssign"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatSingleOr         = parseBindOperation (parseChar _eCharOr)        $ k $ TokenSpecialChar ScharSingleOr"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatDollar           = parseBindOperation (parseChar _eCharDollar)    $ k $ TokenSpecialChar ScharDollar"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatLiteral = parseBindOperation parseToken (\\x tokenLiteral x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatConstS  = parseBindOperation (parseBindOverride (parseCharIf _eIsQuot) (parseBindDiscard (parseUntil _eIsQuot) (parseCharIf _eIsQuot))) (\\x TokenConstS x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatConstN  = parseBindOperation parsenumber (\\x TokenConstN x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatComment = parseBindOperation (parseBindOverride (parseChar _eCharComment) (parseUntil _eIsNewLine)) (\\x TokenComment x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatSpecialChar = parseOptions\n            [\n                eatParenOpen, \n                eatParenClose,\n                eatAbstraction,\n                eatAssign,\n                eatSqBracketOpen, \n                eatSqBracketClose, \n                eatComma,\n                eatSingleOr,\n                eatDollar\n            ]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("eatSomething = parseWithWhitespace $ parseOptions \n        [ \n            eatSpecialChar,\n            eatLiteral, \n            eatConstS, \n            eatConstN,\n            eatComment\n        ]\n            "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("token_Process = b parseAcceptFullyConsumed $ parseWhilesuccessful eatSomething"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("token_Run = \\s (strFromMaybe i (maybeMap (token_Process s) token_String_list))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("SyntaxExpression = SyntaxName literal                             \n                 | SyntaxConstN value                             \n                 | SyntaxConstS value                             \n                 | SyntaxList list                                \n                 | SyntaxAbstraction literal body                 \n                 | SyntaxApplication o1 o2                        \n                 | SyntaxAssignment literal o                     \n                 | SyntaxType literalType listPairInstanceArgs    "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("syntaxCreateApplication = \\syntaxes foldl (tail syntaxes) (head syntaxes) SyntaxApplication"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("syntaxCreateAbstraction = \\literals \\body foldr literals body (\\x \\lit SyntaxAbstraction lit x)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("syntax_String = y $ \\this \\x\n    x\n        (\\literal strConss [\"literal(\", literal, \")\"])\n        (\\value strConss [\"constn(\", strFromN value, \")\"])\n        (\\value strConss [\"consts(\", value, \")\"])\n        (\\list strConss [\"list(\", strJoin (map this list) \", \", \")\"])\n        (\\literal \\body strConss [\"abstract(\", literal, \", \", this body, \")\"])\n        (\\o1 \\o2 strConss [\"apply(\", this o1, \", \", this o2, \")\"])\n        (\\literal \\o strConss [\"assign(\", literal, \", \", this o, \")\"])\n        (\\literalType \\listPairInstanceArgs strConss [\"type(\", literalType, \"; \", (strJoin (map (\\pair strCons (fst pair) (strConss (map (strCons \" \") (snd pair)))) listPairInstanceArgs) \", \"), \")\"])"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("syntax_String_list = \\xs strJoin (map syntax_String xs) \"; \""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseAbstractionTail = \\e \n    parsePipe\n        parseSingle\n        (TokenLiteralLower_Dispatch \n            (\\literal parseBindOperation \n                e\n                (\\rese [SyntaxAbstraction literal rese])\n            ) \n            parseFail)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseSChar = \\specialChar \n    parsePipe\n        parseSingle\n        (TokenSpecialChar_Dispatch  \n            (\\schar if(scharEQ specialChar schar)\n                (parseReturn i)\n                parseFail\n            )\n            parseFail)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseLiteralL = parsePipe\n        parseSingle\n        (TokenLiteralLower_Dispatch parseReturn parseFail)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseLiteralU = parsePipe\n        parseSingle\n        (TokenLiteralUpper_Dispatch parseReturn parseFail)\n        "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseCloseParen = cstrParseSChar ScharParenClose"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseCloseSqBr = cstrParseSChar ScharSqBracketClose"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseComma = cstrParseSChar ScharComma"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseAssign = cstrParseSChar ScharAssign"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseSingleOr = cstrParseSChar ScharSingleOr"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseDollar = cstrParseSChar ScharDollar"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseListTail = \\e parseBindDiscard \n                    (parseBindOperation \n                        (\n                            parseOption\n                            (\n                                parseBind\n                                    ListCons\n                                    e\n                                    (parseWhilesuccessful $ parseBindOverride cstrParseComma e)\n                            )\n                            (parseReturn ListEmpty)\n                        )\n                        (\\list [SyntaxList list])\n                    )\n                    cstrParseCloseSqBr"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseAssignTail = \\literal \\e parseBindOperation \n                        (parseBindOverride cstrParseAssign e)\n                        (\\body [SyntaxAssignment literal body])"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseDataDefOption = parseBind\n                            (\\name \\args Pair name args)\n                            cstrParseLiteralU\n                            (parseWhilesuccessful cstrParseLiteralL)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseDataDefTail2 = parseBind\n                            ListCons\n                            cstrParseDataDefOption\n                            (parseWhilesuccessful (parseBindOverride cstrParseSingleOr cstrParseDataDefOption))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrParseDataDefTail = \\literal \\e parseBindOperation \n                        (parseBindOverride cstrParseAssign cstrParseDataDefTail2) \n                        (\\list [SyntaxType literal list])"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrSyntaxSingle = \\e\n    parsePipe\n        parseSingle\n        (\\token token\n            (\\schar schar\n                (parseBindDiscard (parseBindOperation e listReturn) cstrParseCloseParen)\n                parseFail\n                (cstrParseAbstractionTail e)\n                parseFail\n                (cstrParseListTail e)\n                parseFail\n                parseFail\n                parseFail\n                parseFail\n            )\n            (\\literal \n                parseOption\n                    (cstrParseAssignTail literal e)\n                    (parseReturn [SyntaxName literal])\n            )\n            (\\literal \n                parseOption\n                    (cstrParseDataDefTail literal e)\n                    (parseReturn [SyntaxName literal])\n            )\n            (\\value parseReturn $ [SyntaxConstS value])\n            (\\value parseReturn $ [SyntaxConstN value])\n            (k parseReturn ListEmpty)\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrSyntaxApplication = \\e \n                        parsePipe\n                            (parseWhilesuccessful $ cstrSyntaxSingle e)\n                            (\\list \n                                (\\ops \n                                    if(listIsEmpty ops) \n                                    parseFail\n                                    (parseBindOperation\n                                        (parseOption\n                                            (parseBindOperation (parseBindOverride cstrParseDollar e) listReturn)\n                                            (parseReturn ListEmpty)\n                                        )\n                                        (\\tailx listConcat ops tailx u $ \n                                            \\head \\tail foldl tail head SyntaxApplication)\n                                    )\n                                ) (listBind i list)\n                            )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("cstrSyntaxEverything = parseWhilesuccessful $ y cstrSyntaxApplication"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("syntax_Process = b parseAcceptFullyConsumed cstrSyntaxEverything"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("syntax_Run = \\s strFromMaybe i $ maybeMap (maybeBind (token_Process s) syntax_Process) syntax_String_list"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("NativeDefinition = NativeAssignment literal o   "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("NativeExpression = NativeLiteral literal        \n                 | NativeApplication o1 o2      \n        "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("getCollisionFreeLiteral = \\literal strCons \":arg:\" literal"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeExpr_String = y(\\this \\x\n    x\n        (\\literal strConss [\"literal(\", literal, \")\"])\n        (\\o1 \\o2 strConss [\"apply(\", this o1, \", \", this o2, \")\"])\n    )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeDef_String = y $ \\this \\x x $ \\literal \\o strConss [\"assign(\", literal, \", \", nativeExpr_String o, \")\"]\n    "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeDef_String_list = \\xs strJoin (map nativeExpr_String xs) \"; \""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeExpr_String_list = \\xs strJoin (map nativeDef_String xs) \"; \""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeI = NativeLiteral \":bound:i\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeK = NativeLiteral \":bound:k\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeB = NativeLiteral \":bound:b\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeC = NativeLiteral \":bound:c\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeS = NativeLiteral \":bound:s\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeY = NativeLiteral \":bound:y\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeListEmpty = NativeLiteral \"ListEmpty\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeListCons = NativeLiteral \"ListCons\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeStrToN = NativeLiteral \"strToN\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("native0 = NativeLiteral \"Zero\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("native1 = NativeLiteral \"one\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("native2 = NativeLiteral \"two\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("native3 = NativeLiteral \"three\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeSucc = NativeLiteral \"Succ\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeMul = NativeLiteral \"mul\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeQadd = NativeLiteral \"_qadd\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("isNativeLiteral = \\lit \\nat NativeLiteral_Dispatch \n        (\\literal strEquals lit literal)\n        False\n        nat"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeContainsLit = y(\\this \\n \\lit\n    n\n        (\\literal strEquals lit literal)\n        (\\o1 \\o2 lOr (this o1 lit) (this o2 lit))\n    )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("finalizeLiteral = \\s\n    if(strStartsWith s \":bound:\")\n        (drop 7 s)\n        s"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("finalizeNativeExpr =\n    y(\\this \\n\n        n\n            (\\literal NativeLiteral (finalizeLiteral literal))\n            (\\o1 \\o2 (\\a1 \\a2\n                (\\defres \n                    if(isNativeLiteral \"y\" a1)\n                    (\n                        NativeApplication_Dispatch\n                        (\\i1 \\i2 if(isNativeLiteral \"k\" i1) i2 defres)\n                        defres\n                        a2\n                    )\n                    defres\n                )\n                (NativeApplication a1 a2)\n            ) (this o1) (this o2))\n    )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("finalizeNativeDefs = \\n n (\\literal \\o NativeAssignment literal (finalizeNativeExpr o))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_03ToNative = \\n n native0 (\\n n native1 (\\n n native2 (\\n n native3 (k native0))))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_nToNative = \\n (\\d \\m\n    if (isZero d) \n        m \n        (NativeApplication \n            (NativeApplication \n                nativeQadd \n                m\n            ) \n            (_nToNative d)\n        )) (div n 4) (_03ToNative $ mod n 4)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_sToNative = \\value foldr value nativeListEmpty (\\value \\item NativeApplication (NativeApplication nativeListCons (_nToNative item)) value)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_syntaxToNative = y $ \\this \\syntax\n    syntax\n        (\\literal NativeLiteral literal)\n        _nToNative\n        _sToNative\n        (\\list foldr list nativeListEmpty (\\list \\item NativeApplication (NativeApplication nativeListCons (this item)) list))\n        (\\literal \\body \n            (y(\\strip \\lit \\nbody\n                NativeApplication_Dispatch\n                (\\a \\b\n                    if (nativeContainsLit a lit)\n                    (\n                        if (nativeContainsLit b lit)\n                        (NativeApplication (NativeApplication nativeS (strip lit a)) (strip lit b))\n                        (NativeApplication (NativeApplication nativeC (strip lit a)) b)\n                    )\n                    (\n                        if (nativeContainsLit b lit)\n                        ( \n                            if(NativeLiteral_Dispatch (k True) False b)\n                            a\n                            (NativeApplication (NativeApplication nativeB a) (strip lit b))\n                        )\n                        (NativeApplication nativeK nbody)\n                    )\n                )\n                (\n                    if (nativeContainsLit nbody lit)\n                    nativeI\n                    (NativeApplication nativeK nbody)\n                )\n                nbody\n            )) \n            literal \n            (this body)\n        )\n        (\\o1 \\o2 NativeApplication (this o1) (this o2))\n        (\\literal \\o NativeAssignment \"fail\" (_sToNative \"fail\"))\n        (\\typeLiteral NativeAssignment \"fail\" (_sToNative \"fail\")) \n    "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_createUniqueNameFromN = \\n strCons \":bound:\" (strFromN n)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_createUniqueNameFromS = \\s strCons \":bound:\" s"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_syntaxEmitTypeInstance = \\items \\ctrArgList \\index \\args \\name\n    [\n        NativeAssignment \n            name\n            (\n                _syntaxToNative\n                (syntaxCreateAbstraction (listConcat args ctrArgList) (syntaxCreateApplication (map SyntaxName (ListCons (_createUniqueNameFromN index) args))))\n            ),\n        NativeAssignment\n            (strCons name \"_Dispatch\")\n            (\n                _syntaxToNative\n                (\n                    (\\argDisp \\argAlt \\argItem syntaxCreateAbstraction [argDisp, argAlt, argItem] \n                        (syntaxCreateApplication \n                            (ListCons \n                                (SyntaxName argItem)\n                                (map (\\item \n                                    if(isEQ index (snd item)) \n                                        (SyntaxName argDisp)\n                                        (syntaxCreateAbstraction (snd (fst item)) (SyntaxName argAlt))\n                                ) items)\n                            )\n                        )\n                    )\n                    (_createUniqueNameFromS \"disp\")\n                    (_createUniqueNameFromS \"alt\")\n                    (_createUniqueNameFromS \"item\")\n                )\n            )\n    ]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_syntaxEmitTypeStuff = \\typeName \\items \\ctrArgList \n    (\n        listBind \n        (\\item \n            (\\pair \\index _syntaxEmitTypeInstance items ctrArgList index (snd pair) (fst pair))\n            (fst item)\n            (snd item)\n        )\n        items\n    )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_make__ValueDef = \\syntaxExpression SyntaxAssignment \"__value\" syntaxExpression"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_syntaxToNativeDefs = \\syntax\n    syntax\n        (\\literal       _syntaxToNativeDefs $ _make__ValueDef syntax)\n        (\\value         _syntaxToNativeDefs $ _make__ValueDef syntax)\n        (\\value         _syntaxToNativeDefs $ _make__ValueDef syntax)\n        (\\list          _syntaxToNativeDefs $ _make__ValueDef syntax)\n        (\\literal \\body _syntaxToNativeDefs $ _make__ValueDef syntax)\n        (\\o1 \\o2        _syntaxToNativeDefs $ _make__ValueDef syntax)\n        \n        (\\literal \\o listReturn (NativeAssignment literal \n            (NativeApplication nativeY \n                (_syntaxToNative (SyntaxAbstraction literal o))\n            )))   \n        (\\typeLiteral \\pairs \n            (\\optionCount \\items\n                (\\ctrArgList _syntaxEmitTypeStuff typeLiteral items ctrArgList)\n                (map _createUniqueNameFromN $ take optionCount nats0)\n            )\n            (length pairs)\n            (zip pairs nats0)\n        )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("syntaxToNative = \\s map finalizeNativeDefs (_syntaxToNativeDefs s)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_nlB = NativeLiteral \"b\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_nlMB = NativeLiteral \"maybeBind\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("_nlTA = NativeLiteral \"typeApply\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeToTypeNative = \\native native\n            (\\literal NativeLiteral (strCons literal \"_Type\"))\n            (\\o1 \\o2 \n                NativeApplication\n                    (NativeApplication _nlMB (nativeToTypeNative o1))\n                    (NativeApplication \n                        (NativeApplication \n                            _nlB\n                            (NativeApplication _nlMB (nativeToTypeNative o2))) \n                        _nlTA)\n            )"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeDefToTypeNative = \\native native\n            (\\literal \\o NativeAssignment\n                (strCons literal \"_Type\")\n                (nativeToTypeNative o)\n            )\n        "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("native_Process = \\synts maybeReturn $ listBind syntaxToNative synts"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeExprToExe = \\n n\n            (\\literal literal)\n            (\\o1 \\o2 (strConss [nativeExprToExe o1, \" \", nativeExprToExe o2, \".\"]))"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeDefToExe = \\n strCons (n (\\literal \\o (strConss [literal, \" \", nativeExprToExe o]))) \".\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("nativeToObj = y $ \\this \\env \\n n\n        (\\literal Pair (maybeGetValue (env literal)) env) \n        (\\o1 \\o2  Pair ((fst (this env o1)) (fst (this env o2))) env)"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("native_Run = \\s strFromMaybe i $ maybeMap \n                                    (maybeMap (maybeBind (token_Process s) syntax_Process) (listBind syntaxToNative))\n                                    (\\ns strJoin (map nativeDefToExe ns) \"; \")\n                                    "))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("output_Process = \\natives strConss $ map nativeDefToExe natives"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("output_ProcessType = \\natives strConss $ map (b nativeDefToExe nativeDefToTypeNative) natives"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("pipeType = \\s\n    maybeTryGetValue (\n    maybeMap (\n    maybeBind (\n    maybeBind \n        (token_Process s)\n        syntax_Process)\n        native_Process)\n        output_ProcessType)\n    \"\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("pipe = \\s\n    maybeTryGetValue (\n    maybeMap (\n    maybeBind (\n    maybeBind \n        (token_Process s)\n        syntax_Process)\n        native_Process)\n        output_Process)\n    \"\""))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("fullDebug = \\s strConss\n    [\n        \"LEXER:   \", token_Run s,\n        newLine, newLine,\n        \"PARSER:  \", syntax_Run s,\n        newLine, newLine,\n        \"CODEGEN: \", native_Run s\n    ]"))));
+
+
+console.log(toString((name) => env['pipe'](name)(fromString("run2 = \\menv \\str maybeMap \n                    (maybeBind (token_Process str) syntax_Process) \n                    (\\synt fst \n                            (nativeToObj\n                                menv\n                                (_syntaxToNative $ head synt)\n                    ))"))));
 

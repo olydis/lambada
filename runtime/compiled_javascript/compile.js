@@ -1,9 +1,19 @@
 const fs = require("fs");
 
+const fsOptions = { encoding: "utf-8" };
+
 const prelude = fs.readFileSync(
-  __dirname + "/../../docs/library/prelude.native.txt",
-  { encoding: "utf-8" }
+  __dirname + "/../../www/library/prelude.native.txt",
+  fsOptions
 );
+const preludeDef = fs.readFileSync(
+  __dirname + "/../../www/library/prelude.txt",
+  fsOptions
+).split('\n').filter(x => x.length > 0 && !x.startsWith(`'`));
+const preludeFiles = preludeDef.map(x => fs.readFileSync(
+  __dirname + "/../../www/library/" + x,
+  fsOptions
+));
 
 class StringReader {
   constructor(str) {
@@ -172,17 +182,17 @@ const hacks = {
   c: DEBUG_ARG => `a => b => c => a(${DEBUG_ARG})(c)(b)`,
 
   // List
-  ListEmpty: DEBUG_ARG => `fromList([])(${DEBUG_ARG})`,
-  ListCons: DEBUG_ARG => `h => t => {
-    const tStrict = t(${DEBUG_ARG});
-    if ('List' in tStrict) return fromList([h].concat(tStrict.List))(${DEBUG_ARG})
-    return self(${DEBUG_ARG})(h)(t);
-  }`,
-  reverse: DEBUG_ARG => `l => {
-    const lStrict = l(${DEBUG_ARG});
-    if ('List' in lStrict) return fromList(lStrict.List.slice().reverse())(${DEBUG_ARG})
-    return self(${DEBUG_ARG})(l);
-  }`,
+  // ListEmpty: DEBUG_ARG => `fromList([])(${DEBUG_ARG})`,
+  // ListCons: DEBUG_ARG => `h => t => {
+  //   const tStrict = t(${DEBUG_ARG});
+  //   if ('List' in tStrict) return fromList([h].concat(tStrict.List))(${DEBUG_ARG})
+  //   return self(${DEBUG_ARG})(h)(t);
+  // }`,
+  // reverse: DEBUG_ARG => `l => {
+  //   const lStrict = l(${DEBUG_ARG});
+  //   if ('List' in lStrict) return fromList(lStrict.List.slice().reverse())(${DEBUG_ARG})
+  //   return self(${DEBUG_ARG})(l);
+  // }`,
 
   // Nat
   Zero: DEBUG_ARG => `fromNat(0n)(${DEBUG_ARG})`,
@@ -289,20 +299,60 @@ while (reader.charsLeft > 0) {
   reader.readWhitespace();
 }
 
+function splitSources(sources) {
+    var result = [];
+
+    var lines = sources.split("\n");
+    var index = 0;
+
+    while (index < lines.length)
+    {
+        var stmt = lines[index].split("'")[0];
+        index++;
+        while (index < lines.length && lines[index][0] == " ")
+        {
+            stmt += "\n" + lines[index].split("'")[0];
+            index++;
+        }
+        if (stmt.trim() != "")
+            result.push(stmt);
+    }
+
+    return result;
+}
+
+// const s = 'Bool = True | False';
+// console.log(`
+// console.log(toString((name) => env['fullDebug'](name)(fromString(${JSON.stringify(s)}))));
+// `);
+// process.exit(0);
+
+
+for (const file of preludeFiles) {
+  for (const part of splitSources(file)) {
+    console.log(`
+console.log(toString((name) => env['pipe'](name)(fromString(${JSON.stringify(part)}))));
+`);
+    // console.error(part);
+  }
+}
+
+process.exit(0);
+
 console.log(`
 // Code gen end
 
-env['inf'] = (name) => env['y'](name)(env['Succ']);
+// env['inf'] = (name) => env['y'](name)(env['Succ']);
 
-env['s']('TOP')(env['k'])(env['k'])(env['k'])
+// env['s']('TOP')(env['k'])(env['k'])(env['k'])
 // process.exit(0);
 
-console.log(toNat(fromNat(42n)));
-console.log(toNat((name) => env['add'](name)(env['three'])(env['three'])));
-console.log(toNat((name) => env['mul'](name)(env['three'])(env['three'])));
-console.log(toNat((name) => env['pow'](name)(env['three'])(env['three'])));
-console.log(toNat((name) => env['pow'](name)(env['Zero'])(env['Zero'])));
-console.log(toString((name) => env['strCons'](name)(env['newLine'])(env['empty'])));
+// console.log(toNat(fromNat(42n)));
+// console.log(toNat((name) => env['add'](name)(env['three'])(env['three'])));
+// console.log(toNat((name) => env['mul'](name)(env['three'])(env['three'])));
+// console.log(toNat((name) => env['pow'](name)(env['three'])(env['three'])));
+// console.log(toNat((name) => env['pow'](name)(env['Zero'])(env['Zero'])));
+// console.log(toString((name) => env['strCons'](name)(env['newLine'])(env['empty'])));
 
 // console.log(toBool((name) => env['isLT'](name)(env['inf'])(env['three'])));
 // console.log(toBool((name) => env['isLT'](name)(env['three'])(env['inf'])));
@@ -315,9 +365,10 @@ console.log(toString((name) => env['strCons'](name)(env['newLine'])(env['empty']
 
 // token_Run = \s strFromMaybe token_String_list (token_Process s)
 
-console.log(toString(fromString("pow = \\\\n \\\\m m one (\\\\dm mul n (pow n dm))")));
-console.log(toString((name) => env['fullDebug'](name)(fromString("u u"))));
-console.log(toString((name) => env['fullDebug'](name)(fromString("\\\\n \\\\m m"))));
+// console.log(toString(fromString("pow = \\\\n \\\\m m one (\\\\dm mul n (pow n dm))")));
+// console.log(toString((name) => env['fullDebug'](name)(fromString("u u"))));
+// console.log(toString((name) => env['fullDebug'](name)(fromString("\\\\n \\\\m m"))));
 // console.log(toString((name) => env['token_Run'](name)(fromString("pow = \\\\n \\\\m m one (\\\\dm mul n (pow n dm))"))));
-console.log(toString((name) => env['fullDebug'](name)(fromString("\\\\n \\\\m m one (\\\\dm mul n (pow n dm))"))));
+// console.log(toString((name) => env['fullDebug'](name)(fromString("\\\\n \\\\m m one (\\\\dm mul n (pow n dm))"))));
+console.log(toString((name) => env['pipe'](name)(fromString("\\\\n \\\\m m one (\\\\dm mul n (pow n dm))"))));
 `);
