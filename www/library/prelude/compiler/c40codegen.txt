@@ -1,8 +1,8 @@
 ' NATIVE => S
 nativeExprToExe = \n n
-            (\literal literal)
-            (\o1 \o2 (strConss [nativeExprToExe o1, " ", nativeExprToExe o2, "."]))
-nativeDefToExe = \n strCons (n (\literal \o (strConss [literal, " ", nativeExprToExe o]))) "."
+            (\literal strConss [literal, " "])
+            (\o1 \o2 (strConss [nativeExprToExe o1, nativeExprToExe o2, " "]))
+nativeDefToExe = \n n (\literal \o (strConss [nativeExprToExe o, literal, [10]]))
 
 ' ENV => NATIVE => (???, ENV)
 nativeToObj = y $ \this \env \n n
@@ -11,7 +11,7 @@ nativeToObj = y $ \this \env \n n
 
 
 ' S => S
-native_Run = \s strFromMaybe i $ maybeMap 
+native_Run = \s strFromMaybe i $ maybeMap
                                     (maybeMap (maybeBind (token_Process s) syntax_Process) (listBind syntaxToNative))
                                     (\ns strJoin (map nativeDefToExe ns) "; ")
                                     ' native_String_list
