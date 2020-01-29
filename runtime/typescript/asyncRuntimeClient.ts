@@ -120,7 +120,6 @@
         this.post(["app(d.pipe, s(" + JSON.stringify(source) + ")).asString()"],
             (binary: string) =>
             {
-                binary = binary.replace(/\.\s/g, ".").trim();
                 if (binary == "")
                     error("compiler error");
                 else

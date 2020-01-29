@@ -82,7 +82,6 @@ class AsyncRuntime {
     }
     compile(source, callback, error = this.throwException) {
         this.post(["app(d.pipe, s(" + JSON.stringify(source) + ")).asString()"], (binary) => {
-            binary = binary.replace(/\.\s/g, ".").trim();
             if (binary == "")
                 error("compiler error");
             else
