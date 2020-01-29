@@ -132,7 +132,7 @@
     public eval(binary: string, callback: (result: string) => void, error: (exception: any) => void = this.throwException)
     {
         this.post([
-            "rt.define(" + JSON.stringify("__value ListEmpty.") + ", false)",
+            "rt.define(" + JSON.stringify("ListEmpty __value\n") + ", false)",
             "rt.define(" + JSON.stringify(binary || "") + ", false)",
             "d.__value.asGuess()"],
             (result: string) => callback(result),
