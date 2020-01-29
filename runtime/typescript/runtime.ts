@@ -94,12 +94,8 @@ module LambadaRuntime {
             return this.str.slice(start, this.index);
         }
 
-        public readWhitespace(): string {
-            return this.readWhile(ch => /^\s$/.test(ch));
-        }
-
         public readToken(): string {
-            return this.readWhile(ch => /^[a-zA-Z0-9_]$/.test(ch));
+            return this.readWhile(ch => /^[^ \n]$/.test(ch));
         }
 
         public readChar(expected: string): boolean {
@@ -580,51 +576,42 @@ module LambadaRuntime {
         public define(binaryDefinition: string, withBuiltins: boolean): void {
             const reader = new StringReader(binaryDefinition);
 
-            reader.readWhitespace();
+            const expressionStack: ExpressionBase[] = [];
             while (reader.charsLeft > 0) {
                 // begin parse definition
                 const name = reader.readToken();
-
-                const expressionStack: ExpressionBase[] = [];
-
-                while (true) {
-                    reader.readWhitespace();
-
-                    // apply
-                    if (reader.readChar(".")) {
-                        if (expressionStack.length < 2)
-                            break;
-                        const b = expressionStack.pop();
-                        const a = expressionStack.pop();
-                        if (a instanceof Expression) {
-                            (<Expression>a).stack.unshift(b);
-                            expressionStack.push(a);
-                        }
-                        else {
-                            expressionStack.push(Expression.createApplication(a, b));
-                        }
-                        continue;
+                const term = reader.readChar(' ');
+                const def = reader.readChar('\n');
+                if (name === '') {
+                    if (expressionStack.length < 2)
+                        break;
+                    const b = expressionStack.pop();
+                    const a = expressionStack.pop();
+                    if (a instanceof Expression) {
+                        (<Expression>a).stack.unshift(b);
+                        expressionStack.push(a);
                     }
-
-                    // defref
-                    const defRef = reader.readToken();
-                    const def = this.defs[defRef];
-                    if (def == undefined)
-                        throw "unresolved reference: " + defRef;
-                    expressionStack.push(def);
+                    else {
+                        expressionStack.push(Expression.createApplication(a, b));
+                    }
                 }
-
-                const content = expressionStack.pop();
-                //console.log(name + " = " + content.toString());
-                if (this.rodefs[name] == undefined || !withBuiltins)
-                    this.defs[name] = (function (content: ExpressionBase) {
-                        return new AliasExpression(name, content);
-                    })(content);
-                else
-                    this.defs[name] = this.rodefs[name];
-                // end parse definition
-
-                reader.readWhitespace();
+                else {
+                  if (term) {
+                    const def = this.defs[name];
+                    if (def == undefined)
+                        throw "unresolved reference: " + name;
+                    expressionStack.push(def);
+                  } else {
+                    const content = expressionStack.pop();
+                    //console.log(name + " = " + content.toString());
+                    if (this.rodefs[name] == undefined || !withBuiltins)
+                        this.defs[name] = (function (content: ExpressionBase) {
+                            return new AliasExpression(name, content);
+                        })(content);
+                    else
+                        this.defs[name] = this.rodefs[name];
+                  }
+                }
             }
         }
 
