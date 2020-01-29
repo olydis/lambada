@@ -1,23 +1,32 @@
-# Implementation Hints
+---
+layout: page
+title: Implementation
+header: LambAda Implementation
+tagline: of minimal LambAda runtimes
+group: navigation
+published: true
+---
 
-In this section we summarize observations about the system defined above.
+## Haskell
+{% highlight haskell %}
 
-## Implementing `⟦ ⟧`
+-- Abstract Syntax
+data Expression = App Expression Expression | U
+instance Show Expression where
+  show (App f a)   = "(" ++ show f ++ " " ++ show a ++ ")"
+  show U           = "u"
 
-- Due to the universal quantification in the definition of `⟦■⟧`, the specifics of parameter expressions cannot matter.
-- Note also that due to the reduction rules, expressions cannot be "introspected" without apearing in head position; at which point `⟦■⟧` can terminate.
-- It is hence possible to instead use as arguments atomic dummy expressions/tokens that are outside of the abstract syntax defined here.
-- These should be unaffected by the reduction process, until one ends up in head position, i.e. as the left-most leaf.
+-- Semantics
+valueOf :: Expression -> Expression
+valueOf x = maybe x valueOf $ reduce x
 
-## Reduction
+reduce :: Expression -> Maybe Expression
+reduce (App U (App U (App U U)))                                 = Nothing
+reduce (App (App (App U (App U (App U U))) a) b)                 = Just $ a
+reduce (App U (App U (App U (App U U))))                         = Nothing
+reduce (App (App (App (App U (App U (App U (App U U)))) a) b) c) = Just $ App (App a c) (App b c)
+reduce (App U a)                                                 = Just $ App (App a (App U (App U (App U (App U U))))) (App U (App U (App U U)))
+reduce (App f a)                                                 = fmap (\f' -> App f' a) (reduce f)
+reduce _                                                         = Nothing
 
-### Sharing
-
-- Structurally identical expressions will have the same reduction behavior, i.e. are also observably identical (referential transparency).
-- It is hence valid to let structurally identical expressions *share* the same internal represenation, effectively reducing them simultaneously.
-
-### WHNF
-
-- Regardless of strategy, reduction can lead to expressions being discarded or duplicated.
-- In the former case, it would have been a waste to perform reduction on the discarded expression. In the latter case, no additional work is induced thanks to sharing.
-- Therefore, the most efficient reduction strategy is to always reduce expressions that are in head position (rather than expressions in "argument position").
+{% endhighlight %}
