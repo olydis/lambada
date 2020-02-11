@@ -2,7 +2,7 @@
 layout: page
 title : Bootstrapper
 header : LambAda
-tagline: close to the singularity
+tagline: Feel to the singularity
 group: navigation
 ---
 <script src="runtime/jquery-1.11.2.min.js"></script>

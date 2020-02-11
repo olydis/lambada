@@ -3,15 +3,15 @@ const fs = require("fs");
 const fsOptions = { encoding: "utf-8" };
 
 const prelude = fs.readFileSync(
-  __dirname + "/../../www/library/prelude.native.txt",
+  __dirname + "/../../docs/library/prelude.native.txt",
   fsOptions
 );
 const preludeDef = fs.readFileSync(
-  __dirname + "/../../www/library/prelude.txt",
+  __dirname + "/../../docs/library/prelude.txt",
   fsOptions
 ).split('\n').filter(x => x.length > 0 && !x.startsWith(`'`));
 const preludeFiles = preludeDef.map(x => fs.readFileSync(
-  __dirname + "/../../www/library/" + x,
+  __dirname + "/../../docs/library/" + x,
   fsOptions
 ));
 
@@ -332,7 +332,7 @@ process.stderr.write('.');
 }
 
 console.log(`require('fs').writeFileSync(
-  __dirname + "/../../www/library/prelude.native.txt",
+  __dirname + "/../../docs/library/prelude.native.txt",
   native + '\\n');`);
 
 process.exit(0);

@@ -1593,5 +1593,5 @@ native += toString((name) => env['pipe'](name)(fromString("run2 = \\menv \\str m
 process.stderr.write('.');
 
 require('fs').writeFileSync(
-  __dirname + "/../../www/library/prelude.native.txt",
+  __dirname + "/../../docs/library/prelude.native.txt",
   native + '\n');

@@ -1,4 +1,13 @@
-# Lambada
+---
+layout: page
+title: Concise Specification
+header: LambAda Specification
+tagline: Maybe the shortest turing-complete PL spec of all times
+group: navigation
+published: true
+---
+
+{% include JB/setup %}
 
 ## Abstract Syntax
 
