@@ -1,3 +1,4 @@
+"use strict";
 var LambadaRuntimeMinimal;
 (function (LambadaRuntimeMinimal) {
     class StringReader {
@@ -7,7 +8,7 @@ var LambadaRuntimeMinimal;
             this.len = str.length;
         }
         readWhile(pred) {
-            var start = this.index;
+            let start = this.index;
             while (this.index < this.len && pred(this.str[this.index]))
                 this.index++;
             return this.str.slice(start, this.index);
@@ -16,14 +17,14 @@ var LambadaRuntimeMinimal;
             return this.readWhile(ch => /^\s$/.test(ch));
         }
         readNaturalNumber() {
-            var num = this.readWhile(ch => /^[0-9]$/.test(ch));
+            let num = this.readWhile(ch => /^[0-9]$/.test(ch));
             return num == "" ? null : parseInt(num);
         }
         readToken() {
             return this.readWhile(ch => /^[a-zA-Z0-9_]$/.test(ch));
         }
         readChar(expected) {
-            var b = true;
+            let b = true;
             return this.readWhile(ch => {
                 if (!b)
                     return false;
@@ -46,36 +47,36 @@ var LambadaRuntimeMinimal;
                 ;
         }
         asNumber() {
-            var n = 0;
-            var probeN;
-            var probeSucc = new BuiltinExpression(1, stack => {
+            let n = 0;
+            let probeN;
+            let probeSucc = new BuiltinExpression(1, stack => {
                 n++;
                 stack.push(probeN);
             });
             probeN = new BuiltinExpression(1, stack => {
-                var num = stack.pop();
+                let num = stack.pop();
                 stack.push(probeSucc);
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
             });
-            var expr = Expression.createApplication(probeN, this);
+            let expr = Expression.createApplication(probeN, this);
             expr.fullReduce();
             return n;
         }
         asString() {
-            var s = "";
-            var probeS;
-            var probeCons = new BuiltinExpression(2, stack => {
+            let s = "";
+            let probeS;
+            let probeCons = new BuiltinExpression(2, stack => {
                 s += String.fromCharCode(stack.pop().asNumber());
                 stack.push(probeS);
             });
             probeS = new BuiltinExpression(1, stack => {
-                var num = stack.pop();
+                let num = stack.pop();
                 stack.push(probeCons);
                 stack.push(ExpressionBase.probeSTOP);
                 stack.push(num);
             });
-            var expr = Expression.createApplication(probeS, this);
+            let expr = Expression.createApplication(probeS, this);
             expr.fullReduce();
             return s;
         }
@@ -87,7 +88,7 @@ var LambadaRuntimeMinimal;
             this.applyTo = applyTo;
         }
         apply(stack) {
-            if (stack.length >= this.arity) {
+            if (stack.length >= (this.arity || 0)) {
                 this.applyTo(stack);
                 return true;
             }
@@ -115,22 +116,22 @@ var LambadaRuntimeMinimal;
         }
         static createADTo(arity, index, ...args) {
             return new BuiltinExpression(arity, stack => {
-                var head = stack[stack.length - index - 1];
-                for (var i = 0; i < arity; i++)
+                let head = stack[stack.length - index - 1];
+                for (let i = 0; i < arity; i++)
                     stack.pop();
-                for (var i = args.length - 1; i >= 0; i--)
+                for (let i = args.length - 1; i >= 0; i--)
                     stack.push(args[i]());
                 stack.push(head);
             });
         }
         static createApplication(a, b) {
-            var e = new Expression();
+            let e = new Expression();
             e.stack.push(b);
             e.stack.push(a);
             return e;
         }
         static createApplicationx(...expressions) {
-            var e = new Expression();
+            let e = new Expression();
             Array.prototype.push.apply(e.stack, expressions);
             e.stack.reverse();
             return e;
@@ -142,22 +143,22 @@ var LambadaRuntimeMinimal;
         reduce() {
             if (this.stack.length == 0)
                 return false;
-            var exprs = [this];
+            let exprs = [this];
             while (true) {
-                var top = exprs[exprs.length - 1].top;
+                let top = exprs[exprs.length - 1].top;
                 if (top instanceof Expression && top.stack.length > 0)
                     exprs.push(top);
                 else
                     break;
             }
             while (exprs.length > 0) {
-                var stack = exprs.pop().stack;
-                var top = stack.pop();
-                if (top.reduce()) {
+                let stack = exprs.pop().stack;
+                let top = stack.pop();
+                if (top && top.reduce()) {
                     stack.push(top);
                     return true;
                 }
-                else if (!top.apply(stack))
+                else if (top && !top.apply(stack))
                     stack.push(top);
                 else
                     return true;
@@ -168,7 +169,7 @@ var LambadaRuntimeMinimal;
             return this.stack[this.stack.length - 1];
         }
         toString() {
-            var res = "";
+            let res = "";
             this.stack.forEach((x, i) => res = (i == this.stack.length - 1 ? x.toString() : "(" + x.toString() + ")") + " " + res);
             return res.trim();
         }
@@ -176,7 +177,7 @@ var LambadaRuntimeMinimal;
     LambadaRuntimeMinimal.Expression = Expression;
     class ShortcutExpression {
         static createNumber(n) {
-            var se = n == 0
+            let se = n == 0
                 ? ShortcutExpression.ADTo_2_0
                 : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(n - 1));
             se._asNumber = se.asNumber = () => n;
@@ -184,7 +185,7 @@ var LambadaRuntimeMinimal;
             return se;
         }
         static createString2(s, offset) {
-            var se = s.length == offset
+            let se = s.length == offset
                 ? ShortcutExpression.ADTo_2_0
                 : Expression.createADTo(2, 1, () => ShortcutExpression.createNumber(s.charCodeAt(offset)), () => ShortcutExpression.createString2(s, offset + 1));
             se._asString = se.asString = () => s.slice(offset);
@@ -205,27 +206,37 @@ var LambadaRuntimeMinimal;
     class Runtime extends BuiltinExpression {
         constructor() {
             super(1, stack => {
-                var result = this.defs[stack.pop().asString()];
+                let result = this.defs[stack.pop().asString()];
                 if (result)
                     stack.push(Expression.createADTo(2, 0, () => result));
                 else
                     stack.push(Runtime.maybeNothing);
             });
             this.defs = {};
-            var def = (name, expr) => {
+            let def = (name, expr) => {
                 this.defs[name] = new AliasExpression(name, expr);
             };
             def("u", new BuiltinExpression(1, stack => {
-                var x = stack.pop();
+                let x = stack.pop();
+                if (!x)
+                    throw 'debug me';
                 stack.push(new BuiltinExpression(2, stack => {
-                    var x = stack.pop();
+                    let x = stack.pop();
+                    if (!x)
+                        throw 'debug me';
                     stack.pop();
                     stack.push(x);
                 }));
                 stack.push(new BuiltinExpression(3, stack => {
-                    var a = stack.pop();
-                    var b = stack.pop();
-                    var c = stack.pop();
+                    let a = stack.pop();
+                    let b = stack.pop();
+                    let c = stack.pop();
+                    if (!a)
+                        throw 'debug me';
+                    if (!b)
+                        throw 'debug me';
+                    if (!c)
+                        throw 'debug me';
                     stack.push(Expression.createApplication(b, c));
                     stack.push(c);
                     stack.push(a);
@@ -235,25 +246,29 @@ var LambadaRuntimeMinimal;
             def("msgBox", new BuiltinExpression(1, stack => window.alert(stack[stack.length - 1].toString())));
         }
         static create(binary) {
-            var rt = new Runtime();
+            let rt = new Runtime();
             rt.define(binary);
             return rt;
         }
         define(binaryDefinition) {
-            var reader = new StringReader(binaryDefinition);
+            let reader = new StringReader(binaryDefinition);
             reader.readWhitespace();
             while (reader.charsLeft > 0) {
                 // begin parse definition
-                var name = reader.readToken();
-                var expressionStack = [];
+                let name = reader.readToken();
+                let expressionStack = [];
                 while (true) {
                     reader.readWhitespace();
                     // apply
                     if (reader.readChar(".")) {
                         if (expressionStack.length < 2)
                             break;
-                        var b = expressionStack.pop();
-                        var a = expressionStack.pop();
+                        let b = expressionStack.pop();
+                        let a = expressionStack.pop();
+                        if (!a)
+                            throw 'debug me';
+                        if (!b)
+                            throw 'debug me';
                         if (a instanceof Expression) {
                             a.stack.unshift(b);
                             expressionStack.push(a);
@@ -264,27 +279,29 @@ var LambadaRuntimeMinimal;
                         continue;
                     }
                     // num
-                    var num = reader.readNaturalNumber();
+                    let num = reader.readNaturalNumber();
                     if (num != null) {
                         expressionStack.push(ShortcutExpression.createNumber(num));
                         continue;
                     }
                     // string
                     if (reader.readChar("\"")) {
-                        var s = reader.readWhile(ch => ch != "\"");
+                        let s = reader.readWhile(ch => ch != "\"");
                         reader.readChar("\"");
                         expressionStack.push(ShortcutExpression.createString(s));
                         continue;
                     }
                     // defref
-                    var defRef = reader.readToken();
-                    var def = this.defs[defRef];
+                    let defRef = reader.readToken();
+                    let def = this.defs[defRef];
                     if (def == undefined)
                         throw "undefined reference: " + defRef;
                     expressionStack.push(def);
                 }
                 if (this.defs[name] == undefined) {
-                    var content = expressionStack.pop();
+                    let content = expressionStack.pop();
+                    if (!content)
+                        throw 'debug me';
                     //console.log(name + " = " + content.toString());
                     this.defs[name] = (function (content) {
                         return new AliasExpression(name, content);

@@ -1,8 +1,8 @@
 /// <reference path="demoCommon.ts" />
 
-function statusUpdate(message: string, status: string = null, binary: string = null)
+function statusUpdate(message: string, status: string | null = null, binary: string | null = null)
 {
-    var js = $("#status");
+    let js = $("#status");
     js.text("Status: " + message + "\n\n");
     js.off("click");
     js.removeClass("dirty error");
@@ -18,23 +18,23 @@ onReady.push(() =>
 {
     $.get(libraryPath + "prelude.txt", (source: string) => 
     {
-        var preludeParts = source
+        let preludeParts = source
             .split("\n")
             .map(l => l.trim())
             .filter(l => l != "" && l.charAt(0) != "'");
-        var gPSs = preludeParts.map(l => $.get(libraryPath + l, () => {}, "text"));
+        let gPSs = preludeParts.map(l => $.get(libraryPath + l, () => {}, "text"));
         $.when.apply($, gPSs).done(() =>
         {
-            var sources: string[] = [];
+            let sources: string[] = [];
             gPSs.forEach(x => sources.push(x.responseText));
 
             // layout
 
-            var binaryBuffer: string[] = Array<string>(sources.length).map(x => null);
+            let binaryBuffer: (string | null)[] = Array<string>(sources.length).map(x => null);
 
-            var d1 = new Date().getTime();
-            var detailStats: string[] = [];
-            var binaryUpdate = () =>
+            let d1 = new Date().getTime();
+            let detailStats: string[] = [];
+            let binaryUpdate = () =>
             {
                 if (binaryBuffer.some(x => x == null))
                 {
@@ -43,29 +43,29 @@ onReady.push(() =>
                     return;
                 }
 
-                var result = binaryBuffer.join("");
+                let result = binaryBuffer.join("");
                 // CLICK ON
                 statusUpdate("testing binary", "dirty");
                 
                 // TEST BINARY
                 try
                 {
-                    //var testRuntime = LambadaRuntime.Runtime.create(result);
-                    //var d = (<any>rt).defs;
-                    //var tc = d["testCount"].asNumber();
-                    //var dddiff = measure(() =>
+                    //let testRuntime = LambadaRuntime.Runtime.create(result);
+                    //let d = (<any>rt).defs;
+                    //let tc = d["testCount"].asNumber();
+                    //let dddiff = measure(() =>
                     //{
-                    //    for (var i = 0; i < tc; i++)
+                    //    for (let i = 0; i < tc; i++)
                     //    {
-                    //        var prop = "test" + i;
-                    //        var succ: boolean;
-                    //        var ddiff = measure(() => { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
+                    //        let prop = "test" + i;
+                    //        let succ: boolean;
+                    //        let ddiff = measure(() => { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
                     //        if (succ)
                     //            throw prop + " failed";
                     //    }
                     //});
-                    var d2 = new Date().getTime();
-                    var compMS = d2 - d1;
+                    let d2 = new Date().getTime();
+                    let compMS = d2 - d1;
                     statusUpdate("binary ready and healthy (" + result.length + " bytes, compiled in " + (compMS / 1000).toFixed(3) + "s)"
                         + "\n\n" + detailStats.join("\n"), null, result);
                 }
@@ -75,38 +75,38 @@ onReady.push(() =>
                 }
             };
 
-            var rtCompilePrelude = rtClean.clone();
+            let rtCompilePrelude = rtClean.clone();
 
-            var table = $("#table");
-            var dc1 = new Date().getTime();
+            let table = $("#table");
+            let dc1 = new Date().getTime();
             sources.forEach((src, i) => 
             {
                 detailStats[i] = "    " + preludeParts[i] + ": ";
-                var tr = $("<tr>").appendTo(table);
-                var td1 = $("<td>").appendTo(tr);
-                var td2 = $("<td>");//.appendTo(tr);
+                let tr = $("<tr>").appendTo(table);
+                let td1 = $("<td>").appendTo(tr);
+                let td2 = $("<td>");//.appendTo(tr);
 
-                var target = $("<pre>").css("word-wrap", "break-word").appendTo(td2);
-                var intelliElem = new IntelliHTML(false, text =>
+                let target = $("<pre>").css("word-wrap", "break-word").appendTo(td2);
+                let intelliElem = new IntelliHTML(false, text =>
                 {
                     intelliElem.element.removeClass("dirty error");
                     intelliElem.element.addClass("dirty");
                     binaryBuffer[i] = null;
                     binaryUpdate();
 
-                    var parts = splitSources(text);
-                    var partBuffers: string[] = [];
+                    let parts = splitSources(text);
+                    let partBuffers: (string | null)[] = [];
 
                     parts.forEach((part, i) => rtCompilePrelude.compile(part, bin => partBuffers[i] = bin));
                     rtCompilePrelude.onDone(() =>
                     {
-                        var bin = partBuffers.some(x => x == null) ? null : partBuffers.join("");
+                        let bin = partBuffers.some(x => x == null) ? null : partBuffers.join("");
                         binaryBuffer[i] = bin;
-                        target.text(bin);
+                        target.text(bin || '');
 
                         if (bin != null)
                         {
-                            var dc2 = new Date().getTime();
+                            let dc2 = new Date().getTime();
                             detailStats[i] += (dc2 - dc1).toString() + "ms";
                             dc1 = dc2;
                         }

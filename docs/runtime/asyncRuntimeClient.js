@@ -1,3 +1,4 @@
+"use strict";
 class AsyncRuntime {
     constructor(masterUri, binary) {
         this.masterUri = masterUri;
@@ -61,7 +62,7 @@ class AsyncRuntime {
     post(code, callback = _ => { }, error = this.throwException) {
         if (this.nextReq != this.jobs.length)
             throw "unexpected request id";
-        var codex = code.join(";");
+        let codex = code.join(";");
         this.jobs.push({ callback: callback, error: error });
         this.master.postMessage({
             "id": this.nextReq,
@@ -123,14 +124,14 @@ AsyncRuntime.onPerf = _ => { };
 //function runTests()
 //{
 //    // automated
-//    var tc = d["testCount"].asNumber();
-//    var dddiff = measure(() =>
+//    let tc = d["testCount"].asNumber();
+//    let dddiff = measure(() =>
 //    {
-//        for (var i = 0; i < tc; i++)
+//        for (let i = 0; i < tc; i++)
 //        {
-//            var prop = "test" + i;
-//            var succ: boolean;
-//            var ddiff = measure(() => { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
+//            let prop = "test" + i;
+//            let succ: boolean;
+//            let ddiff = measure(() => { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
 //            if (succ)
 //                throw prop + " failed";
 //            //else
@@ -140,8 +141,8 @@ AsyncRuntime.onPerf = _ => { };
 //    console.log(tc + " tests passed in " + dddiff + "ms");
 //    // execution speed (1.000.000 x operation)
 //    // K
-//    var kTest = d["k"];
-//    for (var i = 0; i < 1000000 * 2; i++)
+//    let kTest = d["k"];
+//    for (let i = 0; i < 1000000 * 2; i++)
 //        kTest = app(kTest, d["k"]);
 //    console.log("K: " + measure(() => kTest.fullReduce()) + "ms");
 //}
@@ -154,7 +155,7 @@ AsyncRuntime.onPerf = _ => { };
 //}
 //function exec(expr: string)
 //{
-//    var result = leval(expr);
+//    let result = leval(expr);
 //    result.fullReduce();
 //    return result.toString();
 //}

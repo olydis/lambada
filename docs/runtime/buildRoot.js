@@ -1,3 +1,4 @@
+"use strict";
 /// <reference path="runtime.ts" />
 /// <reference path="runtimeMinimal.ts" />
 /// <reference path="asyncRuntimeServer.ts" />

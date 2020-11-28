@@ -1,3 +1,4 @@
+"use strict";
 /// <reference path="jquery.d.ts" />
 /// <reference path="IntelliHTML.ts" />
 /// <reference path="../asyncRuntimeClient.ts" />

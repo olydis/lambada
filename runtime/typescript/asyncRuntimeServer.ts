@@ -1,6 +1,6 @@
 ﻿importScripts("runtime.js");
 
-var nextId = 0;
+let nextId = 0;
 
 onmessage = function (e)
 {
@@ -9,10 +9,10 @@ onmessage = function (e)
         throw "expected message " + nextId + " but received " + e.data.id + "; fix: cache unordered messages";
     nextId++;
 
-    var result: any;
-    var elapsedMS: number;
-    var success: boolean = true;
-    var exception: any;
+    let result: any;
+    let elapsedMS: number | undefined = undefined;
+    let success: boolean = true;
+    let exception: any;
     try
     {
         eval("LambadaRuntime._perfReset()");
@@ -35,8 +35,8 @@ onmessage = function (e)
 
 function measure(f: () => void): number
 {
-    var d1 = new Date().getTime();
+    const d1 = new Date().getTime();
     f();
-    var d2 = new Date().getTime();
+    const d2 = new Date().getTime();
     return d2 - d1;
 }

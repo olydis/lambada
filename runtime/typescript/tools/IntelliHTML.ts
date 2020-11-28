@@ -1,12 +1,13 @@
 ﻿/// <reference path="jquery.d.ts" />
 
-var tabSpaces = "    ";
-var tabWidth = tabSpaces.length;
-var acCount = 11;
+const tabSpaces = "    ";
+const tabWidth = tabSpaces.length;
+const acCount = 11;
 
 function setCaret(range: Range)
 {
-    var sel = window.getSelection();
+    let sel = window.getSelection();
+    if (!sel) return;
     sel.removeAllRanges();
     sel.addRange(range);
 }
@@ -24,10 +25,10 @@ class IntelliHTML
     private acList: JQuery;
     private acListNative: HTMLDivElement;
 
-    private lastText: string = null;
+    private lastText: string | null = null;
     private triggerOnTextChanged(): void
     {
-        var newText = this.text;
+        let newText = this.text;
         this.updateHighlight(newText); 
         if (this.lastText == newText)
             return;
@@ -48,15 +49,15 @@ class IntelliHTML
     {
         this.acSpan.hide();
 
-        var range = document.createRange();
+        let range = document.createRange();
 
-        var idStart = this.traceIndex(this.acState.caretIndex - this.acState.phrase.length, this.codeNative);
+        let idStart = this.traceIndex(this.acState.caretIndex - this.acState.phrase.length, this.codeNative);
         range.setStart(idStart.node, idStart.index);
-        var idEnd = this.traceIndex(this.acState.caretIndex, this.codeNative);
+        let idEnd = this.traceIndex(this.acState.caretIndex, this.codeNative);
         range.setEnd(idEnd.node, idEnd.index);
 
         range.deleteContents();
-        var acNode = document.createTextNode(this.acState.item);
+        let acNode = document.createTextNode(this.acState.item);
         range.insertNode(acNode);
         range.setStartAfter(acNode);
         setCaret(range);
@@ -76,7 +77,7 @@ class IntelliHTML
         this.code.css("background-color", "transparent");
         this.code.css("box-shadow", "none");
         this.code.css("padding", "0px");
-        var wrapCode = $("<div>");
+        let wrapCode = $("<div>");
         //wrapCode.css("height", "0px");
         wrapCode.append(this.code);
         wrapCode.appendTo(this.pre);
@@ -90,15 +91,15 @@ class IntelliHTML
             {
                 eo.preventDefault();
                 this.acSpan.hide();
-                var range = this.caretPosition;
+                let range = this.caretPosition;
                 if (range != null)
                 {
-                    var text = this.text;
-                    var startOffset = this.caretIndex(range);
-                    var start = text.lastIndexOf("\n", startOffset - 1);
+                    let text = this.text;
+                    let startOffset = this.caretIndex(range);
+                    let start = text.lastIndexOf("\n", startOffset - 1);
                     text = text.substring(start + 1, startOffset);
-                    var insert = tabWidth - text.length % tabWidth;
-                    var spacesNode = document.createTextNode(tabSpaces.substr(0, insert));
+                    let insert = tabWidth - text.length % tabWidth;
+                    let spacesNode = document.createTextNode(tabSpaces.substr(0, insert));
                     range.insertNode(spacesNode);
                     range.setStartAfter(spacesNode);
                     setCaret(range);
@@ -123,11 +124,11 @@ class IntelliHTML
                 {
                     this.acSpan.hide();
 
-                    var range: Range = this.caretPosition;
+                    let range: Range | null = this.caretPosition;
                     if (range == null) return;
                     range = range.cloneRange();
 
-                    var breakNode = document.createTextNode("\n");
+                    let breakNode = document.createTextNode("\n");
                     range.insertNode(breakNode);
                     range.setStartAfter(breakNode);
                     setCaret(range);
@@ -185,41 +186,42 @@ class IntelliHTML
     private traceIndex(index: number, node: Element): { index: number; node: Element }
     {
         if (node.nodeType == 3)
-            return { index: Math.min(index, node.textContent.length), node: node };
-        var res: { index: number; node: Element } = null;
-        var contents = $(node).contents();
+            return { index: Math.min(index, (node.textContent || '').length), node: node };
+        let res: { index: number; node: Element } | null = null;
+        let contents = $(node).contents();
         contents.each((i, e) =>
         {
-            var elen = e.textContent.length;
+            let elen = (e.textContent || '').length;
             if (res == null)
                 if (elen <= index && i < contents.length - 1)
                     index -= elen;
                 else
                     res = this.traceIndex(index, e);
         });
+        if (res == null) throw 'debug me';
         return res;
     }
     private createCodeRange(start: number, length: number): JQuery
     {
-        var begin = this.traceIndex(start, this.codeNative);
-        var end = this.traceIndex(start + length, this.codeNative);
+        let begin = this.traceIndex(start, this.codeNative);
+        let end = this.traceIndex(start + length, this.codeNative);
         
-        var range = document.createRange();
+        let range = document.createRange();
         range.setStart(begin.node, begin.index);
         range.setEnd(end.node, end.index);
 
         // insert element
-        var elem = $("<span>").text(range.toString());
+        let elem = $("<span>").text(range.toString());
         range.deleteContents();
         range.insertNode(elem[0]);
         return elem;
     }
     
-    private debHLid: number = null;
+    private debHLid: number | null = null;
     
     private _updateHighlight(text: string)
     {
-        var saveCaret = this.caretIndex(this.caretPosition);
+        let saveCaret = this.caretIndex(this.caretPosition);
 
         // clear all formatting
         this.code.text(text);
@@ -227,9 +229,9 @@ class IntelliHTML
         if (this.highlight)
         {
             // format
-            var format = (regex: RegExp, formatter: (jq: JQuery) => void) =>
+            let format = (regex: RegExp, formatter: (jq: JQuery) => void) =>
             {
-                var match: RegExpExecArray;
+                let match: RegExpExecArray | null;
                 while (match = regex.exec(text))
                     formatter(this.createCodeRange(match.index, match.toString().length));
             };
@@ -263,8 +265,8 @@ class IntelliHTML
         }
 
         // restore caret
-        var loc = this.traceIndex(saveCaret, this.codeNative);
-        var range = document.createRange();
+        let loc = this.traceIndex(saveCaret, this.codeNative);
+        let range = document.createRange();
         range.setStart(loc.node, loc.index);
         setCaret(range);
     }
@@ -275,18 +277,18 @@ class IntelliHTML
         this.debHLid = setTimeout(() => this._updateHighlight(text), 1000);
     }
 
-    private get caretPosition(): Range
+    private get caretPosition(): Range | null
     {
-        var range: Range;
-        var container: HTMLElement;
+        let range: Range;
+        let container: HTMLElement;
         try
         {
-            range = window.getSelection().getRangeAt(0);
+            range = window.getSelection()!.getRangeAt(0);
 
-            var cont = range.startContainer;
-            while (cont.nodeType != 1)
+            let cont : Node | null = range.startContainer;
+            while (cont && cont.nodeType != 1)
                 cont = cont.parentNode;
-            var container = <HTMLElement>cont;
+            let container = <HTMLElement>cont;
 
             if (!this.codeNative.contains(container))
                 return null; // caret not in code!
@@ -299,10 +301,10 @@ class IntelliHTML
 
         return range;
     }
-    private caretIndex(caretPosition: Range): number
+    private caretIndex(caretPosition: Range | null): number
     {
         if (caretPosition == null) return 0;
-        var range = caretPosition.cloneRange();
+        let range = caretPosition.cloneRange();
         range.selectNodeContents(this.codeNative);
         range.setEnd(caretPosition.startContainer, caretPosition.startOffset);
         return range.toString().length;
@@ -310,34 +312,34 @@ class IntelliHTML
 
     private showAC(moveSelection: number = 0, explicit: boolean = false)
     {
-        var codeText = this.text;
+        let codeText = this.text;
         
         // hide ac
         this.acSpan.hide();
 
         // get caret information
-        var range: Range = this.caretPosition;
+        let range: Range | null = this.caretPosition;
         if (range == null) return;
         range = range.cloneRange();
 
         // extract current identifier
         this.acState.caretIndex = this.caretIndex(range);
-        var text = codeText.slice(0, this.acState.caretIndex);
-        var vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
-        var v = vv == null ? "" : vv[0];
+        let text = codeText.slice(0, this.acState.caretIndex);
+        let vv = /[a-zA-Z_][a-zA-Z0-9_]*$/.exec(text);
+        let v = vv == null ? "" : vv[0];
         if (v == "" && !explicit)
             return;
         this.acState.phrase = v;
 
         // - check for non-identifier fronts
-        var indexBefore = this.acState.caretIndex - v.length - 1;
+        let indexBefore = this.acState.caretIndex - v.length - 1;
         if (indexBefore >= 0 && (text.charAt(indexBefore) == "\\" || text.charAt(indexBefore) == "\""))
             return;
 
-        var idStart = this.traceIndex(this.acState.caretIndex - v.length, this.codeNative);
+        let idStart = this.traceIndex(this.acState.caretIndex - v.length, this.codeNative);
         range.setStart(idStart.node, idStart.index);
 
-        var x: number, y: number;
+        let x: number, y: number;
         x = (range.getClientRects()[0].left | 0) + $(window).scrollLeft();
         y = (range.getClientRects()[0].top | 0) + $(window).scrollTop();
 
@@ -346,22 +348,22 @@ class IntelliHTML
         this.acSpan.css("top", y + "px");
 
         // get completion results
-        var names = this.getACitems();
+        let names = this.getACitems();
         // - add local names
-        var regex = /\\[a-zA-Z_][a-zA-Z0-9_]*/g;
+        let regex = /\\[a-zA-Z_][a-zA-Z0-9_]*/g;
         while (vv = regex.exec(text))
             names.push(vv[0].substr(1));
 
         // - process
-        var t = names.sort(compareStrings);
+        let t = names.sort(compareStrings);
         t = t.filter((v, i) => i == 0 || v != t[i-1]); // distinct
-        var result: { x: string; i: number }[] = [];
-        var resultAny: { x: string; i: number }[] = [];
-        var vLower = v.toLowerCase();
-        var vLen = v.length;
+        let result: { x: string; i: number }[] = [];
+        let resultAny: { x: string; i: number }[] = [];
+        let vLower = v.toLowerCase();
+        let vLen = v.length;
         t.forEach(tt =>
         {
-            var index = tt.toLowerCase().indexOf(vLower);
+            let index = tt.toLowerCase().indexOf(vLower);
             if (index != -1)
                 (index == 0 ? result : resultAny).push({ x: tt, i: index });
         });
@@ -371,23 +373,23 @@ class IntelliHTML
             return;
 
         // handle/update lastACitem
-        var indexs = result
+        let indexs = result
             .map((x, i) => { return { x: x.x, i: i }; })
             .filter(t => t.x == this.acState.item)
             .map(t => t.i);
 
-        var index = indexs.length == 0 ? 0 : indexs[0];
+        let index = indexs.length == 0 ? 0 : indexs[0];
         index = (index + moveSelection + result.length) % result.length;
         this.acState.item = result[index].x;
 
         // display results
-        var acListOffset = Math.max(Math.min(1 + index - (acCount / 2) | 0, result.length - acCount), 0);
-        var hiddenFront = acListOffset > 0;
-        var hiddenBack = result.length > acListOffset + acCount;
+        let acListOffset = Math.max(Math.min(1 + index - (acCount / 2) | 0, result.length - acCount), 0);
+        let hiddenFront = acListOffset > 0;
+        let hiddenBack = result.length > acListOffset + acCount;
 
         result = result.slice(acListOffset, acListOffset + acCount);
 
-        var boxShadow = "";
+        let boxShadow = "";
         if (hiddenFront)
             boxShadow += "#555 0px 20px 20px -10px inset";
         if (hiddenFront && hiddenBack)
@@ -400,7 +402,7 @@ class IntelliHTML
         this.acList.empty();
         result.forEach(x =>
         {
-            var p = $("<p>").css("padding", "0px");
+            let p = $("<p>").css("padding", "0px");
             p.append($("<span>").text(x.x.slice(0, x.i)));
             p.append($("<span>").text(x.x.slice(x.i, x.i + vLen)).css("color", "salmon"));
             p.append($("<span>").text(x.x.slice(x.i + vLen)));
@@ -432,7 +434,7 @@ class IntelliHTML
 
     public get text(): string
     {
-        var cl = this.code.clone();
+        let cl = this.code.clone();
         cl.find("br").replaceWith("\n");
         return cl.text();
     }

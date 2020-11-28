@@ -1,14 +1,15 @@
+"use strict";
 importScripts("runtime.js");
-var nextId = 0;
+let nextId = 0;
 onmessage = function (e) {
     // guarantee execution order
     if (e.data.id != nextId)
         throw "expected message " + nextId + " but received " + e.data.id + "; fix: cache unordered messages";
     nextId++;
-    var result;
-    var elapsedMS;
-    var success = true;
-    var exception;
+    let result;
+    let elapsedMS = undefined;
+    let success = true;
+    let exception;
     try {
         eval("LambadaRuntime._perfReset()");
         elapsedMS = measure(() => result = eval(e.data.code));
@@ -27,8 +28,8 @@ onmessage = function (e) {
     });
 };
 function measure(f) {
-    var d1 = new Date().getTime();
+    const d1 = new Date().getTime();
     f();
-    var d2 = new Date().getTime();
+    const d2 = new Date().getTime();
     return d2 - d1;
 }

@@ -4,8 +4,8 @@ onReady.push(() => {
     // EVAL PAD
     const safeString = (s: string) => "[" + s.split("").map(x => x.charCodeAt(0).toString()).join(",") + "]";
 
-    let currentRT: AsyncRuntime = null;
-    let debounceHandle: number = undefined;
+    let currentRT: AsyncRuntime | null = null;
+    let debounceHandle: number | undefined = undefined;
     const evalPad = new IntelliHTML(true, text => {
         $("#evalBin").text("").append($("<i>").text("starting compilation shortly (debouncing)..."));
         $("#evalRes").text("").append($("<i>").text("compiling..."));
@@ -19,7 +19,7 @@ onReady.push(() => {
             const srcs = splitSources(text);
 
             let exFree = true;
-            const active = (i: number) => exFree && currentRT == rtTrash && (i == null || i == srcs.length - 1);
+            const active = (i: number | null) => exFree && currentRT == rtTrash && (i == null || i == srcs.length - 1);
 
             const onEx = (ex: any) => {
                 if (active(null)) {
@@ -61,9 +61,9 @@ add 42 oneHundred ' last expression => will be the output of this program
 
     const populate = (lib: string) => {
         $.get(libraryPath + lib + ".txt", (data: string) => {
-            var sSpan = $("#" + lib);
+            let sSpan = $("#" + lib);
             data.split("~~~").forEach((str, i) => {
-                var parts = str.split("~~");
+                let parts = str.split("~~");
                 if (i > 0) sSpan.append("&nbsp;&nbsp;&nbsp;");
                 sSpan.append($("<a>")
                     .text(parts[0].trim())

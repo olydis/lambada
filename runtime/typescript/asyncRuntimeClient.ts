@@ -91,7 +91,7 @@
         if (this.nextReq != this.jobs.length)
             throw "unexpected request id";
 
-        var codex = code.join(";");
+        let codex = code.join(";");
         this.jobs.push({ callback: callback, error: error });
         this.master.postMessage({
             "id": this.nextReq,
@@ -115,7 +115,7 @@
             this.onDone(() => this.onIdle(callback));
     }
 
-    public compile(source: string, callback: (binary: string) => void, error: (exception: any) => void = this.throwException)
+    public compile(source: string, callback: (binary: string | null) => void, error: (exception: any) => void = this.throwException)
     {
         this.post(["app(d.pipe, s(" + JSON.stringify(source) + ")).asString()"],
             (binary: string) =>
@@ -159,8 +159,8 @@
         {
             this.closed = true;
             this.master.terminate();
-            this.master = undefined;
-            this.post = undefined;
+            this.master = undefined as any;
+            this.post = undefined as any;
 
             AsyncRuntime.onClose(this);
         }
@@ -175,14 +175,14 @@
 //function runTests()
 //{
 //    // automated
-//    var tc = d["testCount"].asNumber();
-//    var dddiff = measure(() =>
+//    let tc = d["testCount"].asNumber();
+//    let dddiff = measure(() =>
 //    {
-//        for (var i = 0; i < tc; i++)
+//        for (let i = 0; i < tc; i++)
 //        {
-//            var prop = "test" + i;
-//            var succ: boolean;
-//            var ddiff = measure(() => { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
+//            let prop = "test" + i;
+//            let succ: boolean;
+//            let ddiff = measure(() => { succ = app(d["strFromB"], d[prop]).asString() != "True"; });
 //            if (succ)
 //                throw prop + " failed";
 //            //else
@@ -193,8 +193,8 @@
 
 //    // execution speed (1.000.000 x operation)
 //    // K
-//    var kTest = d["k"];
-//    for (var i = 0; i < 1000000 * 2; i++)
+//    let kTest = d["k"];
+//    for (let i = 0; i < 1000000 * 2; i++)
 //        kTest = app(kTest, d["k"]);
 //    console.log("K: " + measure(() => kTest.fullReduce()) + "ms");
 //}
@@ -208,7 +208,7 @@
 //}
 //function exec(expr: string)
 //{
-//    var result = leval(expr);
+//    let result = leval(expr);
 //    result.fullReduce();
 //    return result.toString();
 //}

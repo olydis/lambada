@@ -1,3 +1,4 @@
+"use strict";
 var LambadaRuntime;
 (function (LambadaRuntime) {
     const _perfAppHeartbeat = 1000000;
@@ -159,6 +160,7 @@ var LambadaRuntime;
             });
             let expr = this;
             let arity = 0;
+            result = result;
             while (arity < 10) {
                 expr = Expression.createApplication(expr, createRecorderProbe(arity++, true));
                 expr.fullReduce();
@@ -309,6 +311,8 @@ var LambadaRuntime;
             while (exprs.length > 0) {
                 const stack = exprs.pop().stack;
                 const top = stack.pop();
+                if (!top)
+                    throw 'debug me';
                 if (top.reduce()) {
                     stack.push(top);
                     return true;
@@ -334,9 +338,13 @@ var LambadaRuntime;
                     }
                     do {
                         const expr = exprs.pop();
+                        if (!expr)
+                            throw 'debug me';
                         if (expr.stack.length == 0)
                             continue;
                         const top = expr.stack.pop();
+                        if (!top)
+                            throw 'debug me';
                         top.fullReduce();
                         if (top.apply(expr.stack)) {
                             exprs.push(expr);
@@ -405,8 +413,12 @@ var LambadaRuntime;
             };
             def("u", new BuiltinExpression(1, stack => {
                 const x = stack.pop();
+                if (!x)
+                    throw 'debug me';
                 stack.push(new BuiltinExpression(2, stack => {
                     const x = stack.pop();
+                    if (!x)
+                        throw 'debug me';
                     stack.pop();
                     stack.push(x);
                 }));
@@ -414,6 +426,12 @@ var LambadaRuntime;
                     const a = stack.pop();
                     const b = stack.pop();
                     const c = stack.pop();
+                    if (!a)
+                        throw 'debug me';
+                    if (!b)
+                        throw 'debug me';
+                    if (!c)
+                        throw 'debug me';
                     stack.push(Expression.createApplication(b, c));
                     stack.push(c);
                     stack.push(a);
@@ -423,6 +441,8 @@ var LambadaRuntime;
             def("i", new BuiltinExpression(0));
             def("k", new BuiltinExpression(2, stack => {
                 const x = stack.pop();
+                if (!x)
+                    throw 'debug me';
                 stack.pop();
                 stack.push(x);
             }));
@@ -430,27 +450,49 @@ var LambadaRuntime;
                 const a = stack.pop();
                 const b = stack.pop();
                 const c = stack.pop();
+                if (!a)
+                    throw 'debug me';
+                if (!b)
+                    throw 'debug me';
+                if (!c)
+                    throw 'debug me';
                 stack.push(Expression.createApplication(b, c), c, a);
             }));
             def("b", new BuiltinExpression(3, stack => {
                 const a = stack.pop();
                 const b = stack.pop();
                 const c = stack.pop();
+                if (!a)
+                    throw 'debug me';
+                if (!b)
+                    throw 'debug me';
+                if (!c)
+                    throw 'debug me';
                 stack.push(Expression.createApplication(b, c), a);
             }));
             def("c", new BuiltinExpression(3, stack => {
                 const a = stack.pop();
                 const b = stack.pop();
                 const c = stack.pop();
+                if (!a)
+                    throw 'debug me';
+                if (!b)
+                    throw 'debug me';
+                if (!c)
+                    throw 'debug me';
                 stack.push(b, c, a);
             }));
             let y = new BuiltinExpression(1, stack => {
                 const x = stack.pop();
+                if (!x)
+                    throw 'debug me';
                 stack.push(Expression.createApplication(y, x), x);
             });
             // WARNING: this impl. makes state-serialization hard
             y = new BuiltinExpression(1, stack => {
                 let x = stack.pop();
+                if (!x)
+                    throw 'debug me';
                 x = Expression.createApplication(x, x);
                 x.stack[0] = x;
                 stack.push(x);
@@ -498,6 +540,10 @@ var LambadaRuntime;
                         break;
                     const b = expressionStack.pop();
                     const a = expressionStack.pop();
+                    if (!a)
+                        throw 'debug me';
+                    if (!b)
+                        throw 'debug me';
                     if (a instanceof Expression) {
                         a.stack.unshift(b);
                         expressionStack.push(a);
@@ -515,6 +561,8 @@ var LambadaRuntime;
                     }
                     else {
                         const content = expressionStack.pop();
+                        if (!content)
+                            throw 'debug me';
                         //console.log(name + " = " + content.toString());
                         if (this.rodefs[name] == undefined || !withBuiltins)
                             this.defs[name] = (function (content) {

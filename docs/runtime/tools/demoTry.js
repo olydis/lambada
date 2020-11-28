@@ -1,3 +1,4 @@
+"use strict";
 /// <reference path="demoCommon.ts" />
 onReady.push(() => {
     // EVAL PAD
@@ -53,9 +54,9 @@ add 42 oneHundred ' last expression => will be the output of this program
     evalPad.focus();
     const populate = (lib) => {
         $.get(libraryPath + lib + ".txt", (data) => {
-            var sSpan = $("#" + lib);
+            let sSpan = $("#" + lib);
             data.split("~~~").forEach((str, i) => {
-                var parts = str.split("~~");
+                let parts = str.split("~~");
                 if (i > 0)
                     sSpan.append("&nbsp;&nbsp;&nbsp;");
                 sSpan.append($("<a>")
