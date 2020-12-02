@@ -1,4 +1,3 @@
-"use strict";
 /// <reference path="demoCommon.ts" />
 function statusUpdate(message, status = null, binary = null) {
     let js = $("#status");

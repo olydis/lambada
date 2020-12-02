@@ -1,4 +1,3 @@
-"use strict";
 var LambadaRuntime;
 (function (LambadaRuntime) {
     const _perfAppHeartbeat = 1000000;

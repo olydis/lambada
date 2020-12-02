@@ -1,4 +1,3 @@
-"use strict";
 /// <reference path="demoCommon.ts" />
 onReady.push(() => {
     // EVAL PAD

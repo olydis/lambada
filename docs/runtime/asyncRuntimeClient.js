@@ -1,4 +1,3 @@
-"use strict";
 class AsyncRuntime {
     constructor(masterUri, binary) {
         this.masterUri = masterUri;

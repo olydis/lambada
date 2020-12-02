@@ -1,4 +1,3 @@
-"use strict";
 /// <reference path="jquery.d.ts" />
 const tabSpaces = "    ";
 const tabWidth = tabSpaces.length;

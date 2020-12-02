@@ -1,4 +1,3 @@
-"use strict";
 importScripts("runtime.js");
 let nextId = 0;
 onmessage = function (e) {

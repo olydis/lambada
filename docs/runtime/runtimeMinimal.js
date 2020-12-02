@@ -1,4 +1,3 @@
-"use strict";
 var LambadaRuntimeMinimal;
 (function (LambadaRuntimeMinimal) {
     class StringReader {
